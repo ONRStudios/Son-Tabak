@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v4.5 Final Balance</title>
+    <title>Son Tabak Online - v5.2 Visual Polish</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -38,8 +38,13 @@
         .flip-front, .flip-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; background: #fff; border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; }
         .flip-back { transform: rotateY(180deg); background: #fdfdfd; }
         .panel-header { font-weight: bold; color: #fff; background: #34495e; padding: 5px; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center; padding-left: 10px; padding-right: 10px;}
-        #score-table { width: 100%; font-size: 0.85em; border-collapse: collapse; margin-top: 5px; }
-        #score-table td { padding: 6px 10px; border-bottom: 1px solid #eee; text-align: left; }
+        
+        /* SCORE TABLE FIX */
+        #score-table { width: 100%; font-size: 0.85em; border-collapse: collapse; margin-top: 5px; table-layout: fixed; }
+        #score-table tr { display: table-row; }
+        #score-table td { padding: 8px 10px; border-bottom: 1px solid #eee; text-align: left; vertical-align: middle; }
+        .me-row { background-color: #fff9c4; font-weight: bold; border-left: 4px solid #f1c40f; }
+
         #system-log { overflow-y: auto; flex-grow: 1; font-size: 0.75em; text-align: left; padding: 5px; list-style: none; margin: 0; }
         #system-log li { padding: 3px 0; border-bottom: 1px dashed #eee; color: #555; }
         .chat-container { background: #fff; border-radius: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.2); flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
@@ -67,13 +72,23 @@
         .mini-card-back::after, .card-back-style::after { content: "SON\A TABAK"; position: absolute; transform: rotate(-15deg); color: #3498db; font-family: 'Comic Sans MS', cursive; font-weight: 900; font-size: 1.1em; white-space: pre; text-align: center; line-height: 0.9; pointer-events: none; text-shadow: 2px 2px 0 #fff; }
         .mini-card-back::after { font-size: 0.75em; transform: rotate(-15deg) scale(0.8); }
         
+        /* OKLAR */
         .arrow-icon { font-size: 2.5em; color: #bdc3c7; font-weight: 900; transition: all 0.5s; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 1; }
         .arrow-icon.active { animation: pulseArrow 2s infinite; text-shadow: 0 0 20px currentColor; z-index: 20; }
-        @keyframes pulseArrow { 0% { transform: translateY(-50%) scale(1.0); } 50% { transform: translateY(-50%) scale(1.15); } 100% { transform: translateY(-50%) scale(1.0); } }
+        
+        /* ÜST OKLAR (STATİK) - FIX: display:inline-block ve transform:none kaldırıldı */
+        .arrow-top-static { position: static; margin: 0 15px; font-size: 2.5em; color: #bdc3c7; font-weight: 900; transition: all 0.3s; display: inline-block; transform-origin: center; transform: scale(1); }
+        .arrow-top-static.active { animation: pulseArrowStatic 1.2s infinite ease-in-out; text-shadow: 0 0 20px currentColor; color: #3498db; }
+        
+        @keyframes pulseArrow { 0% { transform: translateY(-50%) scale(1.0); } 50% { transform: translateY(-50%) scale(1.25); } 100% { transform: translateY(-50%) scale(1.0); } }
+        @keyframes pulseArrowStatic { 0% { transform: scale(1.0); } 50% { transform: scale(1.3); } 100% { transform: scale(1.0); } }
+        
         .arrow-spin { animation: spinArrow 1.2s ease-in-out forwards !important; }
         @keyframes spinArrow { 0% { transform: translateY(-50%) rotate(0deg) scale(1); } 50% { transform: translateY(-50%) rotate(180deg) scale(1.4); color: #e74c3c; } 100% { transform: translateY(-50%) rotate(360deg) scale(1); } }
+        
         .glow-red { color: #c0392b !important; } .glow-green { color: #27ae60 !important; } .glow-yellow { color: #f1c40f !important; } .glow-purple { color: #9b59b6 !important; } .glow-neutral { color: #3498db !important; }
-        #arrow-left { left: 25px; } #arrow-right { right: 25px; } #arrow-top-1, #arrow-top-2 { position: static; transform: none; margin: 0 15px; }
+        #arrow-left { left: 25px; } #arrow-right { right: 25px; } 
+        
         #play-area { display: flex; align-items: center; justify-content: center; gap: 80px; width: 100%; min-height: 180px; position: relative; transition: transform 0.3s; z-index: 5; grid-row: 2; align-self: center; }
         .card { width: 105px; height: 155px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; cursor: pointer; border: 3px solid #555; box-shadow: 5px 5px 15px rgba(0,0,0,0.2); background-color: white; position: relative; user-select: none; transition: transform 0.2s; box-sizing: border-box; flex-shrink: 0; }
         #draw-pile.card:hover { transform: none; }
@@ -104,10 +119,10 @@
         .game-btn { padding: 12px 20px; border: none; border-radius: 10px; font-size: 1em; font-weight: bold; cursor: pointer; color: white; width: 100%; margin-bottom: 0; }
         .btn-red { background-color: #c0392b; } .btn-blue { background-color: #3498db; } .btn-dark { background-color: #34495e; } .btn-green { background-color: #27ae60; }
         
-        /* GERİ ALINAN ANIMASYON (1.0s) */
+        /* GERİ ALINAN ANIMASYON (1.0s) -> JS'te ANIM_CONFIG.FLY_DURATION ile eşleşmeli */
         .flying-card { position: fixed; z-index: 3000; pointer-events: none; transition: all 1.0s ease-in-out; }
-        .blocked-anim { position: absolute; font-size: 4em; color: #c0392b; z-index: 300; text-shadow: 0 0 20px #fff; animation: fadeUp 2s forwards; pointer-events: none; }
-        @keyframes fadeUp { 0% { opacity: 0; transform: scale(0.5); } 20% { opacity: 1; transform: scale(1.2); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-50px); } }
+        .blocked-anim { position: absolute; font-size: 4em; color: #c0392b; z-index: 300; text-shadow: 0 0 20px #fff; animation: fadeUp 2s forwards; pointer-events: none; transform: translate(-50%, -50%); /* MERKEZLEME */ }
+        @keyframes fadeUp { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -100px); } }
         .mixer-container { position: absolute; top: 50%; left: 50%; width: 0; height: 0; z-index: 4000; pointer-events: none; }
         .mixer-card { position: absolute; width: 70px; height: 100px; border: 3px solid #fff; border-radius: 8px; background-size: cover; background-position: center; box-shadow: 0 0 10px rgba(0,0,0,0.5); transform-origin: center 250px; top: -300px; left: -35px; }
         .mixer-card::after { content: "SON\A TABAK"; position: absolute; transform: rotate(-15deg); color: #3498db; font-weight: 900; font-size: 0.75em; white-space: pre; text-align: center; line-height:0.9; top: 35%; left: 5px; font-family: 'Comic Sans MS', cursive; }
@@ -208,7 +223,7 @@
 <div class="main-wrapper">
     <!-- LOGO -->
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v4.5 FINAL ✨</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v5.2 VISUAL ✨</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <!-- OYUN ALANI -->
@@ -222,13 +237,13 @@
                 <div class="bot-stack-visual" id="bot1-stack"></div>
                 <div class="chat-bubble" id="bot1-chat"></div>
             </div>
-            <div id="arrow-top-1" class="arrow-icon" style="position:static; transform:none;">➡️</div>
+            <div id="arrow-top-1" class="arrow-top-static">➡️</div>
             <div class="bot-wrapper" id="bot2-wrapper">
                 <div class="bot-name" id="bot2-name">Oyuncu 3</div>
                 <div class="bot-stack-visual" id="bot2-stack"></div>
                 <div class="chat-bubble" id="bot2-chat"></div>
             </div>
-            <div id="arrow-top-2" class="arrow-icon" style="position:static; transform:none;">➡️</div>
+            <div id="arrow-top-2" class="arrow-top-static">➡️</div>
             <div class="bot-wrapper" id="bot3-wrapper">
                 <div class="bot-name" id="bot3-name">Oyuncu 4</div>
                 <div class="bot-stack-visual" id="bot3-stack"></div>
@@ -329,7 +344,35 @@
 <div id="toast" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:10px 20px; border-radius:20px; display:none; z-index:5000;"></div>
 
 <script>
-/* --- CONFIG & INIT (COMPAT MODE) --- */
+/* --- ANIMATION & CONFIG CONSTANTS --- */
+const ANIM_CONFIG = {
+    FLY_DURATION: 1000,      // CSS .flying-card ile eşleşmeli
+    FLY_BUFFER: 1100,        // JS'in bekleme süresi
+    DRAW_INTERVAL: 600,      // Çoklu kart çekim arası bekleme
+    INITIAL_DEAL: 200,       // İlk dağıtımda kart başı bekleme
+    TOAST: 2000,             // Uyarıların ekranda kalma süresi
+    POPUP: 2000,             // Son tabak/İtiraz popup süresi
+    BOT_THINK: 300,          // Host Bot düşünme süresi
+    HEARTBEAT_MS: 5000,      // Oyuncu canlılık sinyali sıklığı
+    HOST_TIMEOUT: 15000,     // Host kaç sn yoksa düşmüş sayılır
+    BOT_WATCHDOG: 3000       // Bot Watchdog
+};
+
+/* --- CARD NAMES MAPPING --- */
+const CARD_NAMES = {
+    '+1': '📦 +1',
+    '+2': '📦📦 +2',
+    'Reverse': '♻️ Geri Dönüşüm',
+    'Block': '🔪 Bıçak',
+    'Wild': 'Güveç',
+    'Wild Anti-Draw': '🧻 Tuvalet Kağıdı',
+    'Wild Pot': '🍲 Düdüklü Tencere',
+    'Wild Table': '🍽️ Sofra',
+    'Wild Mixer': '🌪️ Mikser',
+    'Wild Meze': '🍱 Meze'
+};
+
+/* --- FIREBASE INIT --- */
 const firebaseConfig = {
   apiKey: "AIzaSyDqyHqluehXJHt4xeanl51LRVG4AeQ3Ijk",
   authDomain: "son-tabak.firebaseapp.com",
@@ -389,6 +432,7 @@ let myUid = null; let myName = ""; let currentRoomId = null; let isHost = false;
 let roomUnsubscribe = null; let myPlayerIdx = -1;
 let localPlayers = []; let lastGameState = null; let lastChatTs = 0; let amIReady = false; let heartbeatInterval = null;
 let actionQueue = []; let isProcessingQueue = false;
+let localSaidSonTabak = false; // YEREL KORUMA DEĞİŞKENİ
 
 /* --- LOGIC --- */
 auth.onAuthStateChanged((user) => { if (user) myUid = user.uid; });
@@ -439,7 +483,7 @@ document.getElementById('create-room-btn').addEventListener('click', () => {
     const rPass = document.getElementById('room-pass-in').value.trim();
     db.collection("rooms").add({
         name: rName, password: rPass, hasPassword: !!rPass, hostId: myUid, status: 'waiting', lastActive: Date.now(),
-        players: [{ uid: myUid, name: myName, isBot: false, score: 0, hand: [], isReady: false, saidSonTabak: false, challengeUsed: false, personality: 'Dengeli' }],
+        players: [{ uid: myUid, name: myName, isBot: false, score: 0, hand: [], isReady: false, saidSonTabak: false, challengeUsed: false, personality: 'Dengeli', lastSeen: Date.now() }],
         gameState: null
     }).then(ref => {
         currentRoomId = ref.id; isHost = true; enterWaitingRoom();
@@ -449,7 +493,6 @@ document.getElementById('create-room-btn').addEventListener('click', () => {
 function joinRoom(roomId, hasPass) {
     if(hasPass) {
         const p = prompt("Oda Şifresi:"); if(p === null) return;
-        // Password check needs async get
         db.collection("rooms").doc(roomId).get().then(doc => {
              if(doc.data().password !== p) return alert("Yanlış Şifre!");
              proceedJoin(roomId);
@@ -467,7 +510,7 @@ function proceedJoin(roomId) {
         if(rData.players.some(p => p.name === myName)) return alert("İsim alınmış!");
         
         roomRef.update({
-            players: firebase.firestore.FieldValue.arrayUnion({ uid: myUid, name: myName, isBot: false, score: 0, hand: [], isReady: false, saidSonTabak: false, challengeUsed: false, personality: 'Dengeli' })
+            players: firebase.firestore.FieldValue.arrayUnion({ uid: myUid, name: myName, isBot: false, score: 0, hand: [], isReady: false, saidSonTabak: false, challengeUsed: false, personality: 'Dengeli', lastSeen: Date.now() })
         }).then(() => {
             currentRoomId = roomId; isHost = false; enterWaitingRoom();
         });
@@ -479,27 +522,58 @@ function enterWaitingRoom() {
     document.getElementById('waiting-room-overlay').style.display = 'flex';
     if(roomUnsubscribe) roomUnsubscribe();
     
-    if(isHost) {
-        if(heartbeatInterval) clearInterval(heartbeatInterval);
-        heartbeatInterval = setInterval(() => { if(currentRoomId) db.collection("rooms").doc(currentRoomId).update({ lastActive: Date.now() }); }, 5000);
-    }
+    if(heartbeatInterval) clearInterval(heartbeatInterval);
+    heartbeatInterval = setInterval(sendHeartbeat, ANIM_CONFIG.HEARTBEAT_MS);
 
     roomUnsubscribe = db.collection("rooms").doc(currentRoomId).onSnapshot((docSnap) => {
         if(!docSnap.exists) { location.reload(); return; }
         const data = docSnap.data();
         localPlayers = data.players;
-        isHost = (localPlayers[0].uid === myUid);
+        
+        const firstHuman = localPlayers.find(p => !p.isBot);
+        isHost = (firstHuman && firstHuman.uid === myUid);
+
+        const humanPlayers = localPlayers.filter(p => !p.isBot);
+        if (humanPlayers.length >= 2 && humanPlayers[1].uid === myUid) {
+            const currentHost = humanPlayers[0]; 
+            const now = Date.now();
+            
+            if (currentHost.lastSeen && (now - currentHost.lastSeen > ANIM_CONFIG.HOST_TIMEOUT)) {
+                const updatedPlayers = localPlayers.map(p => {
+                    if (p.uid === currentHost.uid) {
+                        return { ...p, uid: 'replaced_host_' + Date.now(), name: '🤖 ' + p.name, isBot: true, isReady: true, personality: 'Agresif', lastSeen: Date.now() };
+                    }
+                    return p;
+                });
+                db.collection("rooms").doc(currentRoomId).update({ players: updatedPlayers }).then(() => showToast("Host düştü, yerine bot geçti!"));
+            }
+        }
+
         document.getElementById(isHost ? 'wr-host-controls' : 'wr-guest-controls').style.display = 'block';
         document.getElementById(!isHost ? 'wr-host-controls' : 'wr-guest-controls').style.display = 'none';
         document.getElementById('wr-room-name').innerText = `Oda: ${data.name}`;
         document.getElementById('wr-count').innerText = localPlayers.length;
         const ul = document.getElementById('wr-player-list'); ul.innerHTML = "";
-        localPlayers.forEach(p => { ul.innerHTML += `<li class="player-item"><span>${p.isBot?'🤖 ':''}${p.name}</span> ${p.uid===data.hostId?'(Host)':''}</li>`; });
+        localPlayers.forEach(p => { ul.innerHTML += `<li class="player-item"><span>${p.isBot?'🤖 ':''}${p.name}</span> ${(p.uid===firstHuman?.uid)?'(Host)':''}</li>`; });
         
         if(data.status === 'playing') {
             document.getElementById('waiting-room-overlay').style.display = 'none';
             myPlayerIdx = localPlayers.findIndex(p => p.uid === myUid);
             syncGameLoop(data);
+        }
+    });
+}
+
+function sendHeartbeat() {
+    if(!currentRoomId || !myUid) return;
+    db.collection("rooms").doc(currentRoomId).get().then(doc => {
+        if(doc.exists) {
+            let ps = doc.data().players;
+            let me = ps.find(p => p.uid === myUid);
+            if(me) {
+                me.lastSeen = Date.now();
+                db.collection("rooms").doc(currentRoomId).update({ players: ps, lastActive: Date.now() });
+            }
         }
     });
 }
@@ -512,7 +586,7 @@ document.getElementById('start-game-btn').addEventListener('click', () => {
     let botIdx = 0;
     while(finalPlayers.length < 4) {
         let pType = personalities[Math.floor(Math.random()*personalities.length)];
-        finalPlayers.push({ uid: 'bot_' + Date.now() + '_' + botIdx, name: botNames[botIdx % botNames.length], isBot: true, score: 0, hand: [], isReady: true, saidSonTabak: false, challengeUsed: false, personality: pType });
+        finalPlayers.push({ uid: 'bot_' + Date.now() + '_' + botIdx, name: botNames[botIdx % botNames.length], isBot: true, score: 0, hand: [], isReady: true, saidSonTabak: false, challengeUsed: false, personality: pType, lastSeen: Date.now() });
         botIdx++;
     }
     finalPlayers = shuffleDeck(finalPlayers);
@@ -534,18 +608,22 @@ document.getElementById('start-game-btn').addEventListener('click', () => {
 });
 
 /* --- GAME LOOP (Sync Logic) --- */
+let isBotThinking = false; 
+let lastBotActionTime = 0; 
+
 function syncGameLoop(roomData) {
     const gs = roomData.gameState;
     if(!gs) return;
     
-    // Değişkenleri güncelle
     gameDeck = gs.deck; gameDiscard = gs.discardPile; gamePlayers = roomData.players;
     gameHands = gamePlayers.map(p => p.hand);
     currentPlayer = gs.currentPlayer; direction = gs.direction; drawStack = gs.drawStack;
     gameActive = gs.gameActive; vulnerablePlayerIdx = gs.vulnerablePlayerIdx; playerColors = gs.playerColors;
     hasDrawn = gs.hasDrawn || false;
 
-    // Chat
+    // LOCAL SON TABAK SIFIRLAMA
+    if(currentPlayer !== myPlayerIdx) localSaidSonTabak = false;
+
     if(gs.lastChat && gs.lastChat.ts > lastChatTs) {
         if(gs.lastChat.isSystem) addSystemLog(gs.lastChat.msg);
         else {
@@ -561,24 +639,39 @@ function syncGameLoop(roomData) {
         lastChatTs = gs.lastChat.ts;
     }
 
-    // Action Queue
     if(lastGameState && lastGameState.lastAction.timestamp !== gs.lastAction.timestamp) {
         actionQueue.push(gs.lastAction);
         processActionQueue();
     } else if (!isProcessingQueue) {
         updateUI(); 
     }
+    
+    if(isBotThinking && Date.now() - lastBotActionTime > ANIM_CONFIG.BOT_WATCHDOG) {
+        console.warn("Bot takıldı! Sıfırlanıyor...");
+        isBotThinking = false;
+    }
 
     if (gs.winnerIdx !== undefined && gs.winnerIdx !== -1 && gameActive === false) {
         if(document.getElementById('end-modal').style.display !== 'flex') showEndGame(gs.winnerIdx, roomData.players);
         updateReadyStatusUI();
     }
+    
+    if(!lastGameState && gs.lastAction.type === 'start') {
+         actionQueue.push(gs.lastAction); 
+         processActionQueue();
+    }
+    
     lastGameState = gs;
 
-    // Host Bot Move (Thinking time reduced to 500ms for faster play)
-    if(isHost && gameActive && !isProcessingQueue && actionQueue.length === 0) {
+    if(isHost && gameActive && !isProcessingQueue && actionQueue.length === 0 && !isBotThinking) {
         const currentPObj = gamePlayers[currentPlayer];
-        if(currentPObj && currentPObj.isBot) setTimeout(hostBotTurn, 500);
+        if(currentPObj && currentPObj.isBot) {
+            isBotThinking = true;
+            lastBotActionTime = Date.now(); 
+            setTimeout(() => {
+                hostBotTurn().then(() => { isBotThinking = false; }).catch(e => { console.error("Bot Error", e); isBotThinking = false; });
+            }, ANIM_CONFIG.BOT_THINK);
+        }
     }
 }
 
@@ -595,12 +688,28 @@ async function processActionQueue() {
 
 async function handleRemoteAction(action) {
     if(!action) return;
-    if(action.type === 'newRound' || action.type === 'start') {
+    
+    if(action.type === 'sonTabak') {
+        const pName = gamePlayers[action.pIdx].name;
+        showSonTabakPopup(pName);
+        SoundFX.playUno();
+    }
+    else if(action.type === 'challenge') {
+        showChallengePopup(action.success);
+        if(action.success) SoundFX.playFanfare(); else SoundFX.playBad();
+        // İtiraz sonrası kart çekme animasyonu
+        if(action.victimIdx !== undefined) {
+            await wait(500); // Popup görünsün diye az bekle
+            let targetId = action.victimIdx === myPlayerIdx ? 'player-hand' : `bot${(action.victimIdx - myPlayerIdx + 4) % 4}-wrapper`;
+            animateFly(document.getElementById('draw-pile'), document.getElementById(targetId), null);
+        }
+    }
+    else if(action.type === 'newRound' || action.type === 'start') {
         document.getElementById('end-modal').style.display = 'none';
         amIReady = false; 
         document.getElementById('end-continue-btn').innerText = "Devam Et ⏳";
         document.getElementById('end-continue-btn').className = "game-btn btn-blue";
-        animateInitialDeal(); await wait(2000);
+        await animateInitialDeal();
     }
     else if(action.type === 'play') {
         let pIdx = action.pIdx;
@@ -618,13 +727,13 @@ async function handleRemoteAction(action) {
 
         if(action.card.val === 'Wild Table') await animateTableEffect();
         if(action.card.val === 'Wild Mixer') await animateMixerEffect(1);
-        if(action.card.val === 'Wild Pot') animatePotEffect();
+        if(action.card.val === 'Wild Pot') animatePotEffect(pIdx, direction);
         if(action.card.val === 'Wild Meze') animateMezeEffect(pIdx);
     } 
     else if(action.type === 'draw') {
         SoundFX.playDraw();
         let targetId = action.pIdx === myPlayerIdx ? 'player-hand' : `bot${(action.pIdx - myPlayerIdx + 4) % 4}-wrapper`;
-        for(let k=0; k<action.count; k++) { await wait(300); animateFly(document.getElementById('draw-pile'), document.getElementById(targetId), null); }
+        for(let k=0; k<action.count; k++) { await wait(ANIM_CONFIG.DRAW_INTERVAL); animateFly(document.getElementById('draw-pile'), document.getElementById(targetId), null); }
     }
     await wait(200);
 }
@@ -642,8 +751,14 @@ function playerDrawCard() {
     if(currentPlayer !== myPlayerIdx) return;
     if(drawStack === 0 && gameHands[myPlayerIdx].some(c => canPlay(c))) { showToast("Oynanacak kartın var!"); return; }
     if(hasDrawn) { serverPassTurn(myPlayerIdx); return; }
-    let count = drawStack > 0 ? drawStack : 1; serverDrawCard(myPlayerIdx, count);
-    if(count > 1) serverPassTurn(myPlayerIdx);
+    
+    let count = drawStack > 0 ? drawStack : 1;
+    let isPenalty = drawStack > 0;
+    
+    serverDrawCard(myPlayerIdx, count, isPenalty);
+    if(isPenalty || count > 1) { 
+        setTimeout(() => serverPassTurn(myPlayerIdx), 1000); 
+    }
 }
 function playerPlayCard(idx) {
     if(currentPlayer !== myPlayerIdx) return;
@@ -657,25 +772,59 @@ function playerPlayCard(idx) {
 }
 function resolveColor(c) { document.getElementById('color-modal').style.display = 'none'; if(pendingWild) { let card = pendingWild.card; card.chosenColor = c; if(card.val === 'Wild Mixer') { document.getElementById('dir-modal').style.display = 'flex'; } else { serverPlayCard(myPlayerIdx, pendingWild.idx, card); pendingWild = null; } } }
 function resolveDirection(d) { document.getElementById('dir-modal').style.display = 'none'; if(pendingWild) { serverPlayCard(myPlayerIdx, pendingWild.idx, pendingWild.card, d); pendingWild = null; } }
-function playerSaySonTabak() { if(currentPlayer !== myPlayerIdx || gameHands[myPlayerIdx].length > 2) return; showSonTabakPopup(myName); SoundFX.playUno(); let ps = [...gamePlayers]; ps[myPlayerIdx].saidSonTabak = true; db.collection("rooms").doc(currentRoomId).update({ players: ps, "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> SON TABAK dedi!`, ts: Date.now(), isSystem: true } }); }
+
+function playerSaySonTabak() { 
+    if(currentPlayer !== myPlayerIdx || gameHands[myPlayerIdx].length > 2) return; 
+    
+    localSaidSonTabak = true; // YEREL KORUMA: Hemen set et!
+    
+    let ps = [...gamePlayers]; ps[myPlayerIdx].saidSonTabak = true; 
+    
+    db.collection("rooms").doc(currentRoomId).update({ 
+        players: ps, 
+        "gameState.vulnerablePlayerIdx": -1, 
+        "gameState.lastAction": { type: 'sonTabak', pIdx: myPlayerIdx, timestamp: Date.now() },
+        "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> SON TABAK dedi!`, ts: Date.now(), isSystem: true } 
+    }); 
+}
+
 function challengePreviousPlayer() {
     if(currentPlayer !== myPlayerIdx || gamePlayers[myPlayerIdx].challengeUsed) return;
-    if(vulnerablePlayerIdx !== -1) { showChallengePopup(true); SoundFX.playFanfare(); serverPunishVulnerable(vulnerablePlayerIdx); db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> İTİRAZ ETTİ ve kazandı!`, ts: Date.now(), isSystem: true } }); }
-    else { showChallengePopup(false); SoundFX.playBad(); serverPunishChallenger(myPlayerIdx); db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> YANLIŞ İTİRAZ ETTİ!`, ts: Date.now(), isSystem: true } }); }
+    if(vulnerablePlayerIdx !== -1) { 
+        serverPunishVulnerable(vulnerablePlayerIdx); 
+        db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> İTİRAZ ETTİ ve kazandı!`, ts: Date.now(), isSystem: true } }); 
+    }
+    else { 
+        serverPunishChallenger(myPlayerIdx); 
+        db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> YANLIŞ İTİRAZ ETTİ!`, ts: Date.now(), isSystem: true } }); 
+    }
 }
 function playerSendMessage() { let input = document.getElementById('player-input'); let msg = input.value.trim(); if(msg) { db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": { sender: myName, msg: msg, ts: Date.now(), isSystem: false }, "lastActive": Date.now() }); input.value = ''; } }
 
 /* --- SERVER ACTIONS (COMPAT) --- */
-async function serverDrawCard(pIdx, count) {
-    let newDeck = [...gameDeck], newDiscard = [...gameDiscard], newHands = [...gameHands];
+async function serverDrawCard(pIdx, count, isPenalty = false) {
+    let newDeck = [...gameDeck], newDiscard = [...gameDiscard];
+    let newHands = gameHands.map(h => [...h]); 
+    
     if(newDeck.length < count && newDiscard.length > 1) { let top = newDiscard.pop(); newDeck = shuffleDeck(newDiscard); newDiscard = [top]; }
     for(let i=0; i<count; i++) if(newDeck.length > 0) newHands[pIdx].push(newDeck.pop());
     let pUpdates = [...gamePlayers]; pUpdates[pIdx].hand = newHands[pIdx]; pUpdates[pIdx].saidSonTabak = false;
-    await db.collection("rooms").doc(currentRoomId).update({ "players": pUpdates, "gameState.deck": newDeck, "gameState.discardPile": newDiscard, "gameState.drawStack": 0, "gameState.hasDrawn": true, "gameState.lastAction": { type: 'draw', pIdx, count, timestamp: Date.now() }, "lastActive": Date.now(), "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> ${count} kart çekti.`, ts: Date.now(), isSystem: true } });
+    
+    let updates = { "players": pUpdates, "gameState.deck": newDeck, "gameState.discardPile": newDiscard, "gameState.drawStack": 0, "gameState.hasDrawn": true, "gameState.lastAction": { type: 'draw', pIdx, count, timestamp: Date.now() }, "lastActive": Date.now(), "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> ${count} kart çekti.`, ts: Date.now(), isSystem: true } };
+    if(isPenalty) {
+        updates["gameState.currentPlayer"] = (currentPlayer + direction + 4) % 4;
+        updates["gameState.hasDrawn"] = false;
+        updates["gameState.lastChat"].msg += " (Ceza)";
+    }
+    
+    await db.collection("rooms").doc(currentRoomId).update(updates);
 }
 async function serverPassTurn(pIdx) { await db.collection("rooms").doc(currentRoomId).update({ "gameState.currentPlayer": (currentPlayer + direction + 4) % 4, "gameState.hasDrawn": false, "gameState.vulnerablePlayerIdx": -1, "lastActive": Date.now(), "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> Pas geçti.`, ts: Date.now(), isSystem: true } }); }
 async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1) {
-    let newHands = [...gameHands], newDiscard = [...gameDiscard];
+    let newHands = gameHands.map(h => [...h]); 
+    let newDiscard = [...gameDiscard];
+    if(!newHands[pIdx] || !newHands[pIdx][cIdx]) return;
+
     let card = newHands[pIdx][cIdx]; if(cardWithColor) card = cardWithColor;
     newHands[pIdx].splice(cIdx, 1); newDiscard.push(card);
     let newDir = direction, newDrawStack = drawStack, nextP = currentPlayer, newWinner = -1;
@@ -683,20 +832,55 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1) {
     if(newHands[pIdx].length === 0) newWinner = pIdx;
     if(newWinner === -1) { if(card.val === 'Block') nextP = (currentPlayer + (direction * 2) + 4) % 4; else if (card.val === 'Reverse') { newDir *= -1; nextP = (currentPlayer + newDir + 4) % 4; } else nextP = (currentPlayer + newDir + 4) % 4; }
     if(card.val === '+1') newDrawStack += 1; if(card.val === '+2') newDrawStack += 2; if(card.val === 'Wild Meze') newDrawStack += 1; if(card.val === 'Wild Anti-Draw') newDrawStack = 0;
-    if(card.val === 'Wild Table') { let allCards = []; newHands.forEach(h => { allCards.push(...h); h.length = 0; }); allCards = shuffleDeck(allCards); let idx = 0; while(allCards.length > 0) { newHands[idx % 4].push(allCards.pop()); idx++; } }
-    if(card.val === 'Wild Mixer') { newDir = mixerDir; if(newDir === 1) { let temp = newHands[3]; newHands[3] = newHands[2]; newHands[2] = newHands[1]; newHands[1] = newHands[0]; newHands[0] = temp; } else { let temp = newHands[0]; newHands[0] = newHands[1]; newHands[1] = newHands[2]; newHands[2] = newHands[3]; newHands[3] = temp; } }
-    if(card.val === 'Wild Pot') { for(let i=0; i<4; i++) { if(gameDeck.length > 0) newHands[i].push(gameDeck.pop()); } }
+    
+    if(card.val === 'Wild Table') { 
+        let counts = newHands.map(h => h.length); 
+        let allCards = []; 
+        newHands.forEach(h => { allCards.push(...h); h.length = 0; }); 
+        allCards = shuffleDeck(allCards); 
+        for(let i=0; i<4; i++) {
+            for(let j=0; j<counts[i]; j++) {
+                if(allCards.length > 0) newHands[i].push(allCards.pop());
+            }
+        }
+    }
+    
+    if(card.val === 'Wild Mixer') { 
+        newDir = mixerDir || 1; 
+        if(newDir === 1) { let temp = newHands[3]; newHands[3] = newHands[2]; newHands[2] = newHands[1]; newHands[1] = newHands[0]; newHands[0] = temp; } 
+        else { let temp = newHands[0]; newHands[0] = newHands[1]; newHands[1] = newHands[2]; newHands[2] = newHands[3]; newHands[3] = temp; } 
+    }
+    if(card.val === 'Wild Pot') { 
+        for(let k=0; k<4; k++) {
+            let targetP = (pIdx + (k * newDir) + 4) % 4; 
+            if(gameDeck.length > 0) newHands[targetP].push(gameDeck.pop());
+        }
+    }
     if(card.val === 'Wild Meze') { let prevP = (pIdx - newDir + 4) % 4; if(gameDeck.length > 0) newHands[prevP].push(gameDeck.pop()); }
     playerUpdates = playerUpdates.map((p, i) => ({...p, hand: newHands[i]}));
-    let newVulnerable = (newHands[pIdx].length === 1 && !gamePlayers[pIdx].saidSonTabak) ? pIdx : -1; if(nextP === newVulnerable) newVulnerable = -1;
-    let logMsg = card.type === 'num' ? `${card.val} ${VEGETABLES[card.color]}` : (card.val==='Wild' ? `Güveç (${VEGETABLES[card.chosenColor]})` : card.val);
-    let updates = { "players": playerUpdates, "gameState.discardPile": newDiscard, "gameState.currentPlayer": nextP, "gameState.direction": newDir, "gameState.drawStack": newDrawStack, "gameState.vulnerablePlayerIdx": newVulnerable, "gameState.hasDrawn": false, "gameState.lastAction": { type: 'play', pIdx, card, timestamp: Date.now() }, "lastActive": Date.now(), "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> ${logMsg} attı.`, ts: Date.now(), isSystem: true } };
-    if(card.val === 'Wild Pot' || card.val === 'Wild Meze') updates["gameState.deck"] = gameDeck;
+    
+    // CRITICAL FIX: Use local flag for race condition check
+    let isSafe = gamePlayers[pIdx].saidSonTabak;
+    if(pIdx === myPlayerIdx && localSaidSonTabak) isSafe = true;
+
+    let newVulnerable = (newHands[pIdx].length === 1 && !isSafe) ? pIdx : -1; 
+    if(nextP === newVulnerable) newVulnerable = -1;
+    
+    let cardName = card.type === 'num' ? `${card.val} ${VEGETABLES[card.color]}` : (card.val==='Wild' ? `Güveç (${VEGETABLES[card.chosenColor]})` : (CARD_NAMES[card.val] || card.val));
+    
+    let updates = { "players": playerUpdates, "gameState.discardPile": newDiscard, "gameState.currentPlayer": nextP, "gameState.direction": newDir, "gameState.drawStack": newDrawStack, "gameState.vulnerablePlayerIdx": newVulnerable, "gameState.hasDrawn": false, "gameState.lastAction": { type: 'play', pIdx, card, timestamp: Date.now() }, "lastActive": Date.now(), "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> ${cardName} attı.`, ts: Date.now(), isSystem: true } };
+    if(card.val === 'Wild Pot' || card.val === 'Wild Meze' || card.val === 'Wild Table') updates["gameState.deck"] = gameDeck;
     if(newWinner !== -1) { updates["gameState.gameActive"] = false; updates["gameState.winnerIdx"] = newWinner; let roundScores = newHands.map(h => h.reduce((sum, c) => sum + (c.type==='num'?parseInt(c.val):20), 0)); updates["players"] = playerUpdates.map((p, i) => ({ ...p, score: p.score + roundScores[i] })); }
     await db.collection("rooms").doc(currentRoomId).update(updates);
 }
-async function serverPunishVulnerable(victimIdx) { let newDeck = [...gameDeck], newHands = [...gameHands], c = newDeck.pop(); if(c) newHands[victimIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[victimIdx].hand = newHands[victimIdx]; await db.collection("rooms").doc(currentRoomId).update({ "players": pUpdates, "gameState.deck": newDeck, "gameState.vulnerablePlayerIdx": -1, "gameState.lastAction": { type: 'draw', pIdx: victimIdx, count: 1, timestamp: Date.now() } }); }
-async function serverPunishChallenger(challengerIdx) { let newDeck = [...gameDeck], newHands = [...gameHands], c = newDeck.pop(); if(c) newHands[challengerIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[challengerIdx].hand = newHands[challengerIdx]; pUpdates[challengerIdx].challengeUsed = true; let nextP = (currentPlayer + direction + 4) % 4; await db.collection("rooms").doc(currentRoomId).update({ "players": pUpdates, "gameState.deck": newDeck, "gameState.currentPlayer": nextP, "gameState.hasDrawn": false, "gameState.lastAction": { type: 'draw', pIdx: challengerIdx, count: 1, timestamp: Date.now() } }); }
+async function serverPunishVulnerable(victimIdx) { 
+    let newDeck = [...gameDeck], newHands = gameHands.map(h=>[...h]), c = newDeck.pop(); if(c) newHands[victimIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[victimIdx].hand = newHands[victimIdx]; 
+    await db.collection("rooms").doc(currentRoomId).update({ "players": pUpdates, "gameState.deck": newDeck, "gameState.vulnerablePlayerIdx": -1, "gameState.lastAction": { type: 'challenge', success: true, victimIdx: victimIdx, timestamp: Date.now() } }); 
+}
+async function serverPunishChallenger(challengerIdx) { 
+    let newDeck = [...gameDeck], newHands = gameHands.map(h=>[...h]), c = newDeck.pop(); if(c) newHands[challengerIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[challengerIdx].hand = newHands[challengerIdx]; pUpdates[challengerIdx].challengeUsed = true; let nextP = (currentPlayer + direction + 4) % 4; 
+    await db.collection("rooms").doc(currentRoomId).update({ "players": pUpdates, "gameState.deck": newDeck, "gameState.currentPlayer": nextP, "gameState.hasDrawn": false, "gameState.lastAction": { type: 'challenge', success: false, victimIdx: challengerIdx, timestamp: Date.now() } }); 
+}
 
 async function nextRound() {
     if(!isHost) return;
@@ -711,74 +895,86 @@ async function nextRound() {
 }
 
 async function hostBotTurn() {
-    if(!isHost) return;
-    const currentPObj = gamePlayers[currentPlayer];
-    if(!currentPObj || !currentPObj.isBot) return; 
+    try {
+        if(!isHost) return;
+        const currentPObj = gamePlayers[currentPlayer];
+        if(!currentPObj || !currentPObj.isBot) return; 
 
-    // Bot Chat Trigger
-    const triggerChat = async (cat) => {
-        let pType = currentPObj.personality || 'Dengeli';
-        let pool = CHAT_POOL[pType] || CHAT_POOL['Dengeli'];
-        let msgs = pool[cat] || pool['draw_many'];
-        let msg = msgs[Math.floor(Math.random()*msgs.length)];
-        await db.collection("rooms").doc(currentRoomId).update({
-            "gameState.lastChat": { sender: currentPObj.name, msg: msg, ts: Date.now(), isSystem: false }
-        });
-    };
+        // Bot Chat Trigger
+        const triggerChat = async (cat) => {
+            let pType = currentPObj.personality || 'Dengeli';
+            let pool = CHAT_POOL[pType] || CHAT_POOL['Dengeli'];
+            let msgs = pool[cat] || pool['draw_many'];
+            let msg = msgs[Math.floor(Math.random()*msgs.length)];
+            db.collection("rooms").doc(currentRoomId).update({
+                "gameState.lastChat": { sender: currentPObj.name, msg: msg, ts: Date.now(), isSystem: false }
+            }).catch(e => console.log("Chat error", e));
+        };
 
-    if(vulnerablePlayerIdx !== -1 && vulnerablePlayerIdx !== currentPlayer) {
-        if(Math.random() < 0.95) { 
-            await serverChallenge(currentPlayer); 
-            await wait(1500); // 1.5 sn bekle, animasyonlar çakışmasın
+        if(vulnerablePlayerIdx !== -1 && vulnerablePlayerIdx !== currentPlayer) {
+            if(Math.random() < 0.95) { 
+                await serverPunishVulnerable(vulnerablePlayerIdx);
+                await db.collection("rooms").doc(currentRoomId).update({ 
+                    "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[currentPlayer]}">${currentPObj.name}</b> uyanıklık yaptı ve itiraz etti!`, ts: Date.now(), isSystem: true } 
+                });
+                await wait(1500); 
+            }
         }
-    }
 
-    const hand = gameHands[currentPlayer];
-    if(hand.length === 2) { 
-         if(Math.random() > 0.1) await serverBotSaySonTabak(currentPlayer); 
-    }
-
-    let playableIdx = -1;
-    if(drawStack > 0) {
-        playableIdx = hand.findIndex(c => c.val === '+2' || (c.val === '+1' && gameDiscard[gameDiscard.length-1].val==='+1') || c.val === 'Wild Meze' || c.val === 'Wild Anti-Draw');
-        if(playableIdx === -1) {
-            triggerChat("draw_many");
-            await serverDrawCard(currentPlayer, drawStack); 
-            await serverPassTurn(currentPlayer); return;
-        }
-    } else {
-        playableIdx = hand.findIndex(c => canPlay(c));
-    }
-
-    if(playableIdx !== -1) {
-        let card = hand[playableIdx];
-        if(card.color === 'wild') {
-            triggerChat("wild");
-            card.chosenColor = ['red','green','yellow','purple'][Math.floor(Math.random()*4)];
-        }
-        if(card.val === '+2') triggerChat("plus2");
-        if(card.val === 'Block') triggerChat("block");
+        const hand = gameHands[currentPlayer];
+        let playableIdx = -1;
         
-        if(card.val === 'Wild Mixer') await serverPlayCard(currentPlayer, playableIdx, card, 1); 
-        else await serverPlayCard(currentPlayer, playableIdx, card);
-    } else {
-        if(!hasDrawn) await serverDrawCard(currentPlayer, 1);
-        else await serverPassTurn(currentPlayer);
+        // Önce oynanabilir kartı bul
+        if(drawStack > 0) {
+            playableIdx = hand.findIndex(c => c.val === '+2' || (c.val === '+1' && gameDiscard[gameDiscard.length-1].val==='+1') || c.val === 'Wild Meze' || c.val === 'Wild Anti-Draw');
+        } else {
+            playableIdx = hand.findIndex(c => canPlay(c));
+        }
+
+        // Eğer oynayacaksa ve 2 kartı varsa (biri gidecek 1 kalacak) -> Son Tabak de
+        if(playableIdx !== -1 && hand.length === 2) {
+             if(Math.random() > 0.1) await serverBotSaySonTabak(currentPlayer); 
+        }
+
+        if (drawStack > 0 && playableIdx === -1) {
+            triggerChat("draw_many");
+            await serverDrawCard(currentPlayer, drawStack, true); 
+            return;
+        }
+
+        if(playableIdx !== -1) {
+            let card = hand[playableIdx];
+            if(card.color === 'wild') {
+                triggerChat("wild");
+                card.chosenColor = ['red','green','yellow','purple'][Math.floor(Math.random()*4)];
+            }
+            if(card.val === '+2') triggerChat("plus2");
+            if(card.val === 'Block') triggerChat("block");
+            
+            if(card.val === 'Wild Mixer') await serverPlayCard(currentPlayer, playableIdx, card, 1); 
+            else await serverPlayCard(currentPlayer, playableIdx, card);
+        } else {
+            if(!hasDrawn) await serverDrawCard(currentPlayer, 1);
+            else await serverPassTurn(currentPlayer);
+        }
+    } catch(e) {
+        console.error("Bot Logic Error:", e);
+        throw e;
     }
 }
 
 async function serverBotSaySonTabak(pIdx) {
     let pUpdates = [...gamePlayers]; pUpdates[pIdx].saidSonTabak = true;
     let pColor = playerColors[pIdx];
-    await db.collection("rooms").doc(currentRoomId).update({ players: pUpdates, "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${pColor}">${gamePlayers[pIdx].name}</b> SON TABAK dedi!`, ts: Date.now(), isSystem: true } });
+    await db.collection("rooms").doc(currentRoomId).update({ players: pUpdates, "gameState.vulnerablePlayerIdx": -1, "gameState.lastAction": { type: 'sonTabak', pIdx: pIdx, timestamp: Date.now() }, "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${pColor}">${gamePlayers[pIdx].name}</b> SON TABAK dedi!`, ts: Date.now(), isSystem: true } });
 }
 
 /* --- YARDIMCI GÖRSELLER & ANİMASYONLAR --- */
 function updateUI() {
     if(myPlayerIdx === -1) return;
-    // Oklar
-    document.querySelectorAll('.arrow-icon').forEach(el => el.className = 'arrow-icon');
     let aL = document.getElementById('arrow-left'), aR = document.getElementById('arrow-right'), aT1 = document.getElementById('arrow-top-1'), aT2 = document.getElementById('arrow-top-2');
+    aL.className = 'arrow-icon'; aR.className = 'arrow-icon'; aT1.className = 'arrow-top-static'; aT2.className = 'arrow-top-static';
+
     if(direction === 1) { aL.innerText = '⬆️'; aR.innerText = '⬇️'; aT1.innerText = '➡️'; aT2.innerText = '➡️'; } else { aL.innerText = '⬇️'; aR.innerText = '⬆️'; aT1.innerText = '⬅️'; aT2.innerText = '⬅️'; }
     if(gameActive) {
         let topCard = gameDiscard[gameDiscard.length-1]; let activeColor = topCard ? (topCard.chosenColor || topCard.color) : null; if(activeColor === 'wild') activeColor = 'neutral';
@@ -796,13 +992,13 @@ function updateUI() {
     let pBadge = document.getElementById('penalty-badge');
     if(drawStack > 0) { pBadge.innerText = "+" + drawStack; pBadge.style.display = 'flex'; pBadge.className = `p-${Math.min(drawStack,6)}`; } else pBadge.style.display = 'none';
 
-    // Skorlar
+    // Skorlar - DÜZELTİLDİ: Ben belirgin ve alt alta
     let sortedP = [...gamePlayers].sort((a,b)=>a.score - b.score);
     let html = "";
     sortedP.forEach(p => {
          let color = playerColors[gamePlayers.findIndex(x => x.uid===p.uid)] || '#333';
          let isMe = p.uid === myUid;
-         html += `<tr style="${isMe?'font-weight:bold;':''}"><td style="color:${color};">${p.name}</td><td style="text-align:right;">${p.score}</td></tr>`;
+         html += `<tr class="${isMe?'me-row':''}"><td style="color:${color}; font-weight:${isMe?'900':'normal'};">${p.name}</td><td style="text-align:right;">${p.score}</td></tr>`;
     });
     document.getElementById('score-table').querySelector('tbody').innerHTML = html;
 
@@ -858,7 +1054,7 @@ function animateFly(from, to, html, callback) {
     el.style.left = f.left + 'px'; el.style.top = f.top + 'px'; document.body.appendChild(el);
     void el.offsetWidth;
     el.style.left = t.left + 'px'; el.style.top = t.top + 'px'; 
-    setTimeout(() => { el.remove(); if(callback) callback(); }, 1100);
+    setTimeout(() => { el.remove(); if(callback) callback(); }, ANIM_CONFIG.FLY_BUFFER);
 }
 function animateReverse() { 
     return new Promise(resolve => {
@@ -872,7 +1068,7 @@ function animateBlock(pIdx) {
     let el = document.getElementById(targetId);
     if(el) {
         let b = document.createElement('div'); b.innerText = '🔪'; b.className = 'blocked-anim';
-        let r = el.getBoundingClientRect(); b.style.left = r.left+(r.width/2)+'px'; b.style.top = r.top+'px';
+        let r = el.getBoundingClientRect(); b.style.left = r.left+(r.width/2)+'px'; b.style.top = r.top+(r.height/2)+'px';
         document.body.appendChild(b); setTimeout(()=>b.remove(),2000);
     }
 }
@@ -913,16 +1109,37 @@ function animateMixerEffect(dir) {
         setTimeout(() => { mixerContainer.remove(); resolve(); }, 2200);
     });
 }
-function animatePotEffect() {
+function animatePotEffect(senderIdx, dir) {
     let source = document.getElementById('draw-pile');
-    ['player-hand','bot1-wrapper','bot2-wrapper','bot3-wrapper'].forEach((id, i) => {
-        setTimeout(() => { animateFly(source, document.getElementById(id), null); }, i*300);
-    });
+    // DÜZELTME: Kartı atan kişiden başlayıp yönüne göre sırayla dağıt
+    // Sıra: sender, sender+dir, sender+2*dir, sender+3*dir
+    for(let k=0; k<4; k++) {
+        let targetPIdx = (senderIdx + (k * dir) + 4) % 4;
+        let targetId = targetPIdx === myPlayerIdx ? 'player-hand' : `bot${(targetPIdx - myPlayerIdx + 4) % 4}-wrapper`;
+        setTimeout(() => { 
+            animateFly(source, document.getElementById(targetId), null); 
+        }, k * ANIM_CONFIG.DRAW_INTERVAL);
+    }
 }
 function animateMezeEffect(senderIdx) {
     let prevIdx = (senderIdx - direction + 4) % 4;
     let targetId = prevIdx === myPlayerIdx ? 'player-hand' : `bot${(prevIdx - myPlayerIdx + 4) % 4}-wrapper`;
     animateFly(document.getElementById('draw-pile'), document.getElementById(targetId), null);
+}
+async function animateInitialDeal() {
+    // 7 Tur boyunca herkese sırayla 1 kart
+    let piles = [];
+    // Sıralama: Benim sırama göre bot1, bot2, bot3 (Saat yönü varsayımı)
+    // Aslında: [Ben, Bot1, Bot2, Bot3] sırasıyla dağıtmak en görseli
+    // Ama oyun mantığı kimden başlıyor? Dağıtıcıdan. Görsellik için sırayla dönelim.
+    let targets = ['player-hand', 'bot1-wrapper', 'bot2-wrapper', 'bot3-wrapper'];
+    
+    for(let round=0; round<7; round++) {
+        for(let p=0; p<4; p++) {
+            animateFly(document.getElementById('draw-pile'), document.getElementById(targets[p]), null);
+            await wait(ANIM_CONFIG.INITIAL_DEAL); // Her kart arası bekleme
+        }
+    }
 }
 function startVegetableRain() {
     const canvas = document.getElementById('confetti-canvas'); const ctx = canvas.getContext('2d');
@@ -958,16 +1175,57 @@ function openPatternModal() { const grid = document.getElementById('pattern-grid
 function closePatternModal() { document.getElementById('pattern-modal').style.display = 'none'; }
 function handleChatKey(e) { if(e.key === 'Enter') playerSendMessage(); }
 function toggleReadyState() { if(!currentRoomId) return; amIReady = !amIReady; let btn = document.getElementById('end-continue-btn'); btn.innerText = amIReady ? "Bekleniyor..." : "Devam Et ⏳"; btn.classList.toggle('btn-blue'); btn.classList.toggle('btn-dark'); let ps = [...gamePlayers]; let meIdx = ps.findIndex(p => p.uid === myUid); if(meIdx !== -1) { ps[meIdx].isReady = amIReady; db.collection("rooms").doc(currentRoomId).update({ players: ps, lastActive: Date.now() }); } }
-function leaveGame() { if(!currentRoomId) return; if(confirm("Çıkmak istiyor musun?")) { cleanupRoom().then(()=>location.reload()); } }
-const cleanupRoom = async () => { if(heartbeatInterval) clearInterval(heartbeatInterval); if(currentRoomId && isHost) { await db.collection("rooms").doc(currentRoomId).delete().catch(err => console.error(err)); } };
-window.addEventListener('beforeunload', cleanupRoom); window.addEventListener('pagehide', cleanupRoom);
+
+function leaveGame() { 
+    if(!currentRoomId) return; 
+    if(confirm("Çıkmak istiyor musun?")) { 
+        db.collection("rooms").doc(currentRoomId).get().then(doc => {
+            if(!doc.exists) { location.reload(); return; }
+            let ps = doc.data().players || [];
+            let rData = doc.data();
+            let isPlaying = rData.status === 'playing';
+
+            if(ps.length <= 1) {
+                db.collection("rooms").doc(currentRoomId).delete()
+                    .then(() => location.reload())
+                    .catch(() => location.reload());
+            } else {
+                let newPs;
+                if(isPlaying) {
+                    newPs = ps.map(p => {
+                        if(p.uid === myUid) {
+                            return {
+                                ...p,
+                                uid: 'replaced_bot_' + Date.now(),
+                                name: '🤖 ' + p.name,
+                                isBot: true,
+                                isReady: true,
+                                personality: 'Agresif',
+                                lastSeen: Date.now()
+                            };
+                        }
+                        return p;
+                    });
+                } else {
+                    newPs = ps.filter(p => p.uid !== myUid);
+                }
+                
+                db.collection("rooms").doc(currentRoomId).update({ players: newPs })
+                    .then(() => location.reload())
+                    .catch(() => location.reload());
+            }
+        });
+    } 
+}
+const cleanupRoom = async () => { if(heartbeatInterval) clearInterval(heartbeatInterval); };
+
 function shuffleDeck(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
 function createFullDeck() { let d = []; ['red','green','yellow','purple'].forEach(c => { d.push({color:c,val:'0',type:'num',name:'0'}); for(let i=1; i<=9; i++) d.push({color:c,val:i.toString(),type:'num',name:i}); ['+1','Reverse','Block'].forEach(v=>d.push({color:c,val:v,type:'action',name:v})); }); for(let i=0;i<2;i++) { d.push({color:'wild',val:'Wild',type:'wild',name:'Güveç'}); d.push({color:'wild',val:'+2',type:'wild',name:'+2'}); d.push({color:'wild',val:'Wild Anti-Draw',type:'wild',name:'Tuvalet Kağıdı'}); d.push({color:'wild',val:'Wild Pot',type:'wild',name:'Düdüklü Tencere'}); d.push({color:'wild',val:'Wild Meze',type:'wild',name:'Meze'}); } d.push({color:'wild',val:'Wild Table',type:'wild',name:'Sofra'}); d.push({color:'wild',val:'Wild Mixer',type:'wild',name:'Mikser'}); return shuffleDeck(d); }
-function showSonTabakPopup(name) { let p = document.getElementById('son-tabak-popup'); document.getElementById('son-tabak-who').innerText = name + " dedi!"; p.style.display = 'block'; setTimeout(() => p.style.display = 'none', 1500); }
-function showChallengePopup(success) { let p = document.getElementById('challenge-popup'); document.getElementById('challenge-who').innerText = "İTİRAZ!"; document.getElementById('challenge-result').innerText = success ? "BAŞARILI! ✅" : "HATALI! ❌"; p.className = success ? 'challenge-valid' : 'challenge-invalid'; p.style.display = 'block'; setTimeout(() => p.style.display = 'none', 1500); }
+function showSonTabakPopup(name) { let p = document.getElementById('son-tabak-popup'); document.getElementById('son-tabak-who').innerText = name + " dedi!"; p.style.display = 'block'; setTimeout(() => p.style.display = 'none', ANIM_CONFIG.POPUP); }
+function showChallengePopup(success) { let p = document.getElementById('challenge-popup'); document.getElementById('challenge-who').innerText = "İTİRAZ!"; document.getElementById('challenge-result').innerText = success ? "BAŞARILI! ✅" : "HATALI! ❌"; p.className = success ? 'challenge-valid' : 'challenge-invalid'; p.style.display = 'block'; setTimeout(() => p.style.display = 'none', ANIM_CONFIG.POPUP); }
 function addSystemLog(html) { const logList = document.getElementById('system-log'); const li = document.createElement('li'); li.innerHTML = html; logList.prepend(li); }
 function addChatLog(name, msg, color) { const chatDiv = document.getElementById('chat-messages'); const msgDiv = document.createElement('div'); msgDiv.className = `chat-line`; msgDiv.innerHTML = `<span class="chat-name" style="color:${color}; font-weight:bold;">${name}:</span><span class="chat-text">${msg}</span>`; chatDiv.appendChild(msgDiv); chatDiv.scrollTop = chatDiv.scrollHeight; }
-function showToast(msg) { let t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
+function showToast(msg) { let t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', ANIM_CONFIG.TOAST); }
 function showEndGame(winnerIdx, finalPlayers) {
     lastWinner = winnerIdx;
     const winnerName = finalPlayers[winnerIdx].name;
@@ -979,7 +1237,16 @@ function showEndGame(winnerIdx, finalPlayers) {
 function updateReadyStatusUI() {
     let allReady = true; gamePlayers.forEach(p => { if(!p.isBot && !p.isReady) allReady = false; });
     let sortedP = [...gamePlayers].sort((a,b)=>a.score - b.score);
-    let html = ""; sortedP.forEach(p => { let isMe = p.uid === myUid; html += `<tr style="${isMe?'background:#fff9c4;':''}"><td style="${isMe?'font-weight:bold;':''}color:${playerColors[gamePlayers.findIndex(x=>x.uid===p.uid)]};">${p.name}</td><td style="text-align:right;">${p.score} ${(p.isReady||p.isBot)?'✅':'⏳'}</td></tr>`; });
+    let html = `<table style="width:100%; border-collapse:collapse;">`; 
+    sortedP.forEach(p => { 
+        let isMe = p.uid === myUid; 
+        let pColor = playerColors[gamePlayers.findIndex(x=>x.uid===p.uid)] || '#333';
+        html += `<tr style="${isMe ? 'background-color: #fff9c4; font-weight: bold; border-left: 4px solid #f1c40f;' : ''}">
+                    <td style="padding: 8px 10px; border-bottom: 1px solid #eee; color:${pColor};">${p.name}</td>
+                    <td style="padding: 8px 10px; border-bottom: 1px solid #eee; text-align:right;">${p.score} ${(p.isReady||p.isBot)?'✅':'⏳'}</td>
+                 </tr>`; 
+    });
+    html += `</table>`;
     document.getElementById('final-scores').innerHTML = html;
     if(isHost) document.getElementById('host-start-btn').style.display = allReady ? 'block' : 'none';
 }
