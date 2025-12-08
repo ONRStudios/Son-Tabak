@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v5.7 Animation Polish</title>
+    <title>Son Tabak Online - v5.8 Final Polish</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -102,7 +102,8 @@
         .card-corner { position: absolute; font-size: 1.2em; margin: 5px; }
         .top-left { top: 2px; left: 2px; } .bottom-right { bottom: 2px; right: 2px; transform: rotate(180deg); }
         .card-emoji { font-size: 4.5em; display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
-        .card[data-val="+2"] .card-emoji { font-size: 2.2em !important; letter-spacing: -5px !important; line-height: 1; padding: 0; }
+        /* FIX: +2 Kart Taşıma Sorunu */
+        .card[data-val="+2"] .card-emoji { font-size: 2.0em !important; letter-spacing: -2px !important; line-height: 1; padding: 0; white-space: nowrap; }
         .guvec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; font-size: 0.45em; line-height: 1; }
         .red { background-color: #ffcdd2; color: #c0392b; border-color: #c0392b; } .green { background-color: #c8e6c9; color: #27ae60; border-color: #27ae60; } .yellow { background-color: #fff9c4; color: #f39c12; border-color: #f39c12; } .purple { background-color: #e1bee7; color: #8e44ad; border-color: #8e44ad; }
         .wild-bg { background: conic-gradient(from 45deg, #e74c3c, #f1c40f, #2ecc71, #9b59b6, #e74c3c); border: 3px solid #fff; color: #fff; }
@@ -245,7 +246,7 @@
 <div class="main-wrapper">
     <!-- LOGO -->
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v5.7 ANIM ✨</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v5.8 FINAL ✨</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <!-- OYUN ALANI -->
@@ -412,16 +413,16 @@ const CARD_NAMES = {
     'Wild Meze': '🍱 Meze'
 };
 
-/* --- PATTERNS --- */
+/* --- PATTERNS (ONLY ORANGE AND BLACK/DARK) --- */
 const CARD_PATTERNS = [
     'linear-gradient(135deg, #e67e22 0%, #d35400 100%)', // Default Orange
     'repeating-linear-gradient(45deg, #e67e22, #e67e22 10px, #d35400 10px, #d35400 20px)',
     'radial-gradient(circle, #e67e22 20%, #d35400 90%)',
     'conic-gradient(#e67e22, #d35400, #e67e22)',
-    'linear-gradient(135deg, #3498db 0%, #2980b9 100%)', // Blue
-    'linear-gradient(135deg, #34495e 0%, #2c3e50 100%)', // Dark 1
-    'repeating-linear-gradient(45deg, #34495e, #34495e 10px, #2c3e50 10px, #2c3e50 20px)',
-    'radial-gradient(circle, #7f8c8d 20%, #2c3e50 90%)'
+    'linear-gradient(135deg, #2c3e50 0%, #000000 100%)', // Dark 1
+    'repeating-linear-gradient(45deg, #2c3e50, #2c3e50 10px, #000000 10px, #000000 20px)',
+    'radial-gradient(circle, #7f8c8d 20%, #2c3e50 90%)',
+    'conic-gradient(#34495e, #000000, #34495e)'
 ];
 let currentPattern = CARD_PATTERNS[0];
 
@@ -487,6 +488,7 @@ let localPlayers = []; let lastGameState = null; let lastChatTs = 0; let amIRead
 let actionQueue = []; let isProcessingQueue = false;
 let localSaidSonTabak = false; 
 let isDealing = false;
+let previousPlayersList = []; // LOG ICIN
 
 /* --- LOGIC --- */
 auth.onAuthStateChanged((user) => { if (user) myUid = user.uid; });
@@ -521,7 +523,6 @@ function listenRooms() {
             if (r.lastActive && now - r.lastActive > 60000) { docSnap.ref.delete().catch(() => {}); return; }
             if(r.status === 'finished') return; 
             
-            // Sadece gerçek insan sayısını göster
             let realHumans = r.players.filter(p => !p.isBot).length;
             let statusText = r.status === 'playing' ? '🔴 Oynanıyor' : '🟢 Bekliyor';
             let botCount = r.players.filter(p => p.isBot).length;
@@ -534,7 +535,6 @@ function listenRooms() {
 
             const div = document.createElement('div');
             div.className = 'room-item';
-            // DÜZELTME: İnsan Sayısı / 4
             div.innerHTML = `<span><b>${r.name}</b> (${realHumans}/4) ${statusText}</span>`;
             
             if (r.status !== 'playing' || botCount > 0) {
@@ -623,6 +623,27 @@ function enterWaitingRoom() {
         if(!docSnap.exists) { location.reload(); return; }
         const data = docSnap.data();
         localPlayers = data.players;
+
+        // JOIN/LEAVE LOGIC
+        if(previousPlayersList.length > 0) {
+            // Check Joined
+            localPlayers.forEach(p => {
+                if(!previousPlayersList.find(op => op.uid === p.uid)) {
+                    if(!p.isBot) {
+                        showToast(`${p.name} odaya katıldı!`);
+                        addSystemLog(`<b>${p.name}</b> odaya katıldı.`);
+                    }
+                }
+            });
+            // Check Left
+            previousPlayersList.forEach(op => {
+                if(!localPlayers.find(p => p.uid === op.uid)) {
+                     showToast(`${op.name} ayrıldı.`);
+                     addSystemLog(`<b>${op.name}</b> ayrıldı.`);
+                }
+            });
+        }
+        previousPlayersList = localPlayers;
         
         const firstHuman = localPlayers.find(p => !p.isBot);
         isHost = (firstHuman && firstHuman.uid === myUid);
@@ -761,9 +782,12 @@ function syncGameLoop(roomData) {
         isBotThinking = false;
     }
 
+    // GAME END CHECK (Wait for Queue)
     if (gs.winnerIdx !== undefined && gs.winnerIdx !== -1 && gameActive === false) {
-        if(document.getElementById('end-modal').style.display !== 'flex') showEndGame(gs.winnerIdx, roomData.players);
-        updateReadyStatusUI();
+        if(actionQueue.length === 0 && !isProcessingQueue) { // Wait for animation
+             if(document.getElementById('end-modal').style.display !== 'flex') showEndGame(gs.winnerIdx, roomData.players);
+             updateReadyStatusUI();
+        }
     }
     
     if(!lastGameState && gs.lastAction.type === 'start') {
@@ -840,14 +864,44 @@ async function handleRemoteAction(action) {
         else SoundFX.playCardSnap();
 
         if(action.card.val === 'Wild Table') await animateTableEffect();
-        if(action.card.val === 'Wild Mixer') await animateMixerEffect(direction); // FIX: Send correct direction
+        if(action.card.val === 'Wild Mixer') await animateMixerEffect(direction); 
         if(action.card.val === 'Wild Pot') animatePotEffect(pIdx, direction);
         if(action.card.val === 'Wild Meze') animateMezeEffect(pIdx);
     } 
     else if(action.type === 'draw') {
         SoundFX.playDraw();
         let targetId = action.pIdx === myPlayerIdx ? 'player-hand' : `bot${(action.pIdx - myPlayerIdx + 4) % 4}-wrapper`;
-        for(let k=0; k<action.count; k++) { await wait(ANIM_CONFIG.DRAW_INTERVAL); animateFly(document.getElementById('draw-pile'), document.getElementById(targetId), null); }
+        // INCREMENTAL DRAW VISUALIZATION FIX
+        isDealing = true; // Lock UI updates temporarily
+        let currentHandClone = [...gameHands[myPlayerIdx]]; // Real full hand
+        // We know that 'action.count' cards were added to end.
+        // We will visualize them being added one by one.
+        
+        // This loop simulates delay
+        for(let k=0; k<action.count; k++) { 
+             let cardToVisualize = null;
+             // If it's me, I want to see the card face
+             if(action.pIdx === myPlayerIdx) {
+                 // The card is at index: (length - count + k)
+                 let idx = currentHandClone.length - action.count + k;
+                 if(idx >= 0 && idx < currentHandClone.length) cardToVisualize = createCardHTML(currentHandClone[idx]);
+             }
+             
+             await new Promise(resolve => {
+                 animateFly(document.getElementById('draw-pile'), document.getElementById(targetId), cardToVisualize, () => {
+                     // Add to DOM visually if it's me
+                     if(action.pIdx === myPlayerIdx && cardToVisualize) {
+                         let div = document.createElement('div'); div.innerHTML = cardToVisualize; 
+                         let el = div.firstElementChild;
+                         document.getElementById('player-hand').appendChild(el);
+                     }
+                     resolve();
+                 });
+             });
+             await wait(100); // Small gap between flights
+        }
+        isDealing = false;
+        updateUI(); // Final sync
     }
     await wait(200);
 }
@@ -871,7 +925,7 @@ function playerDrawCard() {
     
     serverDrawCard(myPlayerIdx, count, isPenalty);
     if(isPenalty || count > 1) { 
-        setTimeout(() => serverPassTurn(myPlayerIdx), 1000); 
+        setTimeout(() => serverPassTurn(myPlayerIdx), 1500 + (count*600)); // Wait for animations
     }
 }
 function playerPlayCard(idx) {
@@ -1026,10 +1080,16 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
     if(nextP === newVulnerable) newVulnerable = -1;
     
     let cardName = card.type === 'num' ? `${card.val} ${VEGETABLES[card.color]}` : (card.val==='Wild' ? `Güveç (${VEGETABLES[card.chosenColor]})` : (CARD_NAMES[card.val] || card.val));
-    
+    if(card.val === 'Wild Anti-Draw') cardName += " (Joker)";
+
     let updates = { "players": playerUpdates, "gameState.discardPile": newDiscard, "gameState.currentPlayer": nextP, "gameState.direction": newDir, "gameState.drawStack": newDrawStack, "gameState.vulnerablePlayerIdx": newVulnerable, "gameState.hasDrawn": false, "gameState.lastAction": { type: 'play', pIdx, card, timestamp: Date.now() }, "lastActive": Date.now(), "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> ${cardName} attı.`, ts: Date.now(), isSystem: true } };
     if(card.val === 'Wild Pot' || card.val === 'Wild Meze' || card.val === 'Wild Table') updates["gameState.deck"] = gameDeck;
-    if(newWinner !== -1) { updates["gameState.gameActive"] = false; updates["gameState.winnerIdx"] = newWinner; let roundScores = newHands.map(h => h.reduce((sum, c) => sum + (c.type==='num'?parseInt(c.val):20), 0)); updates["players"] = playerUpdates.map((p, i) => ({ ...p, score: p.score + roundScores[i] })); }
+    if(newWinner !== -1) { 
+        updates["gameState.gameActive"] = false; 
+        updates["gameState.winnerIdx"] = newWinner; 
+        let roundScores = newHands.map(h => h.reduce((sum, c) => sum + (c.type==='num'?parseInt(c.val):20), 0)); 
+        updates["players"] = playerUpdates.map((p, i) => ({ ...p, score: p.score + roundScores[i], lastRoundScore: roundScores[i] })); // SAVE ROUND SCORE
+    }
     await db.collection("rooms").doc(currentRoomId).update(updates);
 }
 async function serverPunishVulnerable(victimIdx) { 
@@ -1099,7 +1159,7 @@ async function hostBotTurn() {
         if (drawStack > 0 && playableIdx === -1) {
             triggerChat("draw_many");
             await serverDrawCard(currentPlayer, drawStack, true); 
-            setTimeout(() => serverPassTurn(currentPlayer), 1000); 
+            setTimeout(() => serverPassTurn(currentPlayer), 1500 + (drawStack*600)); 
             return;
         }
 
@@ -1112,6 +1172,7 @@ async function hostBotTurn() {
             if(card.val === '+2') triggerChat("plus2");
             if(card.val === 'Block') triggerChat("block");
             
+            // Pass true if bot declared son tabak
             if(card.val === 'Wild Mixer') await serverPlayCard(currentPlayer, playableIdx, card, 1, willSaySonTabak); 
             else await serverPlayCard(currentPlayer, playableIdx, card, 1, willSaySonTabak);
         } else {
@@ -1212,18 +1273,25 @@ function animateFly(from, to, html, callback) {
     if(html) { let w = document.createElement('div'); w.innerHTML = html; el = w.firstElementChild; el.classList.add('flying-card'); } else { el.className = 'card card-back-style flying-card'; }
     
     // START CENTERED
-    let startX = f.left + f.width/2 - 52; // 52 = cardWidth/2
-    let startY = f.top + f.height/2 - 77; // 77 = cardHeight/2
+    let startX = f.left + f.width/2 - 52; 
+    let startY = f.top + f.height/2 - 77;
     
     // END CENTERED
     let endX = t.left + t.width/2 - 52; 
     let endY = t.top + t.height/2 - 77;
     
+    // SOFRA FIX: If from='play-area' (table center)
+    if(from.id === 'play-area') {
+        let pa = document.getElementById('play-area').getBoundingClientRect();
+        startX = pa.left + pa.width/2 - 52;
+        startY = pa.top + pa.height/2 - 77;
+    }
+    
     el.style.left = startX + 'px'; 
     el.style.top = startY + 'px'; 
     document.body.appendChild(el);
     
-    void el.offsetWidth; // Force Reflow
+    void el.offsetWidth; 
     
     el.style.left = endX + 'px'; 
     el.style.top = endY + 'px'; 
@@ -1333,7 +1401,6 @@ async function animateInitialDeal() {
             await wait(ANIM_CONFIG.INITIAL_DEAL); 
         }
     }
-    // Clean up temporary cards before final render to avoid duplication
     document.getElementById('player-hand').innerHTML = '';
     isDealing = false; 
     updateUI();
@@ -1358,7 +1425,6 @@ function startVegetableRain() {
 }
 
 function openRules() { document.getElementById('rules-modal').style.display = 'flex'; }
-// LEAVE GAME FIX
 function leaveGame() { document.getElementById('leave-modal').style.display = 'flex'; }
 function confirmLeaveGame() {
     if(!currentRoomId) return; 
@@ -1407,7 +1473,6 @@ function createCardHTML(card) {
     let emoji = (card.type === 'num') ? VEGETABLES[card.color] : (card.val === 'Wild' ? `<div class="guvec-grid"><span>🍅</span><span>🥦</span><span>🥔</span><span>🍆</span></div>` : (SPECIALS[card.val] || card.val));
     let cls = (card.color === 'wild') ? 'wild-bg' : card.color;
     let borderStyle = card.chosenColor ? `border-color: ${card.chosenColor==='red'?'#e74c3c':card.chosenColor==='green'?'#2ecc71':card.chosenColor==='yellow'?'#f39c12':'#9b59b6'} !important; border-width: 3px;` : '';
-    // CSS Variable handles background
     let cornerTxt = (card.type === 'num') ? card.val : '';
     return `<div class="card ${cls}" style="${borderStyle}"><div class="card-corner top-left">${cornerTxt}</div><div class="card-emoji">${emoji}</div><div class="card-corner bottom-right">${cornerTxt}</div></div>`;
 }
@@ -1419,7 +1484,6 @@ function openPatternModal() {
         d.className = 'pattern-opt'; 
         d.style.background = p; 
         d.onclick = () => { 
-            // CHANGE CSS VARIABLE
             document.documentElement.style.setProperty('--card-pattern', p);
             currentPattern = p; 
             updateUI(); 
@@ -1464,9 +1528,13 @@ function updateReadyStatusUI() {
     sortedP.forEach(p => { 
         let isMe = p.uid === myUid; 
         let pColor = playerColors[gamePlayers.findIndex(x=>x.uid===p.uid)] || '#333';
+        let lastRoundScore = p.lastRoundScore !== undefined ? `+${p.lastRoundScore}` : '';
         html += `<tr style="${isMe ? 'background-color: #fff9c4; font-weight: bold; border-left: 4px solid #f1c40f;' : ''}">
                     <td style="padding: 8px 10px; border-bottom: 1px solid #eee; color:${pColor};">${p.name}</td>
-                    <td style="padding: 8px 10px; border-bottom: 1px solid #eee; text-align:right;">${p.score} ${(p.isReady||p.isBot)?'✅':'⏳'}</td>
+                    <td style="padding: 8px 10px; border-bottom: 1px solid #eee; text-align:right;">
+                        <span style="color:#e74c3c; font-size:0.9em; margin-right:5px;">${lastRoundScore}</span>
+                        (Toplam: ${p.score}) ${(p.isReady||p.isBot)?'✅':'⏳'}
+                    </td>
                  </tr>`; 
     });
     html += `</table>`;
