@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v5.5 Ultimate</title>
+    <title>Son Tabak Online - v5.7 Animation Polish</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -15,6 +15,11 @@
 
     <style>
         /* --- STİL DOSYASI --- */
+        :root {
+            /* Varsayılan Turuncu */
+            --card-pattern: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+        }
+
         body { font-family: 'Segoe UI', sans-serif; background-color: #2c3e50; color: #333; margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; user-select: none; -webkit-tap-highlight-color: transparent; }
         #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
         
@@ -66,8 +71,10 @@
         .chat-bubble.visible { opacity: 1; }
         .bot-stack-visual { position: relative; height: 90px; width: 100px; margin-top: 5px; transition: width 0.3s; display: flex; justify-content: center; }
         
-        .mini-card-back { width: 60px; height: 90px; border: 3px solid #fff; border-radius: 8px; position: absolute; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); background-size: cover; background-position: center; box-sizing: border-box; display: flex; justify-content: center; align-items: center; overflow: hidden; transition: all 0.3s; }
-        .card-back-style, .mini-card-back { background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); background-size: cover; border: 3px solid #fff !important; }
+        /* DESEN DÜZELTMESİ: background-image değil background ve !important kullanımı */
+        .mini-card-back { width: 60px; height: 90px; border: 3px solid #fff; border-radius: 8px; position: absolute; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); background-size: cover; background-position: center; box-sizing: border-box; display: flex; justify-content: center; align-items: center; overflow: hidden; transition: all 0.3s; background: var(--card-pattern) !important; }
+        .card-back-style { background: var(--card-pattern) !important; background-size: cover; border: 3px solid #fff !important; }
+        
         .mini-card-back::after, .card-back-style::after { content: "SON\A TABAK"; position: absolute; transform: rotate(-15deg); color: #3498db; font-family: 'Comic Sans MS', cursive; font-weight: 900; font-size: 1.1em; white-space: pre; text-align: center; line-height: 0.9; pointer-events: none; text-shadow: 2px 2px 0 #fff; }
         .mini-card-back::after { font-size: 0.75em; transform: rotate(-15deg) scale(0.8); }
         
@@ -122,7 +129,7 @@
         .blocked-anim { position: absolute; font-size: 4em; color: #c0392b; z-index: 300; text-shadow: 0 0 20px #fff; animation: fadeUp 2s forwards; pointer-events: none; transform: translate(-50%, -50%); /* MERKEZLEME */ }
         @keyframes fadeUp { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -100px); } }
         .mixer-container { position: absolute; top: 50%; left: 50%; width: 0; height: 0; z-index: 4000; pointer-events: none; }
-        .mixer-card { position: absolute; width: 70px; height: 100px; border: 3px solid #fff; border-radius: 8px; background-size: cover; background-position: center; box-shadow: 0 0 10px rgba(0,0,0,0.5); transform-origin: center 250px; top: -300px; left: -35px; }
+        .mixer-card { position: absolute; width: 70px; height: 100px; border: 3px solid #fff; border-radius: 8px; background-size: cover; background-position: center; box-shadow: 0 0 10px rgba(0,0,0,0.5); transform-origin: center 250px; top: -300px; left: -35px; background: var(--card-pattern) !important; }
         .mixer-card::after { content: "SON\A TABAK"; position: absolute; transform: rotate(-15deg); color: #3498db; font-weight: 900; font-size: 0.75em; white-space: pre; text-align: center; line-height:0.9; top: 35%; left: 5px; font-family: 'Comic Sans MS', cursive; }
         .anim-temp-card { position: fixed; width: 70px; height: 100px; border: 3px solid #fff; border-radius: 8px; background-size: cover; background-position: center; z-index: 4000; box-shadow: 0 0 10px rgba(0,0,0,0.5); pointer-events: none; }
         .anim-temp-card::after { content: "SON\A TABAK"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); color: #3498db; font-weight: 900; font-size: 0.9em; white-space: pre; text-align: center; }
@@ -141,6 +148,10 @@
         #challenge-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; padding: 25px 50px; font-size: 2em; font-weight: bold; border-radius: 20px; box-shadow: 0 0 40px rgba(0,0,0,0.7); border: 5px solid white; display: none; z-index: 6000; animation: popIn 0.3s ease-out; text-align: center; width: auto; max-width: 90%; }
         .challenge-valid { background-color: #27ae60; } .challenge-invalid { background-color: #c0392b; }
         .challenge-sub { font-size: 0.6em; display: block; margin-top: 5px; font-weight: normal; opacity: 0.9; }
+        
+        #leave-modal .modal-box { border: 4px solid #c0392b; }
+        #mixer-info { font-size: 0.85em; background: #ecf0f1; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: left; }
+        
         @media screen and (max-width: 900px) {
             body { height: 100%; overflow-y: auto; display: block; background: #2c3e50; }
             .main-wrapper { display: flex; flex-direction: column; height: auto; min-height: 100vh; padding: 5px; gap: 10px; }
@@ -218,10 +229,23 @@
     </div>
 </div>
 
+<!-- ÇIKIŞ ONAY MODALI -->
+<div id="leave-modal" class="modal">
+    <div class="modal-box">
+        <h3>🚨 Oyundan Çık?</h3>
+        <p>Oyundan ayrılmak istediğine emin misin?</p>
+        <br>
+        <div style="display:flex; gap:10px; width:100%; justify-content:center;">
+            <button class="game-btn btn-red" onclick="confirmLeaveGame()">Evet, Çık</button>
+            <button class="game-btn btn-blue" onclick="document.getElementById('leave-modal').style.display='none'">İptal</button>
+        </div>
+    </div>
+</div>
+
 <div class="main-wrapper">
     <!-- LOGO -->
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v5.5 ULTIMATE ✨</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v5.7 ANIM ✨</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <!-- OYUN ALANI -->
@@ -289,8 +313,8 @@
         </div>
         <div class="buttons-container">
             <button class="game-btn btn-green" onclick="openRules()">Nasıl Oynanır?</button>
-            <button class="game-btn btn-dark" onclick="openPatternModal()">Kart Deseni</button>
-            <button class="game-btn btn-blue" onclick="leaveGame()">Oyundan Çık</button>
+            <button class="game-btn btn-blue" onclick="openPatternModal()">Kart Deseni</button>
+            <button class="game-btn btn-red" onclick="leaveGame()">Oyundan Çık</button>
         </div>
     </div>
 </div>
@@ -334,6 +358,7 @@
     <div class="modal-box">
         <h3>Yön Seç (Mikser)</h3>
         <p id="dir-text" style="font-size:0.8em; margin:5px 0;">Eller hangi yöne kaysın?</p>
+        <div id="mixer-info"></div>
         <div class="color-picker">
             <button class="game-btn btn-blue" onclick="resolveDirection(1)">➡️ Saat</button>
             <button class="game-btn btn-blue" onclick="resolveDirection(-1)">⬅️ Ters</button>
@@ -363,7 +388,7 @@ const ANIM_CONFIG = {
     FLY_DURATION: 1000,      
     FLY_BUFFER: 1100,        
     DRAW_INTERVAL: 600,      
-    INITIAL_DEAL: 150,       
+    INITIAL_DEAL: 250,       
     TOAST: 2000,             
     POPUP: 3000,             
     BOT_THINK: 300,          
@@ -393,10 +418,10 @@ const CARD_PATTERNS = [
     'repeating-linear-gradient(45deg, #e67e22, #e67e22 10px, #d35400 10px, #d35400 20px)',
     'radial-gradient(circle, #e67e22 20%, #d35400 90%)',
     'conic-gradient(#e67e22, #d35400, #e67e22)',
+    'linear-gradient(135deg, #3498db 0%, #2980b9 100%)', // Blue
     'linear-gradient(135deg, #34495e 0%, #2c3e50 100%)', // Dark 1
     'repeating-linear-gradient(45deg, #34495e, #34495e 10px, #2c3e50 10px, #2c3e50 20px)',
-    'radial-gradient(circle, #7f8c8d 20%, #2c3e50 90%)',
-    'conic-gradient(#34495e, #2c3e50, #34495e)'
+    'radial-gradient(circle, #7f8c8d 20%, #2c3e50 90%)'
 ];
 let currentPattern = CARD_PATTERNS[0];
 
@@ -815,7 +840,7 @@ async function handleRemoteAction(action) {
         else SoundFX.playCardSnap();
 
         if(action.card.val === 'Wild Table') await animateTableEffect();
-        if(action.card.val === 'Wild Mixer') await animateMixerEffect(1);
+        if(action.card.val === 'Wild Mixer') await animateMixerEffect(direction); // FIX: Send correct direction
         if(action.card.val === 'Wild Pot') animatePotEffect(pIdx, direction);
         if(action.card.val === 'Wild Meze') animateMezeEffect(pIdx);
     } 
@@ -859,7 +884,29 @@ function playerPlayCard(idx) {
         } else serverPlayCard(myPlayerIdx, idx, card, 1, localSaidSonTabak);
     } else { SoundFX.playError(); showToast("Oynanamaz!"); }
 }
-function resolveColor(c) { document.getElementById('color-modal').style.display = 'none'; if(pendingWild) { let card = pendingWild.card; card.chosenColor = c; if(card.val === 'Wild Mixer') { document.getElementById('dir-modal').style.display = 'flex'; } else { serverPlayCard(myPlayerIdx, pendingWild.idx, card, 1, localSaidSonTabak); pendingWild = null; } } }
+function resolveColor(c) { 
+    document.getElementById('color-modal').style.display = 'none'; 
+    if(pendingWild) { 
+        let card = pendingWild.card; card.chosenColor = c; 
+        if(card.val === 'Wild Mixer') { 
+            let pRightIdx = (myPlayerIdx + 1) % 4; // Saat yönündeki
+            let pLeftIdx = (myPlayerIdx + 3) % 4; // Ters yönündeki
+            let pRightName = gamePlayers[pRightIdx].name;
+            let pLeftName = gamePlayers[pLeftIdx].name;
+            let pRightCount = gameHands[pRightIdx].length;
+            let pLeftCount = gameHands[pLeftIdx].length;
+
+            document.getElementById('mixer-info').innerHTML = `
+                <b>➡️ Saat:</b> ${pLeftName}'in elini (${pLeftCount} Kart) alacaksın.<br>
+                <b>⬅️ Ters:</b> ${pRightName}'in elini (${pRightCount} Kart) alacaksın.
+            `;
+            document.getElementById('dir-modal').style.display = 'flex'; 
+        } else { 
+            serverPlayCard(myPlayerIdx, pendingWild.idx, card, 1, localSaidSonTabak); 
+            pendingWild = null; 
+        } 
+    } 
+}
 function resolveDirection(d) { document.getElementById('dir-modal').style.display = 'none'; if(pendingWild) { serverPlayCard(myPlayerIdx, pendingWild.idx, pendingWild.card, d, localSaidSonTabak); pendingWild = null; } }
 
 function playerSaySonTabak() { 
@@ -891,11 +938,10 @@ function challengePreviousPlayer() {
 function playerSendMessage() { let input = document.getElementById('player-input'); let msg = input.value.trim(); if(msg) { db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": { sender: myName, msg: msg, ts: Date.now(), isSystem: false }, "lastActive": Date.now() }); input.value = ''; } }
 
 /* --- SERVER ACTIONS --- */
-// Desteyi temizleyen yardımcı
 function recycleDeck(discardPile) {
     let cleanDeck = discardPile.map(c => {
         let copy = {...c};
-        delete copy.chosenColor; // Geçici renkleri temizle
+        delete copy.chosenColor; 
         return copy;
     });
     return shuffleDeck(cleanDeck);
@@ -907,7 +953,7 @@ async function serverDrawCard(pIdx, count, isPenalty = false) {
     
     if(newDeck.length < count && newDiscard.length > 1) { 
         let top = newDiscard.pop(); 
-        newDeck = recycleDeck(newDiscard); // RECYCLE FIX
+        newDeck = recycleDeck(newDiscard); 
         newDiscard = [top]; 
     }
     for(let i=0; i<count; i++) if(newDeck.length > 0) newHands[pIdx].push(newDeck.pop());
@@ -923,7 +969,6 @@ async function serverDrawCard(pIdx, count, isPenalty = false) {
 }
 async function serverPassTurn(pIdx) { await db.collection("rooms").doc(currentRoomId).update({ "gameState.currentPlayer": (currentPlayer + direction + 4) % 4, "gameState.hasDrawn": false, "gameState.vulnerablePlayerIdx": -1, "lastActive": Date.now(), "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> Pas geçti.`, ts: Date.now(), isSystem: true } }); }
 
-// declaredSonTabak parametresi eklendi
 async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredSonTabak = false) {
     let newHands = gameHands.map(h => [...h]); 
     let newDiscard = [...gameDiscard];
@@ -931,7 +976,6 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
 
     let card = newHands[pIdx][cIdx]; if(cardWithColor) card = cardWithColor;
     
-    // KART OYNAMA: Önce elden çıkar, discard'a ekle
     newHands[pIdx].splice(cIdx, 1); 
     newDiscard.push(card);
     
@@ -952,14 +996,12 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
 
     if(card.val === '+1') newDrawStack += 1; if(card.val === '+2') newDrawStack += 2; if(card.val === 'Wild Meze') newDrawStack += 1; if(card.val === 'Wild Anti-Draw') newDrawStack = 0;
     
-    // SOFRA FIX: Elden çıkarılmış kart haricindekileri topla
     if(card.val === 'Wild Table') { 
-        let counts = newHands.map(h => h.length); // Herkesin kaç kartı var?
+        let counts = newHands.map(h => h.length); 
         let allCards = []; 
-        newHands.forEach(h => { allCards.push(...h); h.length = 0; }); // Hepsini havuza at
-        allCards = shuffleDeck(allCards); // Karıştır
+        newHands.forEach(h => { allCards.push(...h); h.length = 0; }); 
+        allCards = shuffleDeck(allCards); 
         for(let i=0; i<4; i++) {
-            // Herkese eski sayısı kadar geri ver
             for(let j=0; j<counts[i]; j++) {
                 if(allCards.length > 0) newHands[i].push(allCards.pop());
             }
@@ -979,7 +1021,6 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
     if(card.val === 'Wild Meze') { let prevP = (pIdx - newDir + 4) % 4; if(gameDeck.length > 0) newHands[prevP].push(gameDeck.pop()); }
     playerUpdates = playerUpdates.map((p, i) => ({...p, hand: newHands[i]}));
     
-    // CRITICAL FIX: declaredSonTabak parametresiyle ağ gecikmesi bypass edildi
     let isSafe = gamePlayers[pIdx].saidSonTabak || declaredSonTabak;
     let newVulnerable = (newHands[pIdx].length === 1 && !isSafe) ? pIdx : -1; 
     if(nextP === newVulnerable) newVulnerable = -1;
@@ -1048,7 +1089,6 @@ async function hostBotTurn() {
             playableIdx = hand.findIndex(c => canPlay(c));
         }
 
-        // Bot Son Tabak diyecek mi?
         if(playableIdx !== -1 && hand.length === 2) {
              if(Math.random() > 0.1) {
                  await serverBotSaySonTabak(currentPlayer); 
@@ -1072,7 +1112,6 @@ async function hostBotTurn() {
             if(card.val === '+2') triggerChat("plus2");
             if(card.val === 'Block') triggerChat("block");
             
-            // Pass true if bot declared son tabak
             if(card.val === 'Wild Mixer') await serverPlayCard(currentPlayer, playableIdx, card, 1, willSaySonTabak); 
             else await serverPlayCard(currentPlayer, playableIdx, card, 1, willSaySonTabak);
         } else {
@@ -1171,9 +1210,24 @@ function animateFly(from, to, html, callback) {
     let f = from.getBoundingClientRect(); let t = to.getBoundingClientRect();
     let el = document.createElement('div');
     if(html) { let w = document.createElement('div'); w.innerHTML = html; el = w.firstElementChild; el.classList.add('flying-card'); } else { el.className = 'card card-back-style flying-card'; }
-    el.style.left = f.left + 'px'; el.style.top = f.top + 'px'; document.body.appendChild(el);
-    void el.offsetWidth;
-    el.style.left = t.left + 'px'; el.style.top = t.top + 'px'; 
+    
+    // START CENTERED
+    let startX = f.left + f.width/2 - 52; // 52 = cardWidth/2
+    let startY = f.top + f.height/2 - 77; // 77 = cardHeight/2
+    
+    // END CENTERED
+    let endX = t.left + t.width/2 - 52; 
+    let endY = t.top + t.height/2 - 77;
+    
+    el.style.left = startX + 'px'; 
+    el.style.top = startY + 'px'; 
+    document.body.appendChild(el);
+    
+    void el.offsetWidth; // Force Reflow
+    
+    el.style.left = endX + 'px'; 
+    el.style.top = endY + 'px'; 
+    
     setTimeout(() => { el.remove(); if(callback) callback(); }, ANIM_CONFIG.FLY_BUFFER);
 }
 function animateReverse() { 
@@ -1279,6 +1333,8 @@ async function animateInitialDeal() {
             await wait(ANIM_CONFIG.INITIAL_DEAL); 
         }
     }
+    // Clean up temporary cards before final render to avoid duplication
+    document.getElementById('player-hand').innerHTML = '';
     isDealing = false; 
     updateUI();
 }
@@ -1302,6 +1358,47 @@ function startVegetableRain() {
 }
 
 function openRules() { document.getElementById('rules-modal').style.display = 'flex'; }
+// LEAVE GAME FIX
+function leaveGame() { document.getElementById('leave-modal').style.display = 'flex'; }
+function confirmLeaveGame() {
+    if(!currentRoomId) return; 
+    db.collection("rooms").doc(currentRoomId).get().then(doc => {
+        if(!doc.exists) { location.reload(); return; }
+        let ps = doc.data().players || [];
+        let rData = doc.data();
+        let isPlaying = rData.status === 'playing';
+
+        if(ps.length <= 1) {
+            db.collection("rooms").doc(currentRoomId).delete()
+                .then(() => location.reload())
+                .catch(() => location.reload());
+        } else {
+            let newPs;
+            if(isPlaying) {
+                newPs = ps.map(p => {
+                    if(p.uid === myUid) {
+                        return {
+                            ...p,
+                            uid: 'replaced_bot_' + Date.now(),
+                            name: '🤖 ' + p.name,
+                            isBot: true,
+                            isReady: true,
+                            personality: 'Agresif',
+                            lastSeen: Date.now()
+                        };
+                    }
+                    return p;
+                });
+            } else {
+                newPs = ps.filter(p => p.uid !== myUid);
+            }
+            
+            db.collection("rooms").doc(currentRoomId).update({ players: newPs })
+                .then(() => location.reload())
+                .catch(() => location.reload());
+        }
+    });
+}
 
 /* --- UTILS --- */
 const VEGETABLES = { red: '🍅', green: '🥦', yellow: '🥔', purple: '🍆' };
@@ -1310,7 +1407,7 @@ function createCardHTML(card) {
     let emoji = (card.type === 'num') ? VEGETABLES[card.color] : (card.val === 'Wild' ? `<div class="guvec-grid"><span>🍅</span><span>🥦</span><span>🥔</span><span>🍆</span></div>` : (SPECIALS[card.val] || card.val));
     let cls = (card.color === 'wild') ? 'wild-bg' : card.color;
     let borderStyle = card.chosenColor ? `border-color: ${card.chosenColor==='red'?'#e74c3c':card.chosenColor==='green'?'#2ecc71':card.chosenColor==='yellow'?'#f39c12':'#9b59b6'} !important; border-width: 3px;` : '';
-    let backStyle = `background: ${currentPattern}; background-size: cover;`; // Apply Pattern
+    // CSS Variable handles background
     let cornerTxt = (card.type === 'num') ? card.val : '';
     return `<div class="card ${cls}" style="${borderStyle}"><div class="card-corner top-left">${cornerTxt}</div><div class="card-emoji">${emoji}</div><div class="card-corner bottom-right">${cornerTxt}</div></div>`;
 }
@@ -1322,10 +1419,10 @@ function openPatternModal() {
         d.className = 'pattern-opt'; 
         d.style.background = p; 
         d.onclick = () => { 
+            // CHANGE CSS VARIABLE
+            document.documentElement.style.setProperty('--card-pattern', p);
             currentPattern = p; 
-            // Update Card Backs live
-            document.querySelectorAll('.card-back-style, .mini-card-back').forEach(el => el.style.background = p);
-            updateUI(); // Refresh UI to apply new pattern to hands
+            updateUI(); 
             closePatternModal(); 
         }; 
         grid.appendChild(d); 
@@ -1336,47 +1433,6 @@ function closePatternModal() { document.getElementById('pattern-modal').style.di
 function handleChatKey(e) { if(e.key === 'Enter') playerSendMessage(); }
 function toggleReadyState() { if(!currentRoomId) return; amIReady = !amIReady; let btn = document.getElementById('end-continue-btn'); btn.innerText = amIReady ? "Bekleniyor..." : "Devam Et ⏳"; btn.classList.toggle('btn-blue'); btn.classList.toggle('btn-dark'); let ps = [...gamePlayers]; let meIdx = ps.findIndex(p => p.uid === myUid); if(meIdx !== -1) { ps[meIdx].isReady = amIReady; db.collection("rooms").doc(currentRoomId).update({ players: ps, lastActive: Date.now() }); } }
 
-function leaveGame() { 
-    if(!currentRoomId) return; 
-    if(confirm("Oyundan çıkmak istediğinize emin misiniz?")) { 
-        db.collection("rooms").doc(currentRoomId).get().then(doc => {
-            if(!doc.exists) { location.reload(); return; }
-            let ps = doc.data().players || [];
-            let rData = doc.data();
-            let isPlaying = rData.status === 'playing';
-
-            if(ps.length <= 1) {
-                db.collection("rooms").doc(currentRoomId).delete()
-                    .then(() => location.reload())
-                    .catch(() => location.reload());
-            } else {
-                let newPs;
-                if(isPlaying) {
-                    newPs = ps.map(p => {
-                        if(p.uid === myUid) {
-                            return {
-                                ...p,
-                                uid: 'replaced_bot_' + Date.now(),
-                                name: '🤖 ' + p.name,
-                                isBot: true,
-                                isReady: true,
-                                personality: 'Agresif',
-                                lastSeen: Date.now()
-                            };
-                        }
-                        return p;
-                    });
-                } else {
-                    newPs = ps.filter(p => p.uid !== myUid);
-                }
-                
-                db.collection("rooms").doc(currentRoomId).update({ players: newPs })
-                    .then(() => location.reload())
-                    .catch(() => location.reload());
-            }
-        });
-    } 
-}
 const cleanupRoom = async () => { if(heartbeatInterval) clearInterval(heartbeatInterval); };
 
 function shuffleDeck(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
