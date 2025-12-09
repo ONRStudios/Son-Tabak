@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v5.8 Final Polish</title>
+    <title>Son Tabak Online - v5.8.1 Fix</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -246,7 +246,7 @@
 <div class="main-wrapper">
     <!-- LOGO -->
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v5.8 FINAL ✨</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v5.8.1 FIX ✨</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <!-- OYUN ALANI -->
@@ -1166,8 +1166,17 @@ async function hostBotTurn() {
         if(playableIdx !== -1) {
             let card = hand[playableIdx];
             if(card.color === 'wild') {
-                triggerChat("wild");
-                card.chosenColor = ['red','green','yellow','purple'][Math.floor(Math.random()*4)];
+                if (card.val === 'Wild Anti-Draw') {
+                    // FIX: Inherit current color for Toilet Paper
+                    let top = gameDiscard[gameDiscard.length - 1];
+                    let currentActiveColor = top.chosenColor || top.color;
+                    if (currentActiveColor === 'wild') currentActiveColor = ['red','green','yellow','purple'][Math.floor(Math.random()*4)];
+                    card.chosenColor = currentActiveColor;
+                } else {
+                    // Standard Wilds: Random
+                    triggerChat("wild");
+                    card.chosenColor = ['red','green','yellow','purple'][Math.floor(Math.random()*4)];
+                }
             }
             if(card.val === '+2') triggerChat("plus2");
             if(card.val === 'Block') triggerChat("block");
