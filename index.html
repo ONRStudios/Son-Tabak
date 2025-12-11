@@ -784,16 +784,16 @@ function toggleLobbyTab(element) {
 /* --- ANIMATION & CONFIG CONSTANTS --- */
 const ANIM_CONFIG = {
     FLY_DURATION: 1000,        
-    FLY_BUFFER: 1100,          
+    FLY_BUFFER: 1100,           
     DRAW_INTERVAL: 600,        
     INITIAL_DEAL: 250,        
-    TOAST: 2000,               
-    POPUP: 3000,               
-    BOT_THINK: 800,             
-    HEARTBEAT_MS: 5000,         
-    HOST_TIMEOUT: 15000,       
-    AFK_TIMEOUT: 60000,         
-    BOT_WATCHDOG: 3000         
+    TOAST: 2000,                
+    POPUP: 3000,                
+    BOT_THINK: 800,              
+    HEARTBEAT_MS: 5000,          
+    HOST_TIMEOUT: 15000,        
+    AFK_TIMEOUT: 60000,          
+    BOT_WATCHDOG: 3000          
 };
 
 /* --- CARD NAMES MAPPING --- */
@@ -1780,7 +1780,16 @@ async function hostBotTurn() {
         if (drawStack > 0 && playableIdx === -1) {
             triggerChat("draw_many");
             await serverDrawCard(currentPlayer, drawStack, true); 
-            setTimeout(() => serverPassTurn(currentPlayer), 1500 + (drawStack*600)); 
+            
+            // FIX: Bot donma sorunu için Promise yapısı eklendi.
+            // Bu sayede bot, sunucu yanıtından bağımsız olarak animasyon bitene kadar "düşünmeye" devam eder
+            // ve aynı döngüye tekrar girmez.
+            await new Promise(resolve => {
+                setTimeout(async () => {
+                    await serverPassTurn(currentPlayer);
+                    resolve();
+                }, 1500 + (drawStack * 600));
+            });
             return;
         }
 
@@ -2175,16 +2184,16 @@ function closePatternModal() { document.getElementById('pattern-modal').style.di
 function handleChatKey(e) { if(e.key === 'Enter') playerSendMessage(); }
 function toggleReadyState() { 
     if(isOfflineMode) {
-         amIReady = !amIReady; 
-         let btn = document.getElementById('end-continue-btn'); 
-         btn.innerText = amIReady ? "Bekleniyor..." : "Devam Et ⏳"; 
-         btn.classList.toggle('btn-blue'); btn.classList.toggle('btn-dark');
-         
-         // In offline mode, assume bots are ready after delay
-         setTimeout(() => {
-             if(amIReady) nextRound();
-         }, 2000);
-         return;
+          amIReady = !amIReady; 
+          let btn = document.getElementById('end-continue-btn'); 
+          btn.innerText = amIReady ? "Bekleniyor..." : "Devam Et ⏳"; 
+          btn.classList.toggle('btn-blue'); btn.classList.toggle('btn-dark');
+          
+          // In offline mode, assume bots are ready after delay
+          setTimeout(() => {
+              if(amIReady) nextRound();
+          }, 2000);
+          return;
     }
 
     if(!currentRoomId) return; amIReady = !amIReady; let btn = document.getElementById('end-continue-btn'); btn.innerText = amIReady ? "Bekleniyor..." : "Devam Et ⏳"; btn.classList.toggle('btn-blue'); btn.classList.toggle('btn-dark'); let ps = [...gamePlayers]; let meIdx = ps.findIndex(p => p.uid === myUid); if(meIdx !== -1) { ps[meIdx].isReady = amIReady; db.collection("rooms").doc(currentRoomId).update({ players: ps, lastActive: Date.now() }); } }
