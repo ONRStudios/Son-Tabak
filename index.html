@@ -2,12 +2,10 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v6.6 Mobile Fix</title>
+    <title>Son Tabak Online - v6.8 Mobile UI Fix</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
-    <!-- FIREBASE (Compat Sürümleri) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -315,7 +313,14 @@
         .red { background-color: #ffcdd2; color: #c0392b; border-color: #c0392b; } .green { background-color: #c8e6c9; color: #27ae60; border-color: #27ae60; } .yellow { background-color: #fff9c4; color: #f39c12; border-color: #f39c12; } .purple { background-color: #e1bee7; color: #8e44ad; border-color: #8e44ad; }
         .wild-bg { background: conic-gradient(from 45deg, #e74c3c, #f1c40f, #2ecc71, #9b59b6, #e74c3c); border: 3px solid #fff; color: #fff; }
         #penalty-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; font-size: 1.2em; color: white; width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; display: none; justify-content: center; align-items: center; z-index: 70; transition: all 0.3s; animation: pulseBadge 1s infinite; text-shadow: 1px 1px 0 rgba(0,0,0,0.5); }
-        #penalty-badge.p-1 { background: #2ecc71; box-shadow: 0 0 10px #2ecc71; } #penalty-badge.p-2 { background: #f1c40f; box-shadow: 0 0 10px #f1c40f; } #penalty-badge.p-3 { background: #e67e22; box-shadow: 0 0 15px #e67e22; } #penalty-badge.p-4 { background: #e74c3c; box-shadow: 0 0 20px #e74c3c; transform: scale(1.1); } 
+        /* FIX: Renkler Düzeltildi */
+        #penalty-badge.p-1 { background: #2ecc71; box-shadow: 0 0 10px #2ecc71; } /* Yeşil */
+        #penalty-badge.p-2 { background: #f1c40f; box-shadow: 0 0 10px #f1c40f; } /* Sarı */
+        #penalty-badge.p-3 { background: #e67e22; box-shadow: 0 0 15px #e67e22; } /* Turuncu */
+        #penalty-badge.p-4 { background: #e74c3c; box-shadow: 0 0 20px #e74c3c; transform: scale(1.1); } /* Kırmızı */
+        #penalty-badge.p-5 { background: #9b59b6; box-shadow: 0 0 20px #9b59b6; transform: scale(1.15); } /* Mor */
+        #penalty-badge.p-6 { background: #2c3e50; box-shadow: 0 0 25px #000; transform: scale(1.2); } /* Siyah */
+
         @keyframes pulseBadge { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.15); } 100% { transform: translate(-50%, -50%) scale(1); } }
         #draw-counter { display: none; }
         #bottom-area { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; margin-bottom: 10px; position: relative; z-index: 10; grid-row: 3; align-self: end; }
@@ -343,7 +348,10 @@
         .mixer-card::after { content: "SON\A TABAK"; position: absolute; transform: rotate(-15deg); color: #3498db; font-weight: 900; font-size: 0.75em; white-space: pre; text-align: center; line-height:0.9; top: 35%; left: 5px; font-family: 'Comic Sans MS', cursive; }
         .anim-temp-card { position: fixed; width: 70px; height: 100px; border: 3px solid #fff; border-radius: 8px; background-size: cover; background-position: center; z-index: 4000; box-shadow: 0 0 10px rgba(0,0,0,0.5); pointer-events: none; }
         .anim-temp-card::after { content: "SON\A TABAK"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); color: #3498db; font-weight: 900; font-size: 0.9em; white-space: pre; text-align: center; }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 4000; }
+        
+        /* FIX: Modal z-index increased to 9999 to show above Login/Lobby */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        
         .modal-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 80%; max-width: 320px; height: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .input-field { padding: 10px; width: 80%; margin: 5px; border: 1px solid #ccc; border-radius: 5px; }
         .color-picker { display: flex; justify-content: center; gap: 15px; margin-top: 15px; flex-wrap: wrap; }
@@ -362,7 +370,7 @@
         #leave-modal .modal-box { border: 4px solid #c0392b; }
         #mixer-info { font-size: 0.85em; background: #ecf0f1; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: left; }
         
-        /* OYUN EKRANI MOBILE OPTIMIZASYONU - YENİ DÜZEN (V6.6 FIX) */
+        /* OYUN EKRANI MOBILE OPTIMIZASYONU - FIX (V6.8) */
         @media screen and (max-width: 900px) {
             body { 
                 height: 100vh; 
@@ -374,7 +382,8 @@
                 display: grid; /* Flex yerine Grid */
                 grid-template-columns: 100%;
                 /* Satırlar: Title, Game(Kalan Tüm Alan), Panel(Sabit), Butonlar(Sabit) */
-                grid-template-rows: auto 1fr 130px 50px; 
+                /* FIX: Üst boşluk eklendi (gap ile birlikte), Grid row'lar netleştirildi */
+                grid-template-rows: 40px 1fr 120px 40px; 
                 grid-template-areas: 
                     "logo"
                     "game"
@@ -382,8 +391,8 @@
                     "buttons";
                 width: 100%;
                 height: 100vh;
-                padding: 2px;
-                gap: 5px;
+                padding: 15px 5px 5px 5px; /* FIX: Üstten 15px padding eklendi */
+                gap: 10px; /* Elemanlar arası boşluk açıldı */
                 box-sizing: border-box;
                 overflow: hidden;
             }
@@ -395,9 +404,10 @@
                 flex-direction: row; 
                 align-items: center; 
                 gap: 5px; 
-                border-radius: 0 0 10px 10px;
-                margin: 0 5px;
-                height: 40px; /* Sabit yükseklik */
+                border-radius: 10px;
+                margin: 0; /* Margin sıfırlandı, grid gap kullanılıyor */
+                height: 100%; 
+                box-sizing: border-box;
             }
             .brand-title { font-size: 1.1em; display: flex; gap: 5px; } 
             .version { font-size: 0.6em; margin: 0; align-self: center; } 
@@ -409,41 +419,45 @@
                 width: 100%;
                 height: 100%; /* Bulunduğu alanı doldurur */
                 min-height: 0; /* Grid taşmasını önler */
-                display: grid;
-                grid-template-rows: auto 1fr auto; /* İç düzen */
+                
+                /* FIX: İç düzen Flexbox'a çevrildi */
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between; /* Elemanları yukarı/orta/aşağı dağıt */
                 align-items: center;
-                justify-items: center;
+                
                 margin: 0;
                 padding: 5px 0;
+                overflow: hidden; /* Taşmayı engelle */
+                box-sizing: border-box;
             }
             
-            /* Oyun içi elemanları ölçeklendirerek sığdır */
+            /* FIX: Negatif marginler kaldırıldı, taşmalar önlendi */
             #top-area { 
-                grid-row: 1; 
                 height: auto; 
                 min-height: 80px;
                 width: 100%; 
-                transform: scale(0.9);
-                transform-origin: top center;
-                margin-bottom: -15px;
+                transform: scale(0.80); 
+                transform-origin: center top;
+                margin: 0; /* Negatif margin iptal */
             }
             
             #play-area { 
-                grid-row: 2; 
                 height: auto;
-                transform: scale(0.85); /* Alanı küçült */
-                margin-top: -10px;
-                margin-bottom: -10px;
+                width: 100%;
+                transform: scale(0.80); 
+                margin: 0; /* Negatif margin iptal */
+                flex-grow: 1; /* Ortayı doldur */
             }
             
             #bottom-area { 
-                grid-row: 3; 
                 padding-bottom: 2px;
-                transform: scale(0.95);
-                transform-origin: bottom center;
+                transform: scale(0.85); 
+                transform-origin: center bottom;
+                margin: 0; /* Negatif margin iptal */
             }
             
-            .bot-wrapper { transform: scale(0.75); margin: 0; } 
+            .bot-wrapper { transform: scale(0.85); margin: 0; } 
             .arrow-icon { font-size: 1.5em; position: absolute; top: 50%; transform: translateY(-50%); z-index: 15; }
             #arrow-left { left: 5px; } #arrow-right { right: 5px; } #arrow-top-1, #arrow-top-2 { font-size: 1.5em; margin: 0; }
             .flying-card { transform: scale(0.8); transform-origin: top left; }
@@ -468,7 +482,7 @@
                 flex-direction: row; /* Yan yana */
                 height: 100%; 
                 gap: 5px; 
-                padding: 0 5px;
+                padding: 0;
                 box-sizing: border-box;
                 overflow: hidden;
             }
@@ -490,7 +504,7 @@
                 grid-area: buttons;
                 flex-direction: row; 
                 gap: 5px; 
-                padding: 0 5px; 
+                padding: 0; 
                 box-sizing: border-box;
                 height: 100%;
                 margin: 0;
@@ -502,14 +516,11 @@
 <body>
 <canvas id="confetti-canvas"></canvas>
 
-<!-- YENİ GİRİŞ EKRANI -->
 <div id="login-screen">
-    <!-- Köşe Elemanları -->
     <div class="brand-corner">🔥 Kalority</div>
     <div class="rules-corner"><button class="icon-btn" onclick="openRules()">📖</button></div>
     <div class="production-corner">ONR Studios Production</div>
 
-    <!-- Uçuşan Arkaplan (Animasyon Delay Eklendi) -->
     <div class="floating-bg" style="left:10%; animation-duration:12s; animation-delay: -5s;">🍅</div>
     <div class="floating-bg" style="left:30%; animation-duration:15s; animation-delay: -2s;">🥔</div>
     <div class="floating-bg" style="left:60%; animation-duration:10s; animation-delay: -8s;">🍆</div>
@@ -528,15 +539,12 @@
     </div>
 </div>
 
-<!-- YENİ LOBİ EKRANI -->
 <div id="new-lobby-screen">
-    <!-- Köşe Elemanları (Lobi için) -->
     <div class="brand-corner" style="position:fixed; top:15px; left:20px;">🔥 Kalority</div>
     <div class="rules-corner" style="position:fixed; top:15px; right:20px;"><button class="icon-btn" style="background:#333;" onclick="openRules()">📖</button></div>
     <div class="production-corner" style="position:fixed; bottom:10px; left:20px; color:#555;">ONR Studios Production</div>
 
     <div class="lobby-grid">
-        <!-- SOL: MASA AÇ (Mobilde varsayılan kapalı) -->
         <div class="lobby-col" id="col-create">
             <div class="col-title" onclick="toggleLobbyTab(this)">Masa Aç 🛋️</div>
             <div class="col-content create-form">
@@ -546,12 +554,10 @@
                 <div style="font-size:0.9em; font-weight:bold; margin-top:5px; color:#555;">Oyuncu Sayısı:</div>
                 <div class="player-count-select">
                     <button class="p-count-btn active" onclick="selectPCount(4)">4 Kişi</button>
-                    <!-- FIX: 6 Kişi butonu disable edildi -->
                     <button class="p-count-btn disabled" style="pointer-events:none;">6 Kişi (Yakında)</button>
                 </div>
                 
                 <label class="mode-check">
-                    <!-- FIX: Event listener JS tarafında eklendi -->
                     <input type="checkbox" id="offline-mode-check" onchange="toggleOfflineMode(this)">
                     <span style="font-size:0.9em; font-weight:bold; color:#e67e22;">Tek Kişilik Masa (Botlarla)</span>
                 </label>
@@ -560,7 +566,6 @@
             </div>
         </div>
 
-        <!-- ORTA: MASALAR (Mobilde varsayılan açık) -->
         <div class="lobby-col open-tab" id="col-rooms">
             <div class="col-title" onclick="toggleLobbyTab(this)">Aktif Masalar 🍽️</div>
             <div class="col-content room-scroll" id="room-list-container">
@@ -568,7 +573,6 @@
             </div>
         </div>
 
-        <!-- SAĞ: OYUNCULAR (FIX: Class eklendi) -->
         <div class="lobby-col players-col" id="col-players">
             <div class="col-title" onclick="toggleLobbyTab(this)">Mutfaktakiler 👨‍🍳</div>
             <div class="col-content player-list-scroll" id="online-player-list">
@@ -576,7 +580,6 @@
             </div>
         </div>
 
-        <!-- LOBİ CHAT (Sol ve Orta Altı) -->
         <div class="lobby-chat-wrapper">
             <div style="font-weight:bold; font-size:0.9em; color:#555; margin-bottom:5px;">Lobi Sohbeti 💬</div>
             <div id="lobby-chat-msgs" class="l-chat-msgs"></div>
@@ -588,7 +591,6 @@
     </div>
 </div>
 
-<!-- ODA BEKLEME EKRANI -->
 <div id="waiting-room-overlay" class="modal">
     <div class="modal-box">
         <h3 id="wr-room-name">Oda: ...</h3>
@@ -606,7 +608,6 @@
     </div>
 </div>
 
-<!-- ÇIKIŞ ONAY MODALI -->
 <div id="leave-modal" class="modal">
     <div class="modal-box">
         <h3>🚨 Oyundan Çık?</h3>
@@ -619,16 +620,12 @@
     </div>
 </div>
 
-<!-- OYUN ALANI (Wrapper ID Eklendi) -->
 <div class="main-wrapper" id="main-game-wrapper">
-    <!-- LOGO -->
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v6.6 UI</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v6.8 UI</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
-    <!-- OYUN ALANI -->
     <div class="game-container">
-        <!-- Oklar -->
         <div id="arrow-left" class="arrow-icon">⬆️</div>
         <div id="arrow-right" class="arrow-icon">⬇️</div>
         <div id="top-area">
@@ -668,7 +665,6 @@
             <div id="player-hand" class="hand-normal"></div>
         </div>
     </div>
-    <!-- SAĞ PANEL -->
     <div class="right-panel">
         <div class="flip-container" onclick="toggleInfoView(this)">
             <div class="flip-inner">
@@ -690,9 +686,7 @@
             </div>
         </div>
     </div>
-    <!-- BUTONLAR (Panel Dışına Alındı CSS ile) -->
     <div class="buttons-container">
-        <!-- EKLENDİ: Nasıl Oynanır Butonu -->
         <button class="game-btn btn-dark" onclick="openRules()">📖 Kurallar</button>
         <button class="game-btn btn-blue" onclick="openPatternModal()">🎨 Desen</button>
         <button class="game-btn btn-red" onclick="leaveGame()">❌ Çıkış</button>
@@ -776,7 +770,10 @@ function toggleLobbyTab(element) {
     } else {
         // Değilse, diğerlerini kapat ve bunu aç
         allCols.forEach(col => col.classList.remove('open-tab'));
+        allCols.forEach(col => col.querySelector('.col-content').style.opacity = '0');
+        
         parent.classList.add('open-tab');
+        setTimeout(() => parent.querySelector('.col-content').style.opacity = '1', 50);
     }
 }
 
@@ -788,10 +785,10 @@ const ANIM_CONFIG = {
     INITIAL_DEAL: 250,        
     TOAST: 2000,             
     POPUP: 3000,             
-    BOT_THINK: 800,           
-    HEARTBEAT_MS: 5000,       
+    BOT_THINK: 800,            
+    HEARTBEAT_MS: 5000,        
     HOST_TIMEOUT: 15000,     
-    AFK_TIMEOUT: 60000,       
+    AFK_TIMEOUT: 60000,        
     BOT_WATCHDOG: 3000        
 };
 
@@ -916,22 +913,32 @@ document.getElementById('login-btn').addEventListener('click', () => {
     if(!name) return alert("Lütfen bir isim gir!");
     document.getElementById('login-btn').innerText = "Mutfağa Giriliyor...";
     
-    auth.signInAnonymously()
-        .then(() => {
-            myName = name;
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('new-lobby-screen').style.display = 'flex';
-            
-            // Lobi Başlangıç İşlemleri
-            listenRooms();
-            listenLobbyChat();
-            startPresence();
-        })
-        .catch((e) => {
-            alert("Giriş Hatası: " + e.message);
-            document.getElementById('login-btn').innerText = "Mutfağa Gir";
-        });
+    // FIX: Mevcut oturumu kontrol et (Duplikasyonu önlemek için)
+    const proceedLogin = () => {
+        myName = name;
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('new-lobby-screen').style.display = 'flex';
+        
+        // Lobi Başlangıç İşlemleri
+        listenRooms();
+        listenLobbyChat();
+        startPresence();
+    };
+
+    if (auth.currentUser) {
+        myUid = auth.currentUser.uid;
+        proceedLogin();
+    } else {
+        auth.signInAnonymously()
+            .then(() => {
+                proceedLogin();
+            })
+            .catch((e) => {
+                alert("Giriş Hatası: " + e.message);
+                document.getElementById('login-btn').innerText = "Mutfağa Gir";
+            });
+    }
 });
 
 /* --- LOBBY LOGIC --- */
@@ -1075,7 +1082,7 @@ function startOfflineGame(rName) {
     
     // Hide Lobby, Show Game
     document.getElementById('new-lobby-screen').style.display = 'none';
-    document.getElementById('main-game-wrapper').style.display = 'grid';
+    document.getElementById('main-game-wrapper').style.display = 'grid'; // Grid is better for PC, Flex handled in CSS for mobile
 
     // Mock Players
     localPlayers = [
@@ -1814,7 +1821,15 @@ function updateUI() {
 
     if(gameDeck) document.getElementById('deck-count').innerText = gameDeck.length;
     let pBadge = document.getElementById('penalty-badge');
-    if(drawStack > 0) { pBadge.innerText = "+" + drawStack; pBadge.style.display = 'flex'; pBadge.className = `p-${Math.min(drawStack,6)}`; } else pBadge.style.display = 'none';
+    
+    // FIX: Badge Color Logic
+    if(drawStack > 0) { 
+        pBadge.innerText = "+" + drawStack; 
+        pBadge.style.display = 'flex'; 
+        pBadge.className = `p-${Math.min(drawStack,6)}`; // En fazla p-6
+    } else {
+        pBadge.style.display = 'none';
+    }
 
     let sortedP = [...gamePlayers].sort((a,b)=>a.score - b.score);
     let html = "";
