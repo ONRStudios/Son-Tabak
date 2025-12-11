@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v6.8 Mobile UI Fix</title>
+    <title>Son Tabak Online - v6.8 Mobile UI Fix (Optimized)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
@@ -777,17 +777,17 @@ function toggleLobbyTab(element) {
     }
 }
 
-/* --- ANIMATION & CONFIG CONSTANTS --- */
+/* --- ANIMATION & CONFIG CONSTANTS (OPTIMIZED) --- */
 const ANIM_CONFIG = {
-    FLY_DURATION: 1000,      
-    FLY_BUFFER: 1100,        
-    DRAW_INTERVAL: 600,      
+    FLY_DURATION: 1000,       
+    FLY_BUFFER: 1100,         
+    DRAW_INTERVAL: 600,       
     INITIAL_DEAL: 250,        
-    TOAST: 2000,             
-    POPUP: 3000,             
+    TOAST: 2000,              
+    POPUP: 3000,              
     BOT_THINK: 800,            
-    HEARTBEAT_MS: 5000,        
-    HOST_TIMEOUT: 15000,     
+    HEARTBEAT_MS: 30000, /* OPTIMIZED: 5s -> 30s */       
+    HOST_TIMEOUT: 15000,      
     AFK_TIMEOUT: 60000,        
     BOT_WATCHDOG: 3000        
 };
@@ -949,9 +949,10 @@ function startPresence() {
         db.collection('online_users').doc(myUid).set({ name: myName, status: 'lobby', lastSeen: Date.now() }, {merge:true});
     };
     updatePresence();
-    setInterval(updatePresence, 10000);
+    // OPTIMIZED: Presence update interval 10s -> 60s
+    setInterval(updatePresence, 60000);
 
-    // Listeyi Dinle
+    // Listeyi Dinle (OPTIMIZED: Limit 20)
     db.collection('online_users').orderBy('lastSeen', 'desc').limit(20).onSnapshot(snap => {
         const list = document.getElementById('online-player-list'); list.innerHTML = '';
         const now = Date.now();
@@ -965,7 +966,7 @@ function startPresence() {
             }
 
             let stClass = 'pst-lobby';
-            if(now - d.lastSeen > 30000) stClass = 'pst-disc'; // Disconnected
+            if(now - d.lastSeen > 65000) stClass = 'pst-disc'; // Disconnected threshold increased
             else if(d.status === 'playing') stClass = 'pst-game';
             else if(d.status === 'waiting') stClass = 'pst-wait';
             
@@ -997,20 +998,23 @@ function sendLobbyChat() {
     db.collection('lobby_chat').add({ sender: myName, msg: v, ts: Date.now() });
     i.value = '';
     
-    // FIX: Chat Limit Cleanup (50 mesajdan fazlasını sil)
-    db.collection('lobby_chat').orderBy('ts', 'desc').get().then(snap => {
-        if(snap.size > 50) {
-            const batch = db.batch();
-            snap.docs.slice(50).forEach(doc => batch.delete(doc.ref));
-            batch.commit().catch(e => console.log("Chat cleanup error", e));
-        }
-    });
+    // FIX: Chat Limit Cleanup (50 mesajdan fazlasını sil - Sadece ara sıra temizle)
+    if (Math.random() < 0.1) {
+        db.collection('lobby_chat').orderBy('ts', 'desc').get().then(snap => {
+            if(snap.size > 50) {
+                const batch = db.batch();
+                snap.docs.slice(50).forEach(doc => batch.delete(doc.ref));
+                batch.commit().catch(e => console.log("Chat cleanup error", e));
+            }
+        });
+    }
 }
 function handleLobbyChatKey(e) { if(e.key === 'Enter') sendLobbyChat(); }
 
 function listenRooms() {
     const list = document.getElementById('room-list-container');
-    db.collection("rooms").onSnapshot((snapshot) => {
+    // OPTIMIZED: Limit 20
+    db.collection("rooms").limit(20).onSnapshot((snapshot) => {
         list.innerHTML = "";
         if(snapshot.empty) list.innerHTML = "<div style='text-align:center;color:#777; margin-top:20px;'>Açık masa yok, çek bir sandalye!</div>";
         const now = Date.now();
@@ -1219,6 +1223,10 @@ function enterWaitingRoom(roomName) {
 function sendHeartbeat() {
     if(isOfflineMode) return;
     if(!currentRoomId || !myUid) return;
+    
+    // OPTIMIZED: Only host sends heartbeat to keep room alive
+    if (!isHost) return;
+
     db.collection("rooms").doc(currentRoomId).get().then(doc => {
         if(doc.exists) {
             let ps = doc.data().players;
