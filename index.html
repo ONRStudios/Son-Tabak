@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v6.8 Mobile UI Fix</title>
+    <title>Son Tabak Online - v6.9 Performance Fix</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
@@ -297,16 +297,20 @@
         .top-left { top: 2px; left: 2px; } .bottom-right { bottom: 2px; right: 2px; transform: rotate(180deg); }
         .card-emoji { font-size: 4.5em; display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
         
+        /* FIX: +2 Kart Boyutu ve Taşıma Sorunu Düzeltildi */
         .card[data-val="+2"] .card-emoji { 
-            font-size: 3em !important; 
-            letter-spacing: -6px !important; 
+            font-size: 2.2em !important; 
+            letter-spacing: -2px !important; 
             line-height: 1; 
             padding: 0; 
             white-space: nowrap !important; 
             display: flex !important;
             flex-direction: row !important;
+            justify-content: center; /* Ortalandı */
+            align-items: center;
             gap: 0px !important;
-            margin-left: -3px; 
+            margin-left: 0; /* Kayma düzeltildi */
+            width: 100%; /* Kapsayıcıya sığdır */
         }
         
         .guvec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; font-size: 0.45em; line-height: 1; }
@@ -622,7 +626,7 @@
 
 <div class="main-wrapper" id="main-game-wrapper">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v6.8 UI</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v6.9</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <div class="game-container">
@@ -1276,6 +1280,7 @@ function syncGameLoop(roomData) {
 
     if(currentPlayer !== myPlayerIdx) localSaidSonTabak = false;
 
+    // CHAT HANDLING (Performance Fix: Only update Chat UI if timestamp new)
     if(gs.lastChat && gs.lastChat.ts > lastChatTs) {
         if(gs.lastChat.isSystem) addSystemLog(gs.lastChat.msg);
         else {
@@ -1291,51 +1296,68 @@ function syncGameLoop(roomData) {
         lastChatTs = gs.lastChat.ts;
     }
 
-    if(lastGameState && lastGameState.lastAction.timestamp !== gs.lastAction.timestamp) {
+    // GAME STATE HANDLING (Fix: Don't re-render UI if only chat changed)
+    let actionChanged = lastGameState && lastGameState.lastAction.timestamp !== gs.lastAction.timestamp;
+    
+    if(actionChanged) {
         actionQueue.push(gs.lastAction);
         processActionQueue();
-    } else if (!isProcessingQueue) {
+    } else if (!isProcessingQueue && !lastGameState) {
+        // First Load
         updateUI(); 
+    } else if (!isProcessingQueue && actionQueue.length === 0 && actionChanged) {
+        // If queue empty but action changed (fallback)
+        updateUI();
     }
     
     // BOT & AFK HANDLERS (Only for Host)
     if(isHost && gameActive && !isBotThinking && !isDealing) {
-        if (!isOfflineMode) {
-             let currentPObj = gamePlayers[currentPlayer];
-             if(!currentPObj.isBot) {
-                 let timeSinceAction = Date.now() - gs.lastAction.timestamp;
-                 if(timeSinceAction > ANIM_CONFIG.AFK_TIMEOUT) {
-                     const updatedPlayers = gamePlayers.map(p => {
-                         if (p.uid === currentPObj.uid) {
-                             return { ...p, uid: 'afk_bot_' + Date.now(), name: '🤖 ' + p.name, isBot: true, isReady: true, personality: 'Dengeli', lastSeen: Date.now() };
-                         }
-                         return p;
-                     });
-                     db.collection("rooms").doc(currentRoomId).update({ 
-                         players: updatedPlayers,
-                         "gameState.lastChat": { sender: "Sistem", msg: `${currentPObj.name} AFK kaldığı için bot devraldı.`, ts: Date.now(), isSystem: true }
-                     });
+        // Watchdog: If actionQueue is jammed or bot is sleeping for > 4s
+        let timeSinceLast = Date.now() - gs.lastAction.timestamp;
+        let forceBot = (actionQueue.length > 0 && timeSinceLast > 5000); 
+
+        if ((!isProcessingQueue && actionQueue.length === 0) || forceBot) {
+             // AFK Check for Humans
+             if (!isOfflineMode) {
+                 let currentPObj = gamePlayers[currentPlayer];
+                 if(!currentPObj.isBot) {
+                     if(timeSinceLast > ANIM_CONFIG.AFK_TIMEOUT) {
+                         const updatedPlayers = gamePlayers.map(p => {
+                             if (p.uid === currentPObj.uid) {
+                                 return { ...p, uid: 'afk_bot_' + Date.now(), name: '🤖 ' + p.name, isBot: true, isReady: true, personality: 'Dengeli', lastSeen: Date.now() };
+                             }
+                             return p;
+                         });
+                         db.collection("rooms").doc(currentRoomId).update({ 
+                             players: updatedPlayers,
+                             "gameState.lastChat": { sender: "Sistem", msg: `${currentPObj.name} AFK kaldığı için bot devraldı.`, ts: Date.now(), isSystem: true }
+                         });
+                     }
                  }
-             }
-        }
-        
-        // Bot Logic Trigger
-        if(!isProcessingQueue && actionQueue.length === 0) {
+            }
+            
+            // Bot Move Trigger
             const currentPObj = gamePlayers[currentPlayer];
             if(currentPObj && currentPObj.isBot) {
-                isBotThinking = true;
-                lastBotActionTime = Date.now();
-                setTimeout(() => {
-                    hostBotTurn().then(() => { 
-                        isBotThinking = false;
-                        // FIX: Offline modda hamle bittikten sonra tekrar tetikleme
-                        if(isOfflineMode && gameActive && isHost) {
-                            setTimeout(() => {
-                                 syncGameLoop({ players: gamePlayers, gameState: lastGameState });
-                            }, 50);
-                        }
-                    }).catch(e => { console.error("Bot Error", e); isBotThinking = false; });
-                }, ANIM_CONFIG.BOT_THINK);
+                // If force trigger needed, clear queue
+                if(forceBot) {
+                    console.warn("Watchdog: Clearing stuck queue to let bot play.");
+                    actionQueue = [];
+                    isProcessingQueue = false;
+                }
+
+                if(!isBotThinking) {
+                    isBotThinking = true;
+                    lastBotActionTime = Date.now();
+                    setTimeout(() => {
+                        hostBotTurn().then(() => { 
+                            isBotThinking = false;
+                            if(isOfflineMode && gameActive && isHost) {
+                                setTimeout(() => { syncGameLoop({ players: gamePlayers, gameState: lastGameState }); }, 50);
+                            }
+                        }).catch(e => { console.error("Bot Error", e); isBotThinking = false; });
+                    }, ANIM_CONFIG.BOT_THINK);
+                }
             }
         }
     }
