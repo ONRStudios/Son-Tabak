@@ -783,17 +783,17 @@ function toggleLobbyTab(element) {
 
 /* --- ANIMATION & CONFIG CONSTANTS --- */
 const ANIM_CONFIG = {
-    FLY_DURATION: 1000,       
-    FLY_BUFFER: 1100,         
-    DRAW_INTERVAL: 600,       
+    FLY_DURATION: 1000,        
+    FLY_BUFFER: 1100,          
+    DRAW_INTERVAL: 600,        
     INITIAL_DEAL: 250,        
-    TOAST: 2000,              
-    POPUP: 3000,              
-    BOT_THINK: 800,            
-    HEARTBEAT_MS: 5000,        
-    HOST_TIMEOUT: 15000,      
-    AFK_TIMEOUT: 60000,        
-    BOT_WATCHDOG: 3000        
+    TOAST: 2000,               
+    POPUP: 3000,               
+    BOT_THINK: 800,             
+    HEARTBEAT_MS: 5000,         
+    HOST_TIMEOUT: 15000,       
+    AFK_TIMEOUT: 60000,         
+    BOT_WATCHDOG: 3000         
 };
 
 /* --- CARD NAMES MAPPING --- */
@@ -1381,9 +1381,9 @@ function syncGameLoop(roomData) {
 /* --- ACTION HANDLING --- */
 async function processActionQueue() {
     if(isProcessingQueue || actionQueue.length === 0) {
-        // FIX: Kuyruk bittiğinde ve offline moddaysak döngüyü tekrar tetikle (Animasyon sonrası botun oynaması için)
-        // Eğer oyun bittiyse (winnerIdx varsa) de son bir sync yap ki modal açılsın.
-        if(actionQueue.length === 0 && !isProcessingQueue && isHost && isOfflineMode) {
+        // FIX: Kuyruk bittiğinde animasyon sonrası botun oynaması için döngüyü tekrar tetikle
+        // Hem Online hem Offline modda HOST isek tetiklenmeli
+        if(actionQueue.length === 0 && !isProcessingQueue && isHost) {
              if (gameActive || (lastGameState && lastGameState.winnerIdx !== -1)) {
                  syncGameLoop({ players: gamePlayers, gameState: lastGameState });
              }
