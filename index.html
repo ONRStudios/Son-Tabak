@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v6.9 Performance Fix</title>
+    <title>Son Tabak Online - v6.9.3 Bot Fix</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
@@ -626,7 +626,7 @@
 
 <div class="main-wrapper" id="main-game-wrapper">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v6.9</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v6.9.3 Fix</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <div class="game-container">
@@ -784,16 +784,16 @@ function toggleLobbyTab(element) {
 /* --- ANIMATION & CONFIG CONSTANTS --- */
 const ANIM_CONFIG = {
     FLY_DURATION: 1000,        
-    FLY_BUFFER: 1100,           
+    FLY_BUFFER: 1100,            
     DRAW_INTERVAL: 600,        
     INITIAL_DEAL: 250,        
     TOAST: 2000,                
     POPUP: 3000,                
-    BOT_THINK: 800,              
-    HEARTBEAT_MS: 5000,          
+    BOT_THINK: 800,                
+    HEARTBEAT_MS: 5000,            
     HOST_TIMEOUT: 15000,        
-    AFK_TIMEOUT: 60000,          
-    BOT_WATCHDOG: 3000          
+    AFK_TIMEOUT: 60000,            
+    BOT_WATCHDOG: 3000            
 };
 
 /* --- CARD NAMES MAPPING --- */
@@ -1310,15 +1310,21 @@ function syncGameLoop(roomData) {
         updateUI();
     }
     
-    // BOT & AFK HANDLERS (Only for Host)
-    if(isHost && gameActive && !isBotThinking && !isDealing) {
+    // BOT & AFK HANDLERS (Separated Logic for Offline and Online)
+    // FIX: Botların takılmaması için watchdog ekle
+    if (isBotThinking && Date.now() - lastBotActionTime > 8000) {
+        console.warn("Watchdog: Bot stuck, forcing reset.");
+        isBotThinking = false;
+    }
+
+    if(gameActive && !isBotThinking && !isDealing) {
         // Watchdog: If actionQueue is jammed or bot is sleeping for > 4s
         let timeSinceLast = Date.now() - gs.lastAction.timestamp;
         let forceBot = (actionQueue.length > 0 && timeSinceLast > 5000); 
 
         if ((!isProcessingQueue && actionQueue.length === 0) || forceBot) {
-             // AFK Check for Humans
-             if (!isOfflineMode) {
+             // AFK Check for Humans (Only Online)
+             if (!isOfflineMode && isHost) {
                  let currentPObj = gamePlayers[currentPlayer];
                  if(!currentPObj.isBot) {
                      if(timeSinceLast > ANIM_CONFIG.AFK_TIMEOUT) {
@@ -1327,12 +1333,12 @@ function syncGameLoop(roomData) {
                                  return { ...p, uid: 'afk_bot_' + Date.now(), name: '🤖 ' + p.name, isBot: true, isReady: true, personality: 'Dengeli', lastSeen: Date.now() };
                              }
                              return p;
-                         });
-                         db.collection("rooms").doc(currentRoomId).update({ 
+                          });
+                          db.collection("rooms").doc(currentRoomId).update({ 
                              players: updatedPlayers,
                              "gameState.lastChat": { sender: "Sistem", msg: `${currentPObj.name} AFK kaldığı için bot devraldı.`, ts: Date.now(), isSystem: true }
-                         });
-                     }
+                          });
+                      }
                  }
             }
             
@@ -1340,23 +1346,37 @@ function syncGameLoop(roomData) {
             const currentPObj = gamePlayers[currentPlayer];
             if(currentPObj && currentPObj.isBot) {
                 // If force trigger needed, clear queue
-                if(forceBot) {
+                if(forceBot && isHost) {
                     console.warn("Watchdog: Clearing stuck queue to let bot play.");
                     actionQueue = [];
                     isProcessingQueue = false;
                 }
 
                 if(!isBotThinking) {
-                    isBotThinking = true;
-                    lastBotActionTime = Date.now();
-                    setTimeout(() => {
-                        hostBotTurn().then(() => { 
+                    // *** OFFLINE BOT MANTIĞI ***
+                    if (isOfflineMode) {
+                        isBotThinking = true;
+                        lastBotActionTime = Date.now();
+                        // Gecikmeli oynasın ki gerçekçi olsun
+                        setTimeout(async () => {
+                            await offlineBotTurn();
                             isBotThinking = false;
-                            if(isOfflineMode && gameActive && isHost) {
-                                setTimeout(() => { syncGameLoop({ players: gamePlayers, gameState: lastGameState }); }, 50);
-                            }
-                        }).catch(e => { console.error("Bot Error", e); isBotThinking = false; });
-                    }, ANIM_CONFIG.BOT_THINK);
+                            // FIX: Takılmayı önlemek için döngüyü tekrar tetikle
+                            if(gameActive) syncGameLoop({ players: gamePlayers, gameState: lastGameState });
+                        }, ANIM_CONFIG.BOT_THINK);
+                    }
+                    // *** ONLINE BOT MANTIĞI (Sadece Host) ***
+                    else if (isHost) {
+                        isBotThinking = true;
+                        lastBotActionTime = Date.now();
+                        setTimeout(() => {
+                            onlineBotTurn().then(() => { 
+                                isBotThinking = false;
+                                // FIX: Takılmayı önlemek için döngüyü tekrar tetikle
+                                if(gameActive) syncGameLoop({ players: gamePlayers, gameState: lastGameState });
+                            }).catch(e => { console.error("Bot Error", e); isBotThinking = false; });
+                        }, ANIM_CONFIG.BOT_THINK);
+                    }
                 }
             }
         }
@@ -1371,26 +1391,41 @@ function syncGameLoop(roomData) {
     }
     
     if(!lastGameState && gs.lastAction.type === 'start') {
-         actionQueue.push(gs.lastAction); 
-         processActionQueue();
+          actionQueue.push(gs.lastAction); 
+          processActionQueue();
     }
     
     lastGameState = gs;
 }
 
 /* --- ACTION HANDLING --- */
+// FIX: Input Kitleme Fonksiyonu
+function toggleInputLock(locked) {
+    const hand = document.getElementById('player-hand');
+    const btn1 = document.getElementById('son-tabak-btn');
+    const btn2 = document.getElementById('challenge-btn');
+    const styleVal = locked ? 'none' : 'auto';
+    const opacityVal = locked ? '0.7' : '1';
+
+    if(hand) { hand.style.pointerEvents = styleVal; hand.style.opacity = opacityVal; }
+    if(btn1) { btn1.style.pointerEvents = styleVal; btn1.style.opacity = opacityVal; }
+    if(btn2) { btn2.style.pointerEvents = styleVal; btn2.style.opacity = opacityVal; }
+}
+
 async function processActionQueue() {
+    // FIX: Animasyon sırasında inputları kilitle
     if(isProcessingQueue || actionQueue.length === 0) {
-        // FIX: Kuyruk bittiğinde animasyon sonrası botun oynaması için döngüyü tekrar tetikle
-        // Hem Online hem Offline modda HOST isek tetiklenmeli
-        if(actionQueue.length === 0 && !isProcessingQueue && isHost) {
-             if (gameActive || (lastGameState && lastGameState.winnerIdx !== -1)) {
+        // Kuyruk bittiğinde kilidi aç, ancak Host isek ve oyun devam ediyorsa döngüyü tetikle
+        if(actionQueue.length === 0 && !isProcessingQueue) {
+             toggleInputLock(false);
+             if (isHost && (gameActive || (lastGameState && lastGameState.winnerIdx !== -1))) {
                  syncGameLoop({ players: gamePlayers, gameState: lastGameState });
              }
         }
         return;
     }
     
+    toggleInputLock(true); // İşlem başladı, kilitle
     isProcessingQueue = true;
     const action = actionQueue.shift();
     await handleRemoteAction(action); 
@@ -1452,34 +1487,41 @@ async function handleRemoteAction(action) {
         let targetId = action.pIdx === myPlayerIdx ? 'player-hand' : `bot${(action.pIdx - myPlayerIdx + 4) % 4}-wrapper`;
         // INCREMENTAL DRAW VISUALIZATION FIX
         isDealing = true; // Lock UI updates temporarily
-        let currentHandClone = [...gameHands[myPlayerIdx]]; // Real full hand
-        // We know that 'action.count' cards were added to end.
-        // We will visualize them being added one by one.
-        
-        // This loop simulates delay
-        for(let k=0; k<action.count; k++) { 
-             let cardToVisualize = null;
-             // If it's me, I want to see the card face
-             if(action.pIdx === myPlayerIdx) {
-                 // The card is at index: (length - count + k)
-                 let idx = currentHandClone.length - action.count + k;
-                 if(idx >= 0 && idx < currentHandClone.length) cardToVisualize = createCardHTML(currentHandClone[idx]);
-             }
-             
-             await new Promise(resolve => {
-                 animateFly(document.getElementById('draw-pile'), document.getElementById(targetId), cardToVisualize, () => {
-                     // Add to DOM visually if it's me
-                     if(action.pIdx === myPlayerIdx && cardToVisualize) {
-                         let div = document.createElement('div'); div.innerHTML = cardToVisualize; 
-                         let el = div.firstElementChild;
-                         document.getElementById('player-hand').appendChild(el);
-                     }
-                     resolve();
+        toggleInputLock(true);
+        try {
+            let currentHandClone = [...gameHands[myPlayerIdx]]; // Real full hand
+            // We know that 'action.count' cards were added to end.
+            
+            // FIX: Hızlı Çekim Mantığı
+            let delayMs = action.count > 1 ? Math.max(50, 200 / action.count) : 200; // Çok kart varsa hızlan
+
+            for(let k=0; k<action.count; k++) { 
+                 let cardToVisualize = null;
+                 // If it's me, I want to see the card face
+                 if(action.pIdx === myPlayerIdx) {
+                     // The card is at index: (length - count + k)
+                     let idx = currentHandClone.length - action.count + k;
+                     if(idx >= 0 && idx < currentHandClone.length) cardToVisualize = createCardHTML(currentHandClone[idx]);
+                 }
+                 
+                 await new Promise(resolve => {
+                     animateFly(document.getElementById('draw-pile'), document.getElementById(targetId), cardToVisualize, () => {
+                         // Add to DOM visually if it's me
+                         if(action.pIdx === myPlayerIdx && cardToVisualize) {
+                             let div = document.createElement('div'); div.innerHTML = cardToVisualize; 
+                             let el = div.firstElementChild;
+                             document.getElementById('player-hand').appendChild(el);
+                         }
+                         resolve();
+                     });
                  });
-             });
-             await wait(100); // Small gap between flights
+                 // Hızlandırılmış bekleme
+                 await wait(delayMs);
+            }
+        } finally {
+            isDealing = false;
+            // toggleInputLock(false) processActionQueue sonunda yapılacak
         }
-        isDealing = false;
         updateUI(); // Final sync
     }
     await wait(200);
@@ -1504,7 +1546,7 @@ function playerDrawCard() {
     
     serverDrawCard(myPlayerIdx, count, isPenalty);
     if(isPenalty || count > 1) { 
-        setTimeout(() => serverPassTurn(myPlayerIdx), 1500 + (count*600)); // Wait for animations
+        setTimeout(() => serverPassTurn(myPlayerIdx), 1000 + (count*100)); // Hızlandırılmış bekleme
     }
 }
 function playerPlayCard(idx) {
@@ -1558,6 +1600,7 @@ function playerSaySonTabak() {
     if(isOfflineMode) {
         updateOfflineGameState(updateData);
     } else {
+        if(!currentRoomId) return;
         db.collection("rooms").doc(currentRoomId).update(updateData); 
     }
 }
@@ -1567,19 +1610,19 @@ function challengePreviousPlayer() {
     if(vulnerablePlayerIdx !== -1) { 
         serverPunishVulnerable(vulnerablePlayerIdx); 
         let msg = { sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> İTİRAZ ETTİ ve kazandı!`, ts: Date.now(), isSystem: true };
-        if(isOfflineMode) updateOfflineGameState({"gameState.lastChat": msg}); else db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": msg }); 
+        if(isOfflineMode) updateOfflineGameState({"gameState.lastChat": msg}); else { if(!currentRoomId) return; db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": msg }); }
     }
     else { 
         serverPunishChallenger(myPlayerIdx); 
         let msg = { sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> YANLIŞ İTİRAZ ETTİ!`, ts: Date.now(), isSystem: true };
-        if(isOfflineMode) updateOfflineGameState({"gameState.lastChat": msg}); else db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": msg }); 
+        if(isOfflineMode) updateOfflineGameState({"gameState.lastChat": msg}); else { if(!currentRoomId) return; db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": msg }); }
     }
 }
 function playerSendMessage() { 
     let input = document.getElementById('player-input'); let msg = input.value.trim(); 
     if(msg) { 
         let chatObj = { "gameState.lastChat": { sender: myName, msg: msg, ts: Date.now(), isSystem: false }, "lastActive": Date.now() };
-        if(isOfflineMode) updateOfflineGameState(chatObj); else db.collection("rooms").doc(currentRoomId).update(chatObj); 
+        if(isOfflineMode) updateOfflineGameState(chatObj); else { if(currentRoomId) db.collection("rooms").doc(currentRoomId).update(chatObj); }
         input.value = ''; 
     } 
 }
@@ -1631,19 +1674,57 @@ async function serverDrawCard(pIdx, count, isPenalty = false) {
         updates["gameState.lastChat"].msg += " (Ceza)";
     }
     
-    if(isOfflineMode) updateOfflineGameState(updates); else await db.collection("rooms").doc(currentRoomId).update(updates);
+    if(isOfflineMode) {
+        updateOfflineGameState(updates);
+    } else {
+        // FIX: HATA BURADAN KAYNAKLANIYORDU (Oda yoksa yazmaya çalışma)
+        if(!currentRoomId) return;
+        await db.collection("rooms").doc(currentRoomId).update(updates);
+    }
+    
+    // FIX: Timeout çağrıldığında hala odada mıyız kontrol et
+    if(isPenalty) {
+        setTimeout(() => {
+             if(isOfflineMode || currentRoomId) serverPassTurn(pIdx);
+        }, 1000 + (count*100)); // Fast delay
+    }
 }
 async function serverPassTurn(pIdx) { 
-    let u = { "gameState.currentPlayer": (currentPlayer + direction + 4) % 4, "gameState.hasDrawn": false, "gameState.vulnerablePlayerIdx": -1, "lastActive": Date.now(), "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> Pas geçti.`, ts: Date.now(), isSystem: true } };
-    if(isOfflineMode) updateOfflineGameState(u); else await db.collection("rooms").doc(currentRoomId).update(u);
+    // FIX: "lastAction" ekledik ki pas geçilince UI tetiklensin ve oyun takılmasın
+    let u = { 
+        "gameState.currentPlayer": (currentPlayer + direction + 4) % 4, 
+        "gameState.hasDrawn": false, 
+        "gameState.vulnerablePlayerIdx": -1, 
+        "lastActive": Date.now(), 
+        "gameState.lastAction": { type: 'pass', pIdx: pIdx, timestamp: Date.now() }, // EKLENDI
+        "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> Pas geçti.`, ts: Date.now(), isSystem: true } 
+    };
+    if(isOfflineMode) updateOfflineGameState(u); else { if(!currentRoomId) return; await db.collection("rooms").doc(currentRoomId).update(u); }
 }
 
 async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredSonTabak = false) {
+    // FIX: "Undefined Hand" Guard Clause Removed/Improved
     let newHands = gameHands.map(h => [...h]); 
     let newDiscard = [...gameDiscard];
-    if(!newHands[pIdx] || !newHands[pIdx][cIdx]) return;
 
-    let card = newHands[pIdx][cIdx]; if(cardWithColor) card = cardWithColor;
+    if (!newHands[pIdx]) { console.error("ServerPlay: Hand not found!"); return; }
+    
+    // Eğer cIdx geçersizse ama kart oynanmak isteniyorsa, kartın eldeki yerini bulmaya çalış
+    if (!newHands[pIdx][cIdx]) {
+        console.warn("ServerPlay: Card index mismatch, attempting auto-fix");
+        if(cardWithColor) {
+             // Card objesinden eşleşme bulmaya çalış
+             cIdx = newHands[pIdx].findIndex(c => c.val === cardWithColor.val && c.color === cardWithColor.color);
+        }
+        if(cIdx === -1) {
+            console.error("ServerPlay: Card not in hand!");
+            return; // Fallback
+        }
+    }
+
+    let card = newHands[pIdx][cIdx]; 
+    // cardWithColor, bot'un veya oyuncunun seçtiği renkli versiyondur (deep copy olması tercih edilir)
+    if(cardWithColor) card = cardWithColor;
     
     newHands[pIdx].splice(cIdx, 1); 
     newDiscard.push(card);
@@ -1706,17 +1787,17 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
         updates["players"] = playerUpdates.map((p, i) => ({ ...p, score: p.score + roundScores[i], lastRoundScore: roundScores[i] })); 
     }
     
-    if(isOfflineMode) updateOfflineGameState(updates); else await db.collection("rooms").doc(currentRoomId).update(updates);
+    if(isOfflineMode) updateOfflineGameState(updates); else { if(!currentRoomId) return; await db.collection("rooms").doc(currentRoomId).update(updates); }
 }
 async function serverPunishVulnerable(victimIdx) { 
     let newDeck = [...gameDeck], newHands = gameHands.map(h=>[...h]), c = newDeck.pop(); if(c) newHands[victimIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[victimIdx].hand = newHands[victimIdx]; 
     let u = { "players": pUpdates, "gameState.deck": newDeck, "gameState.vulnerablePlayerIdx": -1, "gameState.lastAction": { type: 'challenge', success: true, victimIdx: victimIdx, timestamp: Date.now() } };
-    if(isOfflineMode) updateOfflineGameState(u); else await db.collection("rooms").doc(currentRoomId).update(u);
+    if(isOfflineMode) updateOfflineGameState(u); else { if(!currentRoomId) return; await db.collection("rooms").doc(currentRoomId).update(u); }
 }
 async function serverPunishChallenger(challengerIdx) { 
     let newDeck = [...gameDeck], newHands = gameHands.map(h=>[...h]), c = newDeck.pop(); if(c) newHands[challengerIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[challengerIdx].hand = newHands[challengerIdx]; pUpdates[challengerIdx].challengeUsed = true; let nextP = (currentPlayer + direction + 4) % 4; 
     let u = { "players": pUpdates, "gameState.deck": newDeck, "gameState.currentPlayer": nextP, "gameState.hasDrawn": false, "gameState.lastAction": { type: 'challenge', success: false, victimIdx: challengerIdx, timestamp: Date.now() } };
-    if(isOfflineMode) updateOfflineGameState(u); else await db.collection("rooms").doc(currentRoomId).update(u);
+    if(isOfflineMode) updateOfflineGameState(u); else { if(!currentRoomId) return; await db.collection("rooms").doc(currentRoomId).update(u); }
 }
 
 async function nextRound() {
@@ -1732,11 +1813,99 @@ async function nextRound() {
     if(isOfflineMode) {
         syncGameLoop({ players: updatedPlayers, gameState: nextState });
     } else {
+        if(!currentRoomId) return;
         await db.collection("rooms").doc(currentRoomId).update({ players: updatedPlayers, gameState: nextState, lastActive: Date.now() });
     }
 }
 
-async function hostBotTurn() {
+// *** OFFLINE BOT MANTIĞI (Cihaz Üzerinde Çalışır) - FIX ***
+async function offlineBotTurn() {
+    const currentPObj = gamePlayers[currentPlayer];
+    if (!currentPObj || !currentPObj.isBot) return;
+
+    try {
+        // Basit Chat
+        const triggerChat = (cat) => {
+            let pType = currentPObj.personality || 'Dengeli';
+            let pool = CHAT_POOL[pType] || CHAT_POOL['Dengeli'];
+            let msgs = pool[cat] || pool['draw_many'];
+            let msg = msgs[Math.floor(Math.random()*msgs.length)];
+            updateOfflineGameState({ "gameState.lastChat": { sender: currentPObj.name, msg: msg, ts: Date.now(), isSystem: false } });
+        };
+
+        // İtiraz Etme (Challenge)
+        if(vulnerablePlayerIdx !== -1 && vulnerablePlayerIdx !== currentPlayer) {
+            if(Math.random() < 0.95) { 
+                await serverPunishVulnerable(vulnerablePlayerIdx);
+                updateOfflineGameState({ "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[currentPlayer]}">${currentPObj.name}</b> uyanıklık yaptı ve itiraz etti!`, ts: Date.now(), isSystem: true } });
+                await wait(1500); 
+            }
+        }
+
+        // FIX: Always fetch fresh hand data
+        const hand = gameHands[currentPlayer] || [];
+        let playableIdx = -1;
+        let willSaySonTabak = false;
+        
+        if(drawStack > 0) {
+            playableIdx = hand.findIndex(c => c.val === '+2' || (c.val === '+1' && gameDiscard[gameDiscard.length-1].val==='+1') || c.val === 'Wild Meze' || c.val === 'Wild Anti-Draw');
+        } else {
+            playableIdx = hand.findIndex(c => canPlay(c));
+        }
+
+        // Son Tabak Söyleme
+        if(playableIdx !== -1 && hand.length === 2) {
+             if(Math.random() > 0.1) {
+                 await serverBotSaySonTabak(currentPlayer); 
+                 willSaySonTabak = true;
+             }
+        }
+
+        // Ceza Çekme
+        if (drawStack > 0 && playableIdx === -1) {
+            triggerChat("draw_many");
+            await serverDrawCard(currentPlayer, drawStack, true); 
+            // Bekle ve pas geç (Fast delay logic)
+            let waitTime = 1000 + (drawStack * 100);
+            await wait(waitTime);
+            await serverPassTurn(currentPlayer);
+            return;
+        }
+
+        // Kart Oynama veya Çekme
+        if(playableIdx !== -1) {
+            // FIX: Create a deep copy to set chosenColor safely
+            let card = { ...hand[playableIdx] };
+            
+            if(card.color === 'wild') {
+                if (card.val === 'Wild Anti-Draw') {
+                    let top = gameDiscard[gameDiscard.length - 1];
+                    let currentActiveColor = top.chosenColor || top.color;
+                    if (currentActiveColor === 'wild') currentActiveColor = ['red','green','yellow','purple'][Math.floor(Math.random()*4)];
+                    card.chosenColor = currentActiveColor;
+                } else {
+                    triggerChat("wild");
+                    card.chosenColor = ['red','green','yellow','purple'][Math.floor(Math.random()*4)];
+                }
+            }
+            if(card.val === '+2') triggerChat("plus2");
+            if(card.val === 'Block') triggerChat("block");
+            
+            await serverPlayCard(currentPlayer, playableIdx, card, 1, willSaySonTabak); 
+        } else {
+            if(!hasDrawn) await serverDrawCard(currentPlayer, 1);
+            else await serverPassTurn(currentPlayer);
+        }
+    } catch(e) {
+        console.error("Offline Bot Logic Crashed:", e);
+        // Emergency recovery
+        isBotThinking = false;
+        await serverPassTurn(currentPlayer);
+    }
+}
+
+// *** ONLINE BOT MANTIĞI (Host Üzerinde Çalışır) - REFERANS KODDAN ALINDI ***
+async function onlineBotTurn() {
     try {
         if(!isHost) return;
         const currentPObj = gamePlayers[currentPlayer];
@@ -1747,19 +1916,23 @@ async function hostBotTurn() {
             let pool = CHAT_POOL[pType] || CHAT_POOL['Dengeli'];
             let msgs = pool[cat] || pool['draw_many'];
             let msg = msgs[Math.floor(Math.random()*msgs.length)];
-            let u = { "gameState.lastChat": { sender: currentPObj.name, msg: msg, ts: Date.now(), isSystem: false } };
-            if(isOfflineMode) updateOfflineGameState(u); else db.collection("rooms").doc(currentRoomId).update(u).catch(e => console.log("Chat error", e));
+            // REFERANS KOD: Doğrudan DB güncellemesi
+            db.collection("rooms").doc(currentRoomId).update({
+                "gameState.lastChat": { sender: currentPObj.name, msg: msg, ts: Date.now(), isSystem: false }
+            }).catch(e => console.log("Chat error", e));
         };
 
         if(vulnerablePlayerIdx !== -1 && vulnerablePlayerIdx !== currentPlayer) {
             if(Math.random() < 0.95) { 
                 await serverPunishVulnerable(vulnerablePlayerIdx);
-                let u = { "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[currentPlayer]}">${currentPObj.name}</b> uyanıklık yaptı ve itiraz etti!`, ts: Date.now(), isSystem: true } };
-                if(isOfflineMode) updateOfflineGameState(u); else await db.collection("rooms").doc(currentRoomId).update(u);
+                await db.collection("rooms").doc(currentRoomId).update({ 
+                    "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[currentPlayer]}">${currentPObj.name}</b> uyanıklık yaptı ve itiraz etti!`, ts: Date.now(), isSystem: true } 
+                });
                 await wait(1500); 
             }
         }
 
+        // REFERANS KOD: gameHands doğrudan global scope'tan
         const hand = gameHands[currentPlayer];
         let playableIdx = -1;
         let willSaySonTabak = false;
@@ -1780,16 +1953,7 @@ async function hostBotTurn() {
         if (drawStack > 0 && playableIdx === -1) {
             triggerChat("draw_many");
             await serverDrawCard(currentPlayer, drawStack, true); 
-            
-            // FIX: Bot donma sorunu için Promise yapısı eklendi.
-            // Bu sayede bot, sunucu yanıtından bağımsız olarak animasyon bitene kadar "düşünmeye" devam eder
-            // ve aynı döngüye tekrar girmez.
-            await new Promise(resolve => {
-                setTimeout(async () => {
-                    await serverPassTurn(currentPlayer);
-                    resolve();
-                }, 1500 + (drawStack * 600));
-            });
+            setTimeout(() => serverPassTurn(currentPlayer), 1500 + (drawStack*600)); 
             return;
         }
 
@@ -1828,7 +1992,7 @@ async function serverBotSaySonTabak(pIdx) {
     let pUpdates = [...gamePlayers]; pUpdates[pIdx].saidSonTabak = true;
     let pColor = playerColors[pIdx];
     let u = { players: pUpdates, "gameState.vulnerablePlayerIdx": -1, "gameState.lastAction": { type: 'sonTabak', pIdx: pIdx, timestamp: Date.now() }, "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${pColor}">${gamePlayers[pIdx].name}</b> SON TABAK dedi!`, ts: Date.now(), isSystem: true } };
-    if(isOfflineMode) updateOfflineGameState(u); else await db.collection("rooms").doc(currentRoomId).update(u);
+    if(isOfflineMode) updateOfflineGameState(u); else { if(!currentRoomId) return; await db.collection("rooms").doc(currentRoomId).update(u); }
 }
 
 /* --- YARDIMCI GÖRSELLER & ANİMASYONLAR --- */
@@ -2022,6 +2186,7 @@ function animateMezeEffect(senderIdx) {
 async function animateInitialDeal() {
     let piles = [];
     isDealing = true; 
+    toggleInputLock(true);
     document.getElementById('player-hand').innerHTML = '';
     
     let targets = ['player-hand', 'bot1-wrapper', 'bot2-wrapper', 'bot3-wrapper'];
@@ -2051,6 +2216,7 @@ async function animateInitialDeal() {
     }
     document.getElementById('player-hand').innerHTML = '';
     isDealing = false; 
+    toggleInputLock(false);
     updateUI();
 }
 function startVegetableRain() {
