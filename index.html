@@ -443,7 +443,6 @@
         <div class="lobby-chat-wrapper">
             <div style="font-weight:bold; font-size:0.9em; color:#555; margin-bottom:5px; display:flex; justify-content:space-between;">
                 <span>Lobi Sohbeti 💬</span>
-                <span style="font-size:0.8em; color:#aaa; font-weight:normal;">(Herkese Açık)</span>
             </div>
             <div id="lobby-chat-msgs"></div>
             <div class="l-chat-input-area">
@@ -457,7 +456,7 @@
 <!-- BEKLEME ODASI -->
 <div id="waiting-room-overlay" class="modal">
     <div class="modal-box">
-        <h3 id="wr-room-name">Oda: ...</h3>
+        <h3 id="wr-room-name">Masa: ...</h3>
         <p>Oyuncular bekleniyor (<span id="wr-count">0</span>/4)</p>
         <ul id="wr-player-list" class="player-list"></ul>
         <div id="wr-host-controls" style="display:none;">
@@ -829,7 +828,7 @@ function initLobbyFeatures() {
                 const item = document.createElement('div');
                 item.className = 'p-list-item';
                 let displayName = data.name;
-                if(doc.id === myUid) displayName = `<b>${displayName} (Sen)</b>`;
+                if(doc.id === myUid) displayName = `<b>${displayName}</b>`;
                 
                 item.innerHTML = `<div class="p-dot ${dotClass}"></div>${displayName}`;
                 listDiv.appendChild(item);
@@ -1040,7 +1039,7 @@ function enterWaitingRoom() {
 
         document.getElementById(isHost ? 'wr-host-controls' : 'wr-guest-controls').style.display = 'block';
         document.getElementById(!isHost ? 'wr-host-controls' : 'wr-guest-controls').style.display = 'none';
-        document.getElementById('wr-room-name').innerText = `Oda: ${data.name}`;
+        document.getElementById('wr-room-name').innerText = `Masa: ${data.name}`;
         document.getElementById('wr-count').innerText = localPlayers.length;
         const ul = document.getElementById('wr-player-list'); ul.innerHTML = "";
         localPlayers.forEach(p => { ul.innerHTML += `<li class="player-item"><span>${p.isBot?'🤖 ':''}${p.name}</span> ${(p.uid===firstHuman?.uid)?'(Host)':''}</li>`; });
