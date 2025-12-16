@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Son Tabak Online - v6.3 (UI Fixes)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <!-- FIREBASE (Compat Sürümleri) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* --- TEMEL CSS --- */
+        :root {
+            --card-pattern: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+            --bg-color: #2c3e50;
+            --primary: #e67e22;
+            --accent: #f1c40f;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: #333; margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; user-select: none; -webkit-tap-highlight-color: transparent; }
+        /* FIX: Confetti Z-Index increased to appear above modals */
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20000; }
+        
+        /* --- GİRİŞ EKRANI --- */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 8000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; overflow: hidden; }
+        
+        .floating-bg { position: absolute; font-size: 3rem; opacity: 0.3; bottom: -50px; animation: floatAnim linear infinite; pointer-events: none; z-index: 0; }
+        @keyframes floatAnim { 
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; } 
+            10% { opacity: 0.3; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; } 
+        }
+
+        .brand-corner { position: absolute; top: 20px; left: 20px; font-size: 1.5em; font-weight: 900; color: var(--primary); z-index: 10; display: flex; align-items: center; gap: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .production-corner { position: absolute; bottom: 10px; left: 20px; font-size: 0.7em; color: rgba(255,255,255,0.4); z-index: 10; letter-spacing: 1px; }
+        .rules-corner { position: absolute; top: 20px; right: 20px; z-index: 9000; }
+        .icon-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; width: 40px; height: 40px; font-size: 1.5em; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .icon-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+
+        .login-content { position: relative; z-index: 5; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; }
+        .logo-container { position: relative; margin-bottom: 20px; }
+        .plate-anim { font-size: 6em; animation: plateWobble 3s infinite ease-in-out; display: block; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3)); }
+        @keyframes plateWobble { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+        
+        .game-title-login { font-size: 3em; font-weight: 900; margin-top: -10px; color: white; text-shadow: 0 4px 0 #000; letter-spacing: -2px; line-height: 1; }
+        .online-stamp { position: absolute; top: 0; right: -30px; background: #c0392b; color: white; padding: 2px 8px; font-size: 0.4em; font-weight: bold; transform: rotate(30deg); border: 2px solid white; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); animation: stampPulse 2s infinite; }
+        @keyframes stampPulse { 0% { transform: rotate(30deg) scale(1); } 50% { transform: rotate(30deg) scale(1.1); } 100% { transform: rotate(30deg) scale(1); } }
+
+        .login-input-group { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 15px; width: 300px; max-width: 90%; }
+        .styled-input { background: rgba(0,0,0,0.3); border: none; padding: 15px; border-radius: 10px; color: white; font-size: 1.1em; text-align: center; outline: none; transition: 0.3s; border: 1px solid transparent; width: 100%; box-sizing: border-box; }
+        .styled-input:focus { background: rgba(0,0,0,0.5); border-color: var(--primary); }
+        .login-btn-main { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.2em; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 0 #d35400; width: 100%; }
+        .login-btn-main:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #d35400; }
+        .login-btn-main:active { transform: translateY(2px); box-shadow: 0 2px 0 #d35400; }
+
+        /* --- LOBİ EKRANI --- */
+        #lobby-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 7500; display: none; flex-direction: column; padding: 60px 20px 20px 20px; box-sizing: border-box; overflow: hidden; }
+        
+        .lobby-grid { display: grid; grid-template-columns: 1fr 1.6fr 0.8fr; gap: 15px; height: 100%; width: 100%; max-width: 1400px; margin: 0 auto; grid-template-rows: 1fr 200px; }
+        
+        .lobby-col { background: rgba(255,255,255,0.95); border-radius: 15px; padding: 15px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; position: relative; transition: all 0.3s ease; }
+        .col-title { font-size: 1.2em; font-weight: 800; color: #2c3e50; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #eee; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        
+        .create-form { display: flex; flex-direction: column; gap: 10px; }
+        .mode-check { display: flex; align-items: center; gap: 10px; background: #f9f9f9; padding: 10px; border-radius: 8px; margin-top: 5px; cursor: pointer; border: 1px solid #eee; }
+
+        .room-scroll { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .lobby-room-item { background: white; border: 1px solid #eee; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; }
+        .lobby-room-item:hover { transform: translateX(3px); border-color: #bdc3c7; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .room-status-dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 10px; flex-shrink: 0; }
+        .st-green { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
+        .st-yellow { background: #f1c40f; box-shadow: 0 0 5px #f1c40f; }
+        .st-red { background: #e74c3c; box-shadow: 0 0 5px #e74c3c; }
+        .room-info { display: flex; align-items: center; flex: 1; }
+        .room-name-txt { font-weight: bold; color: #333; margin-right: 10px; }
+        .room-count-pill { font-size: 0.8em; background: #eee; padding: 2px 6px; border-radius: 4px; color: #555; }
+        .room-action-btn { padding: 6px 15px; font-size: 0.9em; border-radius: 6px; cursor: pointer; border: none; background: #3498db; color: white; font-weight: bold; }
+        .room-action-btn:hover { background: #2980b9; }
+
+        .lobby-col.players-col { grid-column: 3; grid-row: 1 / span 2; }
+        .player-list-scroll { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+
+        /* LOBBY CHAT & PLAYERS LIST STYLES */
+        .lobby-chat-wrapper { 
+            grid-column: 1 / 3; 
+            background: rgba(255,255,255,0.95); 
+            border-radius: 15px; 
+            padding: 10px; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+        }
+
+        #lobby-chat-msgs {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            background: #fdfdfd;
+            border-radius: 8px;
+            padding: 5px;
+            margin-bottom: 5px;
+            font-size: 0.85em;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .l-chat-line { padding: 2px 4px; border-bottom: 1px dashed #f0f0f0; word-break: break-word; }
+        .l-chat-input-area { display: flex; gap: 5px; height: 35px; }
+        #l-chat-input { flex: 1; border: 1px solid #ccc; border-radius: 15px; padding: 0 10px; font-size: 0.9em; outline: none; }
+        #l-chat-send { background: #27ae60; color: white; border: none; width: 40px; border-radius: 50%; font-size: 1.2em; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        
+        /* Players List Item Styles */
+        .p-list-item { 
+            display: flex; align-items: center; padding: 4px 8px; border-bottom: 1px solid #f5f5f5; font-size: 0.85em; color: #555; background: white; border-radius: 4px;
+        }
+        .p-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
+        .p-dot-lobby { background: #2ecc71; box-shadow: 0 0 4px #2ecc71; } /* Yeşil: Lobide */
+        .p-dot-wait { background: #f1c40f; box-shadow: 0 0 4px #f1c40f; } /* Sarı: Masada */
+        .p-dot-play { background: #e74c3c; box-shadow: 0 0 4px #e74c3c; } /* Kırmızı: Oyunda */
+
+        /* --- OYUN ALANI DÜZENİ --- */
+        #main-game-wrapper { display: none; }
+        .main-wrapper { 
+            display: grid; width: 98%; max-width: 1400px; height: 98vh; gap: 10px; padding: 5px; box-sizing: border-box; 
+            grid-template-columns: 1fr 300px; grid-template-rows: auto 1fr auto; 
+            grid-template-areas: "game logo" "game panel" "game buttons"; 
+        }
+
+        #brand-area { grid-area: logo; text-align: center; background: #fff; padding: 10px; border-radius: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: center; height: fit-content; }
+        .brand-title { font-size: 1.5em; font-weight: 900; color: #2c3e50; line-height: 1; }
+        .version { font-size: 0.4em; color: #95a5a6; margin-left: 5px; font-weight: normal; }
+        .brand-sub { font-size: 0.7em; margin: 0; margin-left: auto; color: var(--primary); font-weight: 800; }
+
+        .right-panel { grid-area: panel; display: flex; flex-direction: column; gap: 10px; height: 100%; overflow: hidden; }
+        .flip-container { background-color: transparent; width: 100%; height: 200px; perspective: 1000px; cursor: pointer; flex-shrink: 0; }
+        .flip-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; border-radius: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
+        .flip-container.flipped .flip-inner { transform: rotateY(180deg); }
+        .flip-front, .flip-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: #fff; border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; }
+        .flip-back { transform: rotateY(180deg); background: #fdfdfd; }
+        .panel-header { font-weight: bold; color: #fff; background: #34495e; padding: 5px; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center; padding-left: 10px; padding-right: 10px;}
+        
+        #score-table { width: 100%; font-size: 0.85em; border-collapse: collapse; margin-top: 5px; table-layout: fixed; }
+        #score-table td { padding: 4px 6px; border-bottom: 1px solid #eee; text-align: left; vertical-align: middle; font-size: 0.9em; }
+        .me-row { background-color: #fff9c4; font-weight: bold; border-left: 4px solid #f1c40f; }
+
+        #system-log { overflow-y: auto; flex-grow: 1; font-size: 0.75em; text-align: left; padding: 5px; list-style: none; margin: 0; }
+        #system-log li { padding: 2px 0; border-bottom: 1px dashed #eee; color: #555; }
+        .chat-container { background: #fff; border-radius: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.2); flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+        #chat-messages { flex-grow: 1; overflow-y: auto; padding: 10px; font-size: 0.85em; display: flex; flex-direction: column; gap: 4px; background: #fcfcfc; text-align: left;}
+        .chat-line { line-height: 1.4; border-bottom: 1px solid #eee; padding-bottom: 2px;}
+        .chat-input-area { display: flex; padding: 5px; border-top: 1px solid #eee; box-sizing: border-box; width: 100%; }
+        #player-input { flex-grow: 1; border: 1px solid #ccc; border-radius: 20px; padding: 5px 10px; font-size: 0.8em; outline: none; min-width: 0; }
+        #send-btn { background: #3498db; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; margin-left: 5px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.2em; flex-shrink: 0; }
+
+        .game-container { grid-area: game; background: #ecf0f1; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.7); display: grid; grid-template-rows: auto 1fr auto; align-items: center; justify-items: center; position: relative; overflow: hidden; padding: 10px 0; background-color: #fdfbf7; background-image: repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(231, 76, 60, 0.10) 50px, rgba(231, 76, 60, 0.10) 100px), repeating-linear-gradient(0deg, transparent, transparent 50px, rgba(231, 76, 60, 0.10) 50px, rgba(231, 76, 60, 0.10) 100px); transition: box-shadow 0.5s; border: 4px solid transparent; height: 100%; }
+        .ambient-red { box-shadow: inset 0 0 60px rgba(231, 76, 60, 0.4) !important; border-color: #c0392b !important; }
+        .ambient-green { box-shadow: inset 0 0 60px rgba(46, 204, 113, 0.4) !important; border-color: #27ae60 !important; }
+        .ambient-yellow { box-shadow: inset 0 0 60px rgba(241, 196, 15, 0.4) !important; border-color: #f39c12 !important; }
+        .ambient-purple { box-shadow: inset 0 0 60px rgba(142, 68, 173, 0.4) !important; border-color: #8e44ad !important; }
+        
+        #top-area { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; justify-items: center; width: 95%; padding-top: 10px; min-height: 140px; position: relative; z-index: 5; grid-row: 1; align-self: start; }
+        .bot-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; width: 100px; position: relative; transition: 0.3s; }
+        .bot-name { background: white; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.8em; z-index: 5; margin-bottom: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s; white-space: nowrap; border: 1px solid #ddd; }
+        .current-player .bot-name { background: #3498db; color: white; box-shadow: 0 0 10px #3498db; transform: scale(1.1); border-color: #2980b9; }
+        .chat-bubble { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; border: 2px solid #333; padding: 5px 8px; border-radius: 8px; font-size: 0.7em; font-weight: bold; white-space: normal; width: 120px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.4); z-index: 300; opacity: 0; pointer-events: none; line-height: 1.1; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s; }
+        .chat-bubble.visible { opacity: 1; }
+        .bot-stack-visual { position: relative; height: 90px; width: 100px; margin-top: 5px; transition: width 0.3s; display: flex; justify-content: center; }
+        
+        .mini-card-back { width: 60px; height: 90px; border: 3px solid #fff; border-radius: 8px; position: absolute; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); background-size: cover; background-position: center; box-sizing: border-box; display: flex; justify-content: center; align-items: center; overflow: hidden; transition: all 0.3s; background: var(--card-pattern) !important; }
+        .card-back-style { background: var(--card-pattern) !important; background-size: cover; border: 3px solid #fff !important; }
+        
+        /* Centered Text for Card Backs */
+        .mini-card-back::after, .card-back-style::after { 
+            content: "SON\A TABAK"; 
+            position: absolute; 
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            color: #3498db; 
+            font-family: 'Comic Sans MS', cursive; 
+            font-weight: 900; 
+            font-size: 1.1em; 
+            white-space: pre; 
+            text-align: center; 
+            line-height: 0.9; 
+            pointer-events: none; 
+            text-shadow: 2px 2px 0 #fff; 
+        }
+        .mini-card-back::after { font-size: 0.75em; transform: translate(-50%, -50%) rotate(-15deg) scale(0.8); }
+        
+        .arrow-icon { font-size: 2.5em; color: #bdc3c7; font-weight: 900; transition: all 0.5s; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 1; }
+        .arrow-icon.active { animation: pulseArrow 2s infinite; text-shadow: 0 0 20px currentColor; z-index: 20; }
+        .arrow-top-static { position: static; margin: 0 15px; font-size: 2.5em; color: #bdc3c7; font-weight: 900; transition: all 0.3s; display: inline-block; transform-origin: center; transform: scale(1); }
+        .arrow-top-static.active { animation: pulseArrowStatic 1.2s infinite ease-in-out; text-shadow: 0 0 20px currentColor; color: #3498db; }
+        @keyframes pulseArrow { 0% { transform: translateY(-50%) scale(1.0); } 50% { transform: translateY(-50%) scale(1.25); } 100% { transform: translateY(-50%) scale(1.0); } }
+        @keyframes pulseArrowStatic { 0% { transform: scale(1.0); } 50% { transform: scale(1.3); } 100% { transform: scale(1.0); } }
+        .arrow-spin { animation: spinArrow 1.2s ease-in-out forwards !important; }
+        @keyframes spinArrow { 0% { transform: translateY(-50%) rotate(0deg) scale(1); } 50% { transform: translateY(-50%) rotate(180deg) scale(1.4); color: #e74c3c; } 100% { transform: translateY(-50%) rotate(360deg) scale(1); } }
+        .glow-red { color: #c0392b !important; } .glow-green { color: #27ae60 !important; } .glow-yellow { color: #f1c40f !important; } .glow-purple { color: #9b59b6 !important; } .glow-neutral { color: #3498db !important; }
+        #arrow-left { left: 25px; } #arrow-right { right: 25px; } 
+        
+        #play-area { display: flex; align-items: center; justify-content: center; gap: 80px; width: 100%; min-height: 180px; position: relative; transition: transform 0.3s; z-index: 5; grid-row: 2; align-self: center; }
+        .card { width: 105px; height: 155px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; cursor: pointer; border: 3px solid #555; box-shadow: 5px 5px 15px rgba(0,0,0,0.2); background-color: white; position: relative; user-select: none; transition: transform 0.2s; box-sizing: border-box; flex-shrink: 0; }
+        #draw-pile.card:hover { transform: none; }
+        .playable:hover { transform: translateY(-30px) scale(1.1); z-index: 100; }
+        .playable { border-color: #333; } 
+        .card-corner { position: absolute; font-size: 1.2em; margin: 5px; }
+        .top-left { top: 2px; left: 2px; } .bottom-right { bottom: 2px; right: 2px; transform: rotate(180deg); }
+        .card-emoji { font-size: 4.5em; display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
+        
+        /* FIX +2 CARD LAYOUT (PC MODE) */
+        /* Bu kısım PC modunda emojilerin taşmasını ve üst üste binmesini engeller */
+        .card[data-val="+2"] .card-emoji { 
+            font-size: 2.2em !important; 
+            letter-spacing: -2px !important;
+            line-height: 1; 
+            padding: 0; 
+            white-space: nowrap !important; /* Satır kaymasını engeller */
+            display: flex !important; 
+            flex-direction: row !important; /* Yan yana dizer */
+            justify-content: center; 
+            align-items: center; 
+            gap: 2px !important; 
+            width: 100%; 
+            overflow: visible;
+        }
+
+        .guvec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; font-size: 0.45em; line-height: 1; }
+        .red { background-color: #ffcdd2; color: #c0392b; border-color: #c0392b; } .green { background-color: #c8e6c9; color: #27ae60; border-color: #27ae60; } .yellow { background-color: #fff9c4; color: #f39c12; border-color: #f39c12; } .purple { background-color: #e1bee7; color: #8e44ad; border-color: #8e44ad; }
+        .wild-bg { background: conic-gradient(from 45deg, #e74c3c, #f1c40f, #2ecc71, #9b59b6, #e74c3c); border: 3px solid #fff; color: #fff; }
+        #penalty-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; font-size: 1.2em; color: white; width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; display: none; justify-content: center; align-items: center; z-index: 70; transition: all 0.3s; animation: pulseBadge 1s infinite; text-shadow: 1px 1px 0 rgba(0,0,0,0.5); }
+        #penalty-badge.p-1 { background: #2ecc71; box-shadow: 0 0 10px #2ecc71; } 
+        #penalty-badge.p-2 { background: #f1c40f; box-shadow: 0 0 10px #f1c40f; } 
+        #penalty-badge.p-3 { background: #e67e22; box-shadow: 0 0 15px #e67e22; } 
+        #penalty-badge.p-4 { background: #e74c3c; box-shadow: 0 0 20px #e74c3c; transform: scale(1.1); } 
+        #penalty-badge.p-5 { background: #9b59b6; box-shadow: 0 0 20px #9b59b6; transform: scale(1.15); } 
+        #penalty-badge.p-6 { background: #2c3e50; box-shadow: 0 0 25px #000; transform: scale(1.2); } 
+        @keyframes pulseBadge { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.15); } 100% { transform: translate(-50%, -50%) scale(1); } }
+        
+        #bottom-area { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; margin-bottom: 10px; position: relative; z-index: 10; grid-row: 3; align-self: end; }
+        #son-tabak-container { margin-bottom: 5px; z-index: 10; display:flex; gap:10px; }
+        #son-tabak-btn, #challenge-btn { padding: 12px 30px; border: none; border-radius: 30px; font-size: 1.2em; font-weight: bold; cursor: pointer; color: white; box-shadow: 0 5px 0 rgba(0,0,0,0.2); transition: 0.2s; }
+        #son-tabak-btn { background-color: #e67e22; } #challenge-btn { background-color: #f1c40f; color: #333; }
+        #son-tabak-btn:disabled, #challenge-btn:disabled { background-color: #bdc3c7; box-shadow: none; cursor: not-allowed; opacity: 0.6; color:#fff; }
+        #player-hand { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; align-items: center; gap: 8px; width: 90%; padding: 10px; height: auto; min-height: 160px; border: 2px dashed rgba(0,0,0,0.1); border-radius: 25px; overflow: visible; transition: all 0.3s; }
+        .current-player-area { border: 4px dashed #3498db !important; background: rgba(255, 255, 255, 0.4) !important; box-shadow: 0 0 20px rgba(52, 152, 219, 0.5); }
+        .hand-normal .card { width: 105px; height: 155px; }
+        .hand-packed .card { width: 80px; height: 120px; font-size: 0.8em; border-width: 2px; } .hand-packed .card-emoji { font-size: 2.5em; }
+        .hand-super-packed .card { width: 60px; height: 90px; font-size: 0.6em; border-width: 2px; } .hand-super-packed .card-emoji { font-size: 1.8em; }
+        
+        .buttons-container { grid-area: game buttons; display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding: 5px; }
+        .game-btn { padding: 12px 20px; border: none; border-radius: 10px; font-size: 1em; font-weight: bold; cursor: pointer; color: white; width: 100%; margin-bottom: 0; transition: 0.2s; }
+        .game-btn:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
+        .btn-red { background-color: #c0392b; } .btn-blue { background-color: #3498db; } .btn-dark { background-color: #34495e; } .btn-green { background-color: #27ae60; }
+        
+        .flying-card { position: fixed; z-index: 3000; pointer-events: none; transition: all 1.0s ease-in-out; }
+        .blocked-anim { position: absolute; font-size: 4em; color: #c0392b; z-index: 300; text-shadow: 0 0 20px #fff; animation: fadeUp 2s forwards; pointer-events: none; transform: translate(-50%, -50%); }
+        @keyframes fadeUp { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -100px); } }
+        .mixer-container { position: absolute; top: 50%; left: 50%; width: 0; height: 0; z-index: 4000; pointer-events: none; }
+        .mixer-card { position: absolute; width: 70px; height: 100px; border: 3px solid #fff; border-radius: 8px; background-size: cover; background-position: center; box-shadow: 0 0 10px rgba(0,0,0,0.5); transform-origin: center 250px; top: -300px; left: -35px; background: var(--card-pattern) !important; }
+        .mixer-card::after { 
+            content: "SON\A TABAK"; 
+            position: absolute; 
+            top: 50%; left: 50%; 
+            transform: translate(-50%, -50%) rotate(-15deg); 
+            color: #3498db; 
+            font-weight: 900; 
+            font-size: 0.75em; 
+            white-space: pre; 
+            text-align: center; 
+            line-height:0.9; 
+            font-family: 'Comic Sans MS', cursive; 
+        }
+        
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .modal-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 80%; max-width: 320px; height: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .color-picker { display: flex; justify-content: center; gap: 15px; margin-top: 15px; flex-wrap: wrap; }
+        .color-opt { width: 50px; height: 50px; border-radius: 50%; border: 4px solid #333; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+        .bg-red { background: #e74c3c; } .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-purple { background: #9b59b6; }
+        .pattern-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+        .pattern-opt { width: 50px; height: 70px; border: 2px solid #ccc; cursor: pointer; background-size: cover; position: relative; }
+        .pattern-opt::after { content: "SON"; position: absolute; transform: rotate(-15deg) scale(0.5); color: #3498db; font-weight: 900; top: 35%; left: 5px; text-shadow: 1px 1px 0 white; }
+        #son-tabak-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #e67e22; color: white; padding: 30px 60px; font-size: 2.5em; font-weight: bold; border-radius: 25px; box-shadow: 0 0 50px rgba(0,0,0,0.8); border: 6px solid white; display: none; z-index: 6000; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; width: auto; max-width: 90%; }
+        .popup-sub { font-size: 0.6em; display: block; margin-top: 10px; font-weight: normal; }
+        @keyframes popIn { from { transform: translate(-50%, -50%) scale(0); } to { transform: translate(-50%, -50%) scale(1); } }
+        #challenge-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; padding: 25px 50px; font-size: 2em; font-weight: bold; border-radius: 20px; box-shadow: 0 0 40px rgba(0,0,0,0.7); border: 5px solid white; display: none; z-index: 6000; animation: popIn 0.3s ease-out; text-align: center; width: auto; max-width: 90%; }
+        .challenge-valid { background-color: #27ae60; } .challenge-invalid { background-color: #c0392b; }
+        .challenge-sub { font-size: 0.6em; display: block; margin-top: 5px; font-weight: normal; opacity: 0.9; }
+        #leave-modal .modal-box { border: 4px solid #c0392b; }
+        #mixer-info { font-size: 0.85em; background: #ecf0f1; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: left; }
+        
+        /* MOBILE OPTIMIZATION */
+        @media screen and (max-width: 900px) {
+            body { height: 100vh; overflow: hidden; background: #2c3e50; }
+            #login-overlay { padding: 20px; box-sizing: border-box; }
+            .login-input-group { width: 90% !important; padding: 25px; }
+            .game-title-login { font-size: 2.2em; }
+            .plate-anim { font-size: 4em; }
+            .brand-corner { font-size: 1.2em; top: 10px; left: 10px; }
+            .production-corner { font-size: 0.6em; bottom: 5px; left: 10px; }
+            
+            #lobby-overlay { overflow-y: auto; padding: 50px 10px 10px 10px; display: none; }
+            
+            /* UPDATED MOBILE LOBBY GRID */
+            .lobby-grid { 
+                display: flex; 
+                flex-direction: row;
+                flex-wrap: wrap; 
+                height: auto; 
+                gap: 10px; 
+                padding-bottom: 20px; 
+                align-items: flex-start;
+            }
+            
+            /* Full width for Top Columns (Create & Active Rooms) */
+            #col-create, #col-rooms { 
+                width: 100%; 
+                box-sizing: border-box; 
+                min-height: auto; 
+                max-height: 50px; 
+                flex: none; 
+                padding: 10px 15px; 
+                overflow: hidden; 
+                cursor: pointer; 
+            }
+            #col-create.open-tab, #col-rooms.open-tab { 
+                max-height: 500px; 
+                cursor: default; 
+                padding: 15px; 
+            }
+            
+            /* FIX: Side-by-Side Players & Chat (Sol alt ve Sağ alt) */
+            /* width değerlerini güvenli olması için %48 gibi bir değere çektim */
+            .lobby-col.players-col {
+                width: calc(50% - 6px); /* Gap payı ile birlikte %50'den biraz az */
+                flex: none;
+                height: 250px; 
+                max-height: 250px !important; 
+                padding: 5px !important;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                cursor: default !important;
+                box-sizing: border-box;
+            }
+
+            .lobby-chat-wrapper { 
+                width: calc(50% - 6px); /* Gap payı ile birlikte %50'den biraz az */
+                box-sizing: border-box; 
+                height: 250px; 
+                flex: none;
+                margin: 0;
+                font-size: 0.8em; 
+            }
+
+            /* Adjust internal elements for Players & Chat */
+            .lobby-col.players-col .col-content {
+                opacity: 1 !important; /* Always visible */
+                pointer-events: auto !important;
+            }
+            .lobby-col.players-col .col-title::after {
+                display: none; /* Remove accordion arrow */
+            }
+            #l-chat-input { width: 100%; box-sizing: border-box; }
+            .l-chat-input-area { width: 100%; }
+
+            /* Accordion Titles for top items */
+            .col-title { margin-bottom: 0; border-bottom: none; font-size: 1em; cursor: pointer; }
+            #col-create.open-tab .col-title, #col-rooms.open-tab .col-title { margin-bottom: 15px; border-bottom: 2px solid #eee; }
+            .col-title::after { content: '▼'; display: block; font-size: 0.8em; color: #7f8c8d; transition: transform 0.3s; }
+            #col-create.open-tab .col-title::after, #col-rooms.open-tab .col-title::after { transform: rotate(180deg); }
+            
+            .col-content { opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+            #col-create.open-tab .col-content, #col-rooms.open-tab .col-content { opacity: 1; pointer-events: auto; }
+            
+            .styled-input, .p-count-btn, .mode-check { font-size: 0.85em !important; padding: 8px !important; }
+            .lobby-room-item { padding: 8px; font-size: 0.85em; }
+            .room-action-btn { padding: 5px 10px; font-size: 0.8em; }
+            .room-scroll, .player-list-scroll { max-height: 200px; }
+            
+            .main-wrapper { 
+                display: grid; 
+                grid-template-columns: 100%; 
+                grid-template-rows: 40px 1fr 120px 40px; 
+                grid-template-areas: "logo" "game" "panel" "buttons"; 
+                width: 100%; 
+                height: 100vh; 
+                padding: 5px; 
+                gap: 5px; 
+                box-sizing: border-box; 
+                overflow: hidden; 
+            }
+            
+            #brand-area { grid-area: logo; padding: 4px 8px; flex-direction: row; align-items: center; gap: 5px; border-radius: 10px; margin: 0; height: 100%; box-sizing: border-box; }
+            .brand-title { font-size: 1.1em; display: flex; gap: 5px; } 
+            .version { font-size: 0.6em; margin: 0; align-self: center; } 
+            .brand-sub { font-size: 0.7em; margin: 0; margin-left: auto; }
+            .game-container { grid-area: game; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; align-items: center; margin: 0; padding: 5px 0; overflow: hidden; box-sizing: border-box; }
+            #top-area { height: auto; min-height: 80px; width: 100%; transform: scale(0.80); transform-origin: center top; margin: 0; }
+            #play-area { height: auto; width: 100%; transform: scale(0.80); margin: 0; flex-grow: 1; }
+            #bottom-area { padding-bottom: 2px; transform: scale(0.85); transform-origin: center bottom; margin: 0; }
+            .bot-wrapper { transform: scale(0.85); margin: 0; } 
+            .arrow-icon { font-size: 1.5em; position: absolute; top: 50%; transform: translateY(-50%); z-index: 15; }
+            #arrow-left { left: 5px; } #arrow-right { right: 5px; } #arrow-top-1, #arrow-top-2 { font-size: 1.5em; margin: 0; }
+            .flying-card { transform: scale(0.8); transform-origin: top left; }
+            
+            /* Mobile adjustment for +2 card can remain similar or slightly tuned */
+            .card[data-val="+2"] .card-emoji { font-size: 2.0em !important; gap: 1px !important; }
+            
+            #player-hand { min-height: 80px; padding: 4px; gap: 3px; border-width: 2px; }
+            .hand-normal .card, .hand-packed .card, .hand-super-packed .card { width: 40px; height: 60px; font-size: 0.5em; border-width: 1px; border-radius: 4px; }
+            .hand-normal .card-emoji, .hand-packed .card-emoji, .hand-super-packed .card-emoji { font-size: 1.6em; }
+            #son-tabak-btn, #challenge-btn { padding: 8px 15px; font-size: 0.9em; margin-bottom: 2px; }
+            #son-tabak-popup, #challenge-popup { position: fixed !important; transform: translate(-50%, -50%) scale(0.7); }
+            .right-panel { grid-area: panel; flex-direction: row; height: 100%; gap: 5px; padding: 0; box-sizing: border-box; overflow: hidden; }
+            .flip-container { height: 100%; flex: 1; }
+            .chat-container { height: 100%; flex: 1; }
+            #score-table td { padding: 2px 4px; font-size: 0.7em; }
+            #system-log li { padding: 1px 0; font-size: 0.65em; }
+            #chat-messages { font-size: 0.65em !important; padding: 2px !important; gap: 1px !important; }
+            .chat-line { line-height: 1.1 !important; margin-bottom: 2px !important; }
+            .panel-header { font-size: 0.75em; padding: 3px; }
+            .chat-input-area { padding: 2px; }
+            #player-input { font-size: 0.7em; padding: 2px 5px; height: 25px; }
+            #send-btn { width: 25px; height: 25px; font-size: 1em; }
+            .buttons-container { grid-area: buttons; flex-direction: row; gap: 5px; padding: 0; box-sizing: border-box; height: 100%; margin: 0; min-height: 40px; z-index: 100; }
+            .game-btn { font-size: 0.8em; padding: 0; display: flex; align-items: center; justify-content: center; height: 100%; flex: 1; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+
+<!-- GİRİŞ EKRANI -->
+<div id="login-overlay">
+    <div class="brand-corner">🔥 Kalority</div>
+    <div class="rules-corner"><button class="icon-btn" onclick="openRules()">📖</button></div>
+    <div class="production-corner">ONR Studios Production</div>
+
+    <div class="floating-bg" style="left:10%; animation-duration:12s; animation-delay: -5s;">🍅</div>
+    <div class="floating-bg" style="left:30%; animation-duration:15s; animation-delay: -2s;">🥔</div>
+    <div class="floating-bg" style="left:60%; animation-duration:10s; animation-delay: -8s;">🍆</div>
+    <div class="floating-bg" style="left:80%; animation-duration:14s; animation-delay: -1s;">🥦</div>
+
+    <div class="login-content">
+        <div class="logo-container">
+            <span class="plate-anim">🍽️</span>
+            <div class="game-title-login">SON<br>TABAK</div>
+            <div class="online-stamp">ONLINE</div>
+        </div>
+        <div class="login-input-group">
+            <input type="text" id="username-in" class="styled-input" placeholder="Adını Yaz" maxlength="12">
+            <button class="login-btn-main" id="login-btn">Mutfağa Gir</button>
+        </div>
+    </div>
+</div>
+
+<!-- LOBİ EKRANI -->
+<div id="lobby-overlay">
+    <div class="brand-corner" style="position:fixed; top:15px; left:20px;">🔥 Kalority</div>
+    <div class="rules-corner" style="position:fixed; top:15px; right:20px;"><button class="icon-btn" style="background:#333;" onclick="openRules()">📖</button></div>
+    <div class="production-corner" style="position:fixed; bottom:10px; left:20px; color:#555;">ONR Studios Production</div>
+
+    <div class="lobby-grid">
+        <!-- SOL KOLON: ODA KUR -->
+        <div class="lobby-col" id="col-create">
+            <div class="col-title" onclick="toggleLobbyTab(this)">Masa Aç 🛋️</div>
+            <div class="col-content create-form">
+                <input type="text" id="room-name-in" class="styled-input" style="background:#f9f9f9; color:#333; border:1px solid #ddd; text-align:left;" placeholder="Masa Adı">
+                <input type="password" id="room-pass-in" class="styled-input" style="background:#f9f9f9; color:#333; border:1px solid #ddd; text-align:left;" placeholder="Şifre (Opsiyonel)">
+                
+                <label class="mode-check" style="cursor: pointer; opacity: 1;">
+                    <input type="checkbox" id="offline-mode-check">
+                    <span style="font-size:0.9em; font-weight:bold; color:#555;">Tek Kişilik Masa (Offline)</span>
+                </label>
+
+                <button class="login-btn-main" id="create-room-btn" style="padding:10px; margin-top:10px;">Masayı Kur</button>
+            </div>
+        </div>
+
+        <!-- ORTA KOLON: MASALAR -->
+        <div class="lobby-col open-tab" id="col-rooms">
+            <div class="col-title" onclick="toggleLobbyTab(this)">Aktif Masalar 🍽️</div>
+            <div class="col-content room-scroll" id="room-list">
+                <div style="text-align:center; color:#777; margin-top:20px;">Masalar aranıyor...</div>
+            </div>
+        </div>
+
+        <!-- SAĞ KOLON: OYUNCULAR (AKTİF) -->
+        <div class="lobby-col players-col open-tab" id="col-players">
+            <div class="col-title">Mutfaktakiler 👨‍🍳</div>
+            <div class="col-content player-list-scroll" id="online-player-list">
+                <!-- Oyuncular buraya dinamik gelecek -->
+                <div style="text-align:center; color:#777; font-size:0.8em; padding:10px;">Yükleniyor...</div>
+            </div>
+        </div>
+
+        <!-- ALT CHAT: LOBİ CHAT (AKTİF) -->
+        <div class="lobby-chat-wrapper">
+            <div style="font-weight:bold; font-size:0.9em; color:#555; margin-bottom:5px; display:flex; justify-content:space-between;">
+                <span>Lobi Sohbeti 💬</span>
+            </div>
+            <div id="lobby-chat-msgs"></div>
+            <div class="l-chat-input-area">
+                <input type="text" id="l-chat-input" placeholder="Bir şeyler yaz..." maxlength="50" onkeypress="if(event.key === 'Enter') sendLobbyMessage()">
+                <button id="l-chat-send" onclick="sendLobbyMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BEKLEME ODASI -->
+<div id="waiting-room-overlay" class="modal">
+    <div class="modal-box">
+        <h3 id="wr-room-name">Masa: ...</h3>
+        <p>Oyuncular bekleniyor (<span id="wr-count">0</span>/4)</p>
+        <ul id="wr-player-list" class="player-list"></ul>
+        <div id="wr-host-controls" style="display:none;">
+            <p style="font-size:0.8em; color:#e67e22;">Eksik oyuncular yerine Bot (🤖) eklenecek.</p>
+            <button class="game-btn btn-blue" id="start-game-btn">Oyunu Başlat 🚀</button>
+        </div>
+        <div id="wr-guest-controls">
+            <p>Host'un başlatması bekleniyor...</p>
+        </div>
+        <br>
+        <button class="game-btn btn-red" id="leave-room-btn">Çıkış</button>
+    </div>
+</div>
+
+<!-- ÇIKIŞ ONAY MODALI -->
+<div id="leave-modal" class="modal">
+    <div class="modal-box">
+        <h3>🚨 Oyundan Çık?</h3>
+        <p>Oyundan ayrılmak istediğine emin misin?</p>
+        <br>
+        <div style="display:flex; gap:10px; width:100%; justify-content:center;">
+            <button class="game-btn btn-red" onclick="confirmLeaveGame()">Evet, Çık</button>
+            <button class="game-btn btn-blue" onclick="document.getElementById('leave-modal').style.display='none'">İptal</button>
+        </div>
+    </div>
+</div>
+
+<!-- OYUN ALANI -->
+<div class="main-wrapper" id="main-game-wrapper" style="display:none;">
+    <div id="brand-area">
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v6.0</span></div>
+        <div class="brand-sub">🔥Kalority</div>
+    </div>
+    <div class="game-container">
+        <div id="arrow-left" class="arrow-icon">⬆️</div>
+        <div id="arrow-right" class="arrow-icon">⬇️</div>
+        <div id="top-area">
+            <div class="bot-wrapper" id="bot1-wrapper">
+                <div class="bot-name" id="bot1-name">Oyuncu 2</div>
+                <div class="bot-stack-visual" id="bot1-stack"></div>
+                <div class="chat-bubble" id="bot1-chat"></div>
+            </div>
+            <div id="arrow-top-1" class="arrow-top-static">➡️</div>
+            <div class="bot-wrapper" id="bot2-wrapper">
+                <div class="bot-name" id="bot2-name">Oyuncu 3</div>
+                <div class="bot-stack-visual" id="bot2-stack"></div>
+                <div class="chat-bubble" id="bot2-chat"></div>
+            </div>
+            <div id="arrow-top-2" class="arrow-top-static">➡️</div>
+            <div class="bot-wrapper" id="bot3-wrapper">
+                <div class="bot-name" id="bot3-name">Oyuncu 4</div>
+                <div class="bot-stack-visual" id="bot3-stack"></div>
+                <div class="chat-bubble" id="bot3-chat"></div>
+            </div>
+        </div>
+        <div id="play-area">
+            <div id="draw-pile" class="card card-back-style" onclick="playerDrawCard()">
+                <!-- REMOVED COUNTER -->
+                <div id="penalty-badge">+0</div> 
+                <div id="deck-count" style="position:absolute; bottom:10px; color:white; font-size:1.5em; text-shadow:1px 1px 2px #000;">0</div>
+            </div>
+            <div id="discard-pile"></div>
+            <div id="son-tabak-popup">SON TABAK!<span id="son-tabak-who" class="popup-sub"></span></div>
+            <div id="challenge-popup"><span id="challenge-who"></span><span id="challenge-result" class="challenge-sub"></span></div>
+        </div>
+        <div id="bottom-area">
+            <div id="son-tabak-container">
+                <button id="son-tabak-btn" onclick="playerSaySonTabak()">SON TABAK!</button>
+                <button id="challenge-btn" onclick="challengePreviousPlayer()" disabled>✋ İTİRAZ ET!</button>
+            </div>
+            <div id="player-hand" class="hand-normal"></div>
+        </div>
+    </div>
+    <div class="right-panel">
+        <div class="flip-container" onclick="toggleInfoView(this)">
+            <div class="flip-inner">
+                <div class="flip-front">
+                    <div class="panel-header"><span>🏆 Puan</span><span class="panel-hint">🖱️ Log</span></div>
+                    <table id="score-table"><tbody></tbody></table>
+                </div>
+                <div class="flip-back">
+                    <div class="panel-header" style="background:#7f8c8d;"><span>📝 Log</span><span class="panel-hint">🖱️ Puan</span></div>
+                    <ul id="system-log"></ul>
+                </div>
+            </div>
+        </div>
+        <div class="chat-container">
+            <div id="chat-messages"></div>
+            <div class="chat-input-area">
+                <input type="text" id="player-input" placeholder="Yaz..." onkeypress="handleChatKey(event)">
+                <button id="send-btn" onclick="playerSendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+    <div class="buttons-container">
+        <button class="game-btn btn-dark" onclick="openRules()">📖 Kurallar</button>
+        <button class="game-btn btn-blue" onclick="openPatternModal()">🎨 Desen</button>
+        <button class="game-btn btn-red" onclick="leaveGame()">❌ Çıkış</button>
+    </div>
+</div>
+
+<div id="rules-modal" class="modal">
+    <div class="modal-box" style="text-align:left; max-height:80vh; overflow-y:auto;">
+        <h3>📖 Nasıl Oynanır?</h3>
+        <p style="font-size:0.9em;">
+            1. Amaç elindeki kartları bitirmektir.<br>
+            2. Yerdeki kart ile aynı renk veya aynı sayı/sembol atabilirsin.<br>
+            3. Özel kartlar (Mikser, Sofra, Güveç) rengi değiştirir veya oyunun akışını bozar.<br>
+            4. Elinde 2 kart varken hamle yapıp 1 karta düşeceğin zaman "SON TABAK" demeyi unutma!<br>
+            5. Unutanlara "İTİRAZ ET" butonu ile ceza verebilirsin.<br>
+            6. Bol şans! 🍅🥦
+        </p>
+        <button class="game-btn btn-blue" onclick="document.getElementById('rules-modal').style.display='none'">Anladım</button>
+    </div>
+</div>
+
+<div id="pattern-modal" class="modal">
+    <div class="modal-box">
+        <h3>Kart Deseni</h3>
+        <div class="pattern-grid" id="pattern-grid"></div>
+        <br><button class="game-btn btn-blue" onclick="closePatternModal()">Kapat</button>
+    </div>
+</div>
+
+<div id="color-modal" class="modal">
+    <div class="modal-box">
+        <h3>Renk Seç</h3>
+        <div class="color-picker">
+            <div class="color-opt bg-red" onclick="resolveColor('red')"></div>
+            <div class="color-opt bg-green" onclick="resolveColor('green')"></div>
+            <div class="color-opt bg-yellow" onclick="resolveColor('yellow')"></div>
+            <div class="color-opt bg-purple" onclick="resolveColor('purple')"></div>
+        </div>
+    </div>
+</div>
+
+<div id="dir-modal" class="modal">
+    <div class="modal-box">
+        <h3>Yön Seç (Mikser)</h3>
+        <p id="dir-text" style="font-size:0.8em; margin:5px 0;">Eller hangi yöne kaysın?</p>
+        <div id="mixer-info"></div>
+        <div class="color-picker">
+            <button class="game-btn btn-blue" onclick="resolveDirection(1)">➡️ Saat</button>
+            <button class="game-btn btn-blue" onclick="resolveDirection(-1)">⬅️ Ters</button>
+        </div>
+    </div>
+</div>
+
+<div id="end-modal" class="modal">
+    <div class="modal-box" style="max-width: 400px;">
+        <h2 id="winner-text"></h2>
+        <div id="ai-summary" style="font-style:italic; font-size:0.9em; margin:15px 0; color:#555; border-top:1px solid #eee; border-bottom:1px solid #eee; padding:10px;"></div>
+        <div id="final-scores"></div>
+        <br>
+        <div style="display:flex; gap:15px; width:100%;">
+            <button id="end-continue-btn" class="game-btn btn-blue" style="flex:1;" onclick="toggleReadyState()">Devam Et ⏳</button>
+            <button id="host-start-btn" class="game-btn btn-green" style="flex:1; display:none;" onclick="nextRound()">YENİ EL BAŞLAT</button>
+            <button class="game-btn btn-red" style="flex:1;" onclick="leaveGame()">Çıkış</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:10px 20px; border-radius:20px; display:none; z-index:5000;"></div>
+
+<script>
+/* --- MOBILE UI LOGIC --- */
+function toggleLobbyTab(element) {
+    if (window.innerWidth > 900) return; 
+    const parent = element.parentElement;
+    const allCols = document.querySelectorAll('.lobby-col');
+    if (parent.classList.contains('open-tab')) {
+        parent.classList.remove('open-tab');
+    } else {
+        allCols.forEach(col => col.classList.remove('open-tab'));
+        allCols.forEach(col => col.querySelector('.col-content').style.opacity = '0');
+        parent.classList.add('open-tab');
+        setTimeout(() => parent.querySelector('.col-content').style.opacity = '1', 50);
+    }
+}
+
+/* --- ANIMATION & CONFIG CONSTANTS --- */
+const ANIM_CONFIG = {
+    FLY_DURATION: 1000,        
+    FLY_BUFFER: 1100,         
+    DRAW_INTERVAL: 600,        
+    INITIAL_DEAL: 250,        
+    TOAST: 2000,              
+    POPUP: 3000,              
+    BOT_THINK: 300,           
+    HEARTBEAT_MS: 5000,       
+    HOST_TIMEOUT: 15000,      
+    AFK_TIMEOUT: 60000,        
+    BOT_WATCHDOG: 3000        
+};
+
+/* --- CARD NAMES MAPPING --- */
+const CARD_NAMES = {
+    '+1': '📦 +1',
+    '+2': '📦📦 +2',
+    'Reverse': '♻️ Geri Dönüşüm',
+    'Block': '🔪 Bıçak',
+    'Wild': 'Güveç',
+    'Wild Anti-Draw': '🧻 Tuvalet Kağıdı',
+    'Wild Pot': '🍲 Düdüklü Tencere',
+    'Wild Table': '🍽️ Sofra',
+    'Wild Mixer': '🌪️ Mikser',
+    'Wild Meze': '🍱 Meze'
+};
+
+/* --- PATTERNS --- */
+const CARD_PATTERNS = [
+    'linear-gradient(135deg, #e67e22 0%, #d35400 100%)', // Default Orange
+    'repeating-linear-gradient(45deg, #e67e22, #e67e22 10px, #d35400 10px, #d35400 20px)',
+    'radial-gradient(circle, #e67e22 20%, #d35400 90%)',
+    'conic-gradient(#e67e22, #d35400, #e67e22)',
+    'linear-gradient(135deg, #2c3e50 0%, #000000 100%)', // Dark 1
+    'repeating-linear-gradient(45deg, #2c3e50, #2c3e50 10px, #000000 10px, #000000 20px)',
+    'radial-gradient(circle, #7f8c8d 20%, #2c3e50 90%)',
+    'conic-gradient(#34495e, #000000, #34495e)'
+];
+let currentPattern = CARD_PATTERNS[0];
+
+/* --- FIREBASE INIT --- */
+const firebaseConfig = {
+  apiKey: "AIzaSyDqyHqluehXJHt4xeanl51LRVG4AeQ3Ijk",
+  authDomain: "son-tabak.firebaseapp.com",
+  databaseURL: "https://son-tabak-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "son-tabak",
+  storageBucket: "son-tabak.firebasestorage.app",
+  messagingSenderId: "994436192152",
+  appId: "1:994436192152:web:35d17d0dbb1d5d0015fded"
+};
+
+let app, db, auth;
+try {
+    app = firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    auth = firebase.auth();
+    console.log("Firebase Init OK");
+} catch(e) {
+    alert("Firebase Hatası: " + e.message);
+}
+
+/* --- SES VE CHAT --- */
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioContext();
+
+const SoundFX = {
+    playTone: (freq, type, duration, rampTo = 0.001) => {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(rampTo, audioCtx.currentTime + duration);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    },
+    playCardSnap: () => SoundFX.playTone(800, 'sine', 0.1),
+    playDraw: () => SoundFX.playTone(400, 'triangle', 0.15),
+    playBlock: () => { SoundFX.playTone(1500, 'sawtooth', 0.1); setTimeout(() => SoundFX.playTone(2000, 'sine', 0.3), 50); },
+    playReverse: () => { if(audioCtx.state === 'suspended') audioCtx.resume(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.frequency.setValueAtTime(200, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 0.3); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.3); },
+    playWild: () => { [300, 400, 500, 600, 800].forEach((f, i) => setTimeout(() => SoundFX.playTone(f, 'sine', 0.2), i*50)); },
+    playBad: () => { SoundFX.playTone(150, 'sawtooth', 0.2); setTimeout(() => SoundFX.playTone(120, 'sawtooth', 0.4), 100); },
+    playError: () => { SoundFX.playTone(100, 'square', 0.2); },
+    playFanfare: () => { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => SoundFX.playTone(f, 'square', 0.4), i * 150)); },
+    playUno: () => SoundFX.playTone(1200, 'sine', 0.5)
+};
+
+const CHAT_POOL = {
+    "Agresif": { "start_good": ["Dağılın!", "Acımam."], "block": ["Geç!", "Bekle!"], "plus2": ["Al bakalım!", "+2 cnm"], "wild": ["Ben ne dersem o!"], "draw_many": ["Dükkanı aldım!", "Bu ne?!"], "win": ["Ezdim!", "Kral benim!"], "fail": ["Olamaz!", "Hile!"] },
+    "Stratejik": { "start_good": ["Plan hazır."], "block": ["Sıradaki."], "plus2": ["Stratejik hamle."], "wild": ["Renk değişimi."], "draw_many": ["Plan değişti."], "win": ["Matematik kazandı."], "fail": ["Hesap hatası."] },
+    "Panik Atak": { "start_good": ["Heyecanlıyım!"], "block": ["Pardon!", "Özür!"], "plus2": ["Kızma n'olur!"], "wild": ["Ay ne seçsem?"], "draw_many": ["Boğuluyorum!", "İmdat!"], "win": ["Ben mi kazandım?"], "fail": ["Görmedim!"] },
+    "Rahat": { "start_good": ["Akarı var."], "block": ["Soluklan.", "Yavaş."], "plus2": ["Hediye.", "Yorma kendini."], "wild": ["Değişiklik iyidir."], "draw_many": ["Ooo bana girdi.", "Nasip."], "win": ["Tertemiz.", "Kolaydı."], "fail": ["Dalmışım."] },
+    "Gıcık": { "start_good": ["Ezikler."], "block": ["Kudur!", "Zaa!"], "plus2": ["Beter ol.", "Ağlama."], "wild": ["Biat edin!"], "draw_many": ["Hile var!", "Of ya."], "win": ["Çok kolaysınız."], "fail": ["Önemli değil."] },
+    "Dengeli": { "start_good": ["Başlayalım."], "block": ["Geç bakalım."], "plus2": ["+2 çek."], "wild": ["Renk değişsin."], "draw_many": ["Bayağı çektim."], "win": ["Güzel oyun."], "fail": ["Tüh."] }
+};
+
+let myUid = null; let myName = ""; let currentRoomId = null; let isHost = false;
+let roomUnsubscribe = null; let myPlayerIdx = -1;
+let localPlayers = []; let lastGameState = null; let lastChatTs = 0; let amIReady = false; let heartbeatInterval = null;
+let actionQueue = []; let isProcessingQueue = false;
+let localSaidSonTabak = false; 
+let isDealing = false;
+let previousPlayersList = [];
+let myLobbyColor = '#333'; // Random color for lobby chat
+
+/* --- LOGIC --- */
+auth.onAuthStateChanged((user) => { if (user) myUid = user.uid; });
+
+// GENERATE RANDOM HEX COLOR FOR LOBBY
+function getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
+document.getElementById('login-btn').addEventListener('click', () => {
+    const name = document.getElementById('username-in').value.trim();
+    if(!name) return alert("Lütfen bir isim gir!");
+    document.getElementById('login-btn').innerText = "Giriş Yapılıyor...";
+    
+    auth.signInAnonymously()
+        .then(() => {
+            myName = name;
+            myLobbyColor = getRandomColor();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('lobby-overlay').style.display = 'flex';
+            
+            initLobbyFeatures(); // START NEW FEATURES
+            updateGlobalStatus('lobby'); // Set initial status
+            listenRooms();
+        })
+        .catch((e) => {
+            alert("Giriş Hatası: " + e.message);
+            document.getElementById('login-btn').innerText = "Mutfağa Gir";
+        });
+});
+
+/* --- LOBBY CHAT & PLAYER LIST LOGIC --- */
+let lobbyChatUnsub = null;
+let globalPlayersUnsub = null;
+
+function initLobbyFeatures() {
+    // 1. Start Global Heartbeat for Status
+    setInterval(() => {
+        if(myUid) {
+            let status = 'lobby';
+            if(currentRoomId) status = (document.getElementById('main-game-wrapper').style.display === 'grid' || document.getElementById('main-game-wrapper').style.display === 'flex') ? 'playing' : 'waiting';
+            updateGlobalStatus(status);
+        }
+    }, 5000); // 5 seconds heartbeat
+
+    // 2. Listen to Lobby Chat
+    lobbyChatUnsub = db.collection("lobby_chat").orderBy("ts", "asc").limit(100).onSnapshot(snapshot => {
+        const div = document.getElementById('lobby-chat-msgs');
+        div.innerHTML = "";
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const line = document.createElement('div');
+            line.className = 'l-chat-line';
+            line.innerHTML = `<span style="font-weight:bold; color:${data.color}">${data.sender}:</span> ${data.msg}`;
+            div.appendChild(line);
+        });
+        div.scrollTop = div.scrollHeight;
+    });
+
+    // 3. Listen to Online Players
+    // Filter logic is client-side because filtering by time requires query index
+    globalPlayersUnsub = db.collection("global_players").onSnapshot(snapshot => {
+        const listDiv = document.getElementById('online-player-list');
+        listDiv.innerHTML = "";
+        const now = Date.now();
+        let activeCount = 0;
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            // Show only players active in last 60 seconds
+            if(now - data.lastSeen < 60000) {
+                activeCount++;
+                let dotClass = 'p-dot-lobby';
+                if(data.status === 'waiting') dotClass = 'p-dot-wait';
+                if(data.status === 'playing') dotClass = 'p-dot-play';
+                
+                const item = document.createElement('div');
+                item.className = 'p-list-item';
+                let displayName = data.name;
+                if(doc.id === myUid) displayName = `<b>${displayName}</b>`;
+                
+                item.innerHTML = `<div class="p-dot ${dotClass}"></div>${displayName}`;
+                listDiv.appendChild(item);
+            }
+        });
+        
+        if(activeCount === 0) listDiv.innerHTML = '<div style="text-align:center; color:#999; padding:5px;">Kimse yok.</div>';
+    });
+}
+
+function updateGlobalStatus(status) {
+    if(!myUid) return;
+    db.collection("global_players").doc(myUid).set({
+        name: myName,
+        status: status,
+        lastSeen: Date.now()
+    }, { merge: true });
+}
+
+function sendLobbyMessage() {
+    const input = document.getElementById('l-chat-input');
+    const msg = input.value.trim();
+    if(!msg) return;
+
+    // Check message count to cleanup old ones (Simple Client-Side Logic)
+    db.collection("lobby_chat").get().then(snap => {
+        if(snap.size >= 100) {
+            // Find oldest and delete
+            let oldestDoc = snap.docs[0];
+            let minTs = oldestDoc.data().ts;
+            snap.docs.forEach(d => { if(d.data().ts < minTs) { minTs = d.data().ts; oldestDoc = d; } });
+            oldestDoc.ref.delete();
+        }
+        // Add new
+        db.collection("lobby_chat").add({
+            sender: myName,
+            msg: msg,
+            color: myLobbyColor,
+            ts: Date.now()
+        });
+        input.value = "";
+    });
+}
+
+function listenRooms() {
+    const list = document.getElementById('room-list'); 
+    db.collection("rooms").onSnapshot((snapshot) => {
+        list.innerHTML = "";
+        if(snapshot.empty) list.innerHTML = "<div style='text-align:center;color:#777; margin-top:20px;'>Oda yok. İlk odayı sen kur!</div>";
+        const now = Date.now();
+        snapshot.forEach(docSnap => {
+            const r = docSnap.data();
+            if (r.lastActive && now - r.lastActive > 60000) { docSnap.ref.delete().catch(() => {}); return; }
+            if(r.status === 'finished') return; 
+            
+            let realHumans = r.players.filter(p => !p.isBot).length;
+            let dotClass = r.status === 'playing' ? (realHumans >= 4 ? 'st-red' : 'st-yellow') : 'st-green';
+            let botCount = r.players.filter(p => p.isBot).length;
+            let joinText = "Katıl";
+            
+            if (r.status === 'playing') {
+                if (botCount > 0) joinText = "Oyuna Gir 🚀";
+                else joinText = "Dolu 🔒"; 
+            }
+
+            const div = document.createElement('div');
+            div.className = 'lobby-room-item';
+            div.innerHTML = `
+                <div class="room-info">
+                    <div class="room-status-dot ${dotClass}"></div>
+                    <div class="room-name-txt">${r.name}</div>
+                    <div class="room-count-pill">${realHumans}/4</div>
+                </div>
+            `;
+            
+            if (r.status !== 'playing' || botCount > 0) {
+                const joinBtn = document.createElement('button');
+                joinBtn.className = 'room-action-btn'; 
+                joinBtn.innerText = joinText;
+                joinBtn.onclick = () => joinRoom(docSnap.id, r.hasPassword);
+                div.appendChild(joinBtn);
+            }
+            list.appendChild(div);
+        });
+    });
+}
+
+document.getElementById('create-room-btn').addEventListener('click', () => {
+    // SINGLE PLAYER REDIRECT
+    if(document.getElementById('offline-mode-check').checked) {
+        window.location.href = 'singleplayer.html';
+        return;
+    }
+
+    const rName = document.getElementById('room-name-in').value.trim() || `${myName}'in Odası`;
+    const rPass = document.getElementById('room-pass-in').value.trim();
+    db.collection("rooms").add({
+        name: rName, password: rPass, hasPassword: !!rPass, hostId: myUid, status: 'waiting', lastActive: Date.now(),
+        players: [{ uid: myUid, name: myName, isBot: false, score: 0, hand: [], isReady: false, saidSonTabak: false, challengeUsed: false, personality: 'Dengeli', lastSeen: Date.now() }],
+        gameState: null
+    }).then(ref => {
+        currentRoomId = ref.id; isHost = true; enterWaitingRoom();
+    });
+});
+
+function joinRoom(roomId, hasPass) {
+    if(hasPass) {
+        const p = prompt("Oda Şifresi:"); if(p === null) return;
+        db.collection("rooms").doc(roomId).get().then(doc => {
+             if(doc.data().password !== p) return alert("Yanlış Şifre!");
+             proceedJoin(roomId);
+        });
+    } else proceedJoin(roomId);
+}
+
+function proceedJoin(roomId) {
+    const roomRef = db.collection("rooms").doc(roomId);
+    roomRef.get().then(doc => {
+        if(!doc.exists) return alert("Oda yok!");
+        const rData = doc.data();
+        let players = rData.players;
+        
+        if(players.length >= 4 && !players.some(p => p.isBot)) return alert("Oda tamamen dolu!");
+        
+        let targetIndex = -1;
+        const sameNameBotIdx = players.findIndex(p => p.isBot && p.name.includes(myName));
+        if (sameNameBotIdx !== -1) {
+            targetIndex = sameNameBotIdx;
+        } else {
+            const botIdx = players.findIndex(p => p.isBot);
+            if (botIdx !== -1) targetIndex = botIdx;
+        }
+
+        if (targetIndex !== -1) {
+            players[targetIndex] = {
+                ...players[targetIndex],
+                uid: myUid,
+                name: myName,
+                isBot: false,
+                isReady: rData.status === 'playing', 
+                lastSeen: Date.now()
+            };
+            roomRef.update({ players: players }).then(() => {
+                currentRoomId = roomId; isHost = false; enterWaitingRoom();
+            });
+        } else {
+            if(rData.status === 'playing') return alert("Oda dolu ve bot yok!");
+            roomRef.update({
+                players: firebase.firestore.FieldValue.arrayUnion({ uid: myUid, name: myName, isBot: false, score: 0, hand: [], isReady: false, saidSonTabak: false, challengeUsed: false, personality: 'Dengeli', lastSeen: Date.now() })
+            }).then(() => {
+                currentRoomId = roomId; isHost = false; enterWaitingRoom();
+            });
+        }
+    });
+}
+
+function enterWaitingRoom() {
+    updateGlobalStatus('waiting'); // Update Status to Yellow
+    document.getElementById('lobby-overlay').style.display = 'none';
+    document.getElementById('waiting-room-overlay').style.display = 'flex';
+    document.getElementById('leave-room-btn').onclick = () => { document.getElementById('leave-modal').style.display = 'flex'; }; 
+
+    if(roomUnsubscribe) roomUnsubscribe();
+    
+    if(heartbeatInterval) clearInterval(heartbeatInterval);
+    heartbeatInterval = setInterval(sendHeartbeat, ANIM_CONFIG.HEARTBEAT_MS);
+
+    roomUnsubscribe = db.collection("rooms").doc(currentRoomId).onSnapshot((docSnap) => {
+        if(!docSnap.exists) { location.reload(); return; }
+        const data = docSnap.data();
+        localPlayers = data.players;
+
+        // JOIN/LEAVE LOGIC
+        if(previousPlayersList.length > 0) {
+            localPlayers.forEach(p => {
+                if(!previousPlayersList.find(op => op.uid === p.uid)) {
+                    if(!p.isBot) {
+                        showToast(`${p.name} odaya katıldı!`);
+                        addSystemLog(`<b>${p.name}</b> odaya katıldı.`);
+                    }
+                }
+            });
+            previousPlayersList.forEach(op => {
+                if(!localPlayers.find(p => p.uid === op.uid)) {
+                      showToast(`${op.name} ayrıldı.`);
+                      addSystemLog(`<b>${op.name}</b> ayrıldı.`);
+                }
+            });
+        }
+        previousPlayersList = localPlayers;
+        
+        const firstHuman = localPlayers.find(p => !p.isBot);
+        isHost = (firstHuman && firstHuman.uid === myUid);
+
+        const humanPlayers = localPlayers.filter(p => !p.isBot);
+        if (humanPlayers.length >= 2 && humanPlayers[1].uid === myUid) {
+            const currentHost = humanPlayers[0]; 
+            if (currentHost.lastSeen && (Date.now() - currentHost.lastSeen > ANIM_CONFIG.HOST_TIMEOUT)) {
+                const updatedPlayers = localPlayers.map(p => {
+                    if (p.uid === currentHost.uid) {
+                        return { ...p, uid: 'replaced_host_' + Date.now(), name: '🤖 ' + p.name, isBot: true, isReady: true, personality: 'Agresif', lastSeen: Date.now() };
+                    }
+                    return p;
+                });
+                db.collection("rooms").doc(currentRoomId).update({ players: updatedPlayers }).then(() => showToast("Host düştü, yerine bot geçti!"));
+            }
+        }
+
+        document.getElementById(isHost ? 'wr-host-controls' : 'wr-guest-controls').style.display = 'block';
+        document.getElementById(!isHost ? 'wr-host-controls' : 'wr-guest-controls').style.display = 'none';
+        document.getElementById('wr-room-name').innerText = `Masa: ${data.name}`;
+        document.getElementById('wr-count').innerText = localPlayers.length;
+        const ul = document.getElementById('wr-player-list'); ul.innerHTML = "";
+        localPlayers.forEach(p => { ul.innerHTML += `<li class="player-item"><span>${p.isBot?'🤖 ':''}${p.name}</span> ${(p.uid===firstHuman?.uid)?'(Host)':''}</li>`; });
+        
+        if(data.status === 'playing') {
+            document.getElementById('waiting-room-overlay').style.display = 'none';
+            document.getElementById('main-game-wrapper').style.display = 'grid';
+            updateGlobalStatus('playing'); // Update Status to Red
+            myPlayerIdx = localPlayers.findIndex(p => p.uid === myUid);
+            syncGameLoop(data);
+        }
+    });
+}
+
+function sendHeartbeat() {
+    if(!currentRoomId || !myUid) return;
+    db.collection("rooms").doc(currentRoomId).get().then(doc => {
+        if(doc.exists) {
+            let ps = doc.data().players;
+            let me = ps.find(p => p.uid === myUid);
+            if(me) {
+                me.lastSeen = Date.now();
+                db.collection("rooms").doc(currentRoomId).update({ players: ps, lastActive: Date.now() });
+            }
+        }
+    });
+}
+
+document.getElementById('start-game-btn').addEventListener('click', () => {
+    if(localPlayers.length < 2) return alert("En az 2 oyuncu!");
+    let finalPlayers = [...localPlayers];
+    const botNames = ["🤖 Rifu", "🤖 Utku", "🤖 Kübra"];
+    const personalities = ["Agresif", "Stratejik", "Panik Atak", "Rahat", "Gıcık"];
+    let botIdx = 0;
+    while(finalPlayers.length < 4) {
+        let pType = personalities[Math.floor(Math.random()*personalities.length)];
+        finalPlayers.push({ uid: 'bot_' + Date.now() + '_' + botIdx, name: botNames[botIdx % botNames.length], isBot: true, score: 0, hand: [], isReady: true, saidSonTabak: false, challengeUsed: false, personality: pType, lastSeen: Date.now() });
+        botIdx++;
+    }
+    finalPlayers = shuffleDeck(finalPlayers);
+    finalPlayers = finalPlayers.map(p => ({...p, isReady: false, saidSonTabak: false, challengeUsed: false }));
+    
+    const newDeck = createFullDeck();
+    const hands = [[], [], [], []];
+    for(let i=0; i<7; i++) { for(let p=0; p<4; p++) hands[p].push(newDeck.pop()); }
+    finalPlayers.forEach((p, i) => p.hand = hands[i]);
+    let first = newDeck.pop();
+    while(first.color === 'wild' || first.type === 'action') { newDeck.unshift(first); first = newDeck.pop(); }
+    
+    const initialState = {
+        deck: newDeck, discardPile: [first], currentPlayer: Math.floor(Math.random()*4), direction: 1, drawStack: 0, gameActive: true,
+        lastAction: { type: 'start', timestamp: Date.now() }, vulnerablePlayerIdx: -1, playerColors: shuffleDeck(['#c0392b', '#f1c40f', '#8e44ad', '#27ae60']),
+        lastChat: { sender: "Sistem", msg: "Oyun Başladı!", ts: Date.now(), isSystem: true }, hasDrawn: false
+    };
+    db.collection("rooms").doc(currentRoomId).update({ status: 'playing', players: finalPlayers, gameState: initialState, lastActive: Date.now() });
+});
+
+/* --- GAME LOOP (Sync Logic) --- */
+let isBotThinking = false; 
+let lastBotActionTime = 0; 
+
+function syncGameLoop(roomData) {
+    const gs = roomData.gameState;
+    if(!gs) return;
+    
+    gameDeck = gs.deck; gameDiscard = gs.discardPile; gamePlayers = roomData.players;
+    gameHands = gamePlayers.map(p => p.hand);
+    currentPlayer = gs.currentPlayer; direction = gs.direction; drawStack = gs.drawStack;
+    gameActive = gs.gameActive; vulnerablePlayerIdx = gs.vulnerablePlayerIdx; playerColors = gs.playerColors;
+    hasDrawn = gs.hasDrawn || false;
+
+    if(currentPlayer !== myPlayerIdx) localSaidSonTabak = false;
+
+    if(gs.lastChat && gs.lastChat.ts > lastChatTs) {
+        if(gs.lastChat.isSystem) addSystemLog(gs.lastChat.msg);
+        else {
+            let senderIdx = gamePlayers.findIndex(p => p.name === gs.lastChat.sender);
+            let color = senderIdx !== -1 ? (playerColors[senderIdx] || '#333') : '#333';
+            addChatLog(gs.lastChat.sender, gs.lastChat.msg, color);
+            if(senderIdx !== -1 && senderIdx !== myPlayerIdx) {
+                let relIdx = (senderIdx - myPlayerIdx + 4) % 4; 
+                let b = document.getElementById(`bot${relIdx}-chat`);
+                if(b) { b.innerText = gs.lastChat.msg; b.classList.add('visible'); setTimeout(()=>b.classList.remove('visible'),3000); }
+            }
+        }
+        lastChatTs = gs.lastChat.ts;
+    }
+
+    if(lastGameState && lastGameState.lastAction.timestamp !== gs.lastAction.timestamp) {
+        actionQueue.push(gs.lastAction);
+        processActionQueue();
+    } else if (!isProcessingQueue) {
+        updateUI(); 
+    }
+    
+    if(isHost && gameActive && !isBotThinking) {
+        let currentPObj = gamePlayers[currentPlayer];
+        if(!currentPObj.isBot) {
+            let timeSinceAction = Date.now() - gs.lastAction.timestamp;
+            if(timeSinceAction > ANIM_CONFIG.AFK_TIMEOUT) {
+                const updatedPlayers = gamePlayers.map(p => {
+                    if (p.uid === currentPObj.uid) {
+                        return { ...p, uid: 'afk_bot_' + Date.now(), name: '🤖 ' + p.name, isBot: true, isReady: true, personality: 'Dengeli', lastSeen: Date.now() };
+                    }
+                    return p;
+                });
+                db.collection("rooms").doc(currentRoomId).update({ 
+                    players: updatedPlayers,
+                    "gameState.lastChat": { sender: "Sistem", msg: `${currentPObj.name} AFK kaldığı için bot devraldı.`, ts: Date.now(), isSystem: true }
+                });
+            }
+        }
+    }
+
+    if(isBotThinking && Date.now() - lastBotActionTime > ANIM_CONFIG.BOT_WATCHDOG) {
+        console.warn("Bot takıldı! Sıfırlanıyor...");
+        isBotThinking = false;
+    }
+
+    // GAME END CHECK (Wait for Queue)
+    if (gs.winnerIdx !== undefined && gs.winnerIdx !== -1 && gameActive === false) {
+        if(actionQueue.length === 0 && !isProcessingQueue) { // Wait for animation
+             if(document.getElementById('end-modal').style.display !== 'flex') showEndGame(gs.winnerIdx, roomData.players);
+             updateReadyStatusUI();
+        }
+    }
+    
+    if(!lastGameState && gs.lastAction.type === 'start') {
+          actionQueue.push(gs.lastAction); 
+          processActionQueue();
+    }
+    
+    lastGameState = gs;
+
+    if(isHost && gameActive && !isProcessingQueue && actionQueue.length === 0 && !isBotThinking) {
+        const currentPObj = gamePlayers[currentPlayer];
+        if(currentPObj && currentPObj.isBot) {
+            isBotThinking = true;
+            lastBotActionTime = Date.now(); 
+            setTimeout(() => {
+                hostBotTurn().then(() => { isBotThinking = false; }).catch(e => { console.error("Bot Error", e); isBotThinking = false; });
+            }, ANIM_CONFIG.BOT_THINK);
+        }
+    }
+}
+
+/* --- ACTION HANDLING --- */
+async function processActionQueue() {
+    if(isProcessingQueue || actionQueue.length === 0) return;
+    isProcessingQueue = true;
+    const action = actionQueue.shift();
+    await handleRemoteAction(action); 
+    updateUI();
+    isProcessingQueue = false;
+    processActionQueue();
+}
+
+async function handleRemoteAction(action) {
+    if(!action) return;
+    
+    if(action.type === 'sonTabak') {
+        const pName = gamePlayers[action.pIdx].name;
+        showSonTabakPopup(pName);
+        SoundFX.playUno();
+    }
+    else if(action.type === 'challenge') {
+        let victimName = action.victimIdx !== undefined ? gamePlayers[action.victimIdx].name : "Biri";
+        let msg = action.success ? "BAŞARILI! ✅" : "BAŞARISIZ! ❌";
+        let detail = action.success ? `${victimName} ceza yedi!` : `İtiraz haksızdı!`;
+        showChallengePopup(action.success, msg, detail);
+        
+        if(action.success) SoundFX.playFanfare(); else SoundFX.playBad();
+        
+        if(action.victimIdx !== undefined) {
+            await wait(500); 
+            let targetId = action.victimIdx === myPlayerIdx ? 'player-hand' : `bot${(action.victimIdx - myPlayerIdx + 4) % 4}-wrapper`;
+            animateFly(document.getElementById('draw-pile'), document.getElementById(targetId), null);
+        }
+    }
+    else if(action.type === 'newRound' || action.type === 'start') {
+        document.getElementById('end-modal').style.display = 'none';
+        amIReady = false; 
+        document.getElementById('end-continue-btn').innerText = "Devam Et ⏳";
+        document.getElementById('end-continue-btn').className = "game-btn btn-blue";
+        await animateInitialDeal();
+    }
+    else if(action.type === 'play') {
+        let pIdx = action.pIdx;
+        let sourceId = pIdx === myPlayerIdx ? 'player-hand' : pIdx === (myPlayerIdx+1)%4 ? 'bot1-wrapper' : pIdx === (myPlayerIdx+2)%4 ? 'bot2-wrapper' : 'bot3-wrapper';
+        let source = document.getElementById(sourceId);
+        if(pIdx === myPlayerIdx && source.children.length > 0) source = source.children[Math.min(source.children.length-1, 3)];
+        
+        await new Promise(r => animateFly(source, document.getElementById('discard-pile'), createCardHTML(action.card), r));
+        
+        document.getElementById('discard-pile').innerHTML = createCardHTML(action.card);
+        if(action.card.val === 'Block') { SoundFX.playBlock(); animateBlock(pIdx); }
+        else if(action.card.val === 'Reverse') { SoundFX.playReverse(); await animateReverse(); } 
+        else if(action.card.color === 'wild') SoundFX.playWild();
+        else SoundFX.playCardSnap();
+
+        if(action.card.val === 'Wild Table') await animateTableEffect();
+        if(action.card.val === 'Wild Mixer') await animateMixerEffect(direction); 
+        if(action.card.val === 'Wild Pot') animatePotEffect(pIdx, direction);
+        if(action.card.val === 'Wild Meze') animateMezeEffect(pIdx);
+    } 
+    else if(action.type === 'draw') {
+        SoundFX.playDraw();
+        let targetId = action.pIdx === myPlayerIdx ? 'player-hand' : `bot${(action.pIdx - myPlayerIdx + 4) % 4}-wrapper`;
+        isDealing = true;
+        let currentHandClone = [...gameHands[myPlayerIdx]]; 
+        
+        for(let k=0; k<action.count; k++) { 
+             let cardToVisualize = null;
+             if(action.pIdx === myPlayerIdx) {
+                 let idx = currentHandClone.length - action.count + k;
+                 if(idx >= 0 && idx < currentHandClone.length) cardToVisualize = createCardHTML(currentHandClone[idx]);
+             }
+             
+             await new Promise(resolve => {
+                 animateFly(document.getElementById('draw-pile'), document.getElementById(targetId), cardToVisualize, () => {
+                     if(action.pIdx === myPlayerIdx && cardToVisualize) {
+                         let div = document.createElement('div'); div.innerHTML = cardToVisualize; 
+                         let el = div.firstElementChild;
+                         document.getElementById('player-hand').appendChild(el);
+                     }
+                     resolve();
+                 });
+             });
+             await wait(100); 
+        }
+        isDealing = false;
+        updateUI(); 
+    }
+    await wait(200);
+}
+
+/* --- GAME LOGIC (Host/Player) --- */
+let gameDeck = [], gameDiscard = [], gameHands = [], gamePlayers = [], gameActive = false, direction = 1, currentPlayer = 0, drawStack = 0, vulnerablePlayerIdx = -1, playerColors = [], pendingWild = null, hasDrawn = false, lastWinner = -1;
+
+function canPlay(card) {
+    let top = gameDiscard[gameDiscard.length-1]; let topColor = top.chosenColor || top.color;
+    if(drawStack > 0) { if(card.val === '+2' || card.val === 'Wild Meze' || card.val === 'Wild Anti-Draw') return true; if(card.val === '+1') { return top.val === '+2' || top.val === 'Wild Meze' ? card.color === topColor : true; } return false; }
+    return card.color === 'wild' || card.color === topColor || card.val === top.val;
+}
+
+function playerDrawCard() {
+    if(currentPlayer !== myPlayerIdx) return;
+    if(drawStack === 0 && gameHands[myPlayerIdx].some(c => canPlay(c))) { showToast("Oynanacak kartın var!"); return; }
+    if(hasDrawn) { serverPassTurn(myPlayerIdx); return; }
+    
+    let count = drawStack > 0 ? drawStack : 1;
+    let isPenalty = drawStack > 0;
+    
+    serverDrawCard(myPlayerIdx, count, isPenalty);
+    if(isPenalty || count > 1) { 
+        setTimeout(() => serverPassTurn(myPlayerIdx), 1500 + (count*600)); 
+    }
+}
+function playerPlayCard(idx) {
+    if(currentPlayer !== myPlayerIdx) return;
+    let card = gameHands[myPlayerIdx][idx];
+    if(canPlay(card)) {
+        if(card.color === 'wild') {
+            if(card.val === 'Wild Anti-Draw') { let top = gameDiscard[gameDiscard.length-1]; card.chosenColor = top.chosenColor || top.color; if(card.chosenColor==='wild') card.chosenColor = 'red'; serverPlayCard(myPlayerIdx, idx, card, 1, localSaidSonTabak); }
+            else { pendingWild = { idx, card }; document.getElementById('color-modal').style.display = 'flex'; }
+        } else serverPlayCard(myPlayerIdx, idx, card, 1, localSaidSonTabak);
+    } else { SoundFX.playError(); showToast("Oynanamaz!"); }
+}
+function resolveColor(c) { 
+    document.getElementById('color-modal').style.display = 'none'; 
+    if(pendingWild) { 
+        let card = pendingWild.card; card.chosenColor = c; 
+        if(card.val === 'Wild Mixer') { 
+            let pRightIdx = (myPlayerIdx + 1) % 4; 
+            let pLeftIdx = (myPlayerIdx + 3) % 4; 
+            let pRightName = gamePlayers[pRightIdx].name;
+            let pLeftName = gamePlayers[pLeftIdx].name;
+            let pRightCount = gameHands[pRightIdx].length;
+            let pLeftCount = gameHands[pLeftIdx].length;
+
+            document.getElementById('mixer-info').innerHTML = `
+                <b>➡️ Saat:</b> ${pLeftName}'in elini (${pLeftCount} Kart) alacaksın.<br>
+                <b>⬅️ Ters:</b> ${pRightName}'in elini (${pRightCount} Kart) alacaksın.
+            `;
+            document.getElementById('dir-modal').style.display = 'flex'; 
+        } else { 
+            serverPlayCard(myPlayerIdx, pendingWild.idx, card, 1, localSaidSonTabak); 
+            pendingWild = null; 
+        } 
+    } 
+}
+function resolveDirection(d) { document.getElementById('dir-modal').style.display = 'none'; if(pendingWild) { serverPlayCard(myPlayerIdx, pendingWild.idx, pendingWild.card, d, localSaidSonTabak); pendingWild = null; } }
+
+function playerSaySonTabak() { 
+    if(currentPlayer !== myPlayerIdx || gameHands[myPlayerIdx].length > 2) return; 
+    
+    localSaidSonTabak = true; 
+    
+    let ps = [...gamePlayers]; ps[myPlayerIdx].saidSonTabak = true; 
+    
+    db.collection("rooms").doc(currentRoomId).update({ 
+        players: ps, 
+        "gameState.vulnerablePlayerIdx": -1, 
+        "gameState.lastAction": { type: 'sonTabak', pIdx: myPlayerIdx, timestamp: Date.now() },
+        "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> SON TABAK dedi!`, ts: Date.now(), isSystem: true } 
+    }); 
+}
+
+function challengePreviousPlayer() {
+    if(currentPlayer !== myPlayerIdx || gamePlayers[myPlayerIdx].challengeUsed) return;
+    if(vulnerablePlayerIdx !== -1) { 
+        serverPunishVulnerable(vulnerablePlayerIdx); 
+        db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> İTİRAZ ETTİ ve kazandı!`, ts: Date.now(), isSystem: true } }); 
+    }
+    else { 
+        serverPunishChallenger(myPlayerIdx); 
+        db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> YANLIŞ İTİRAZ ETTİ!`, ts: Date.now(), isSystem: true } }); 
+    }
+}
+function playerSendMessage() { let input = document.getElementById('player-input'); let msg = input.value.trim(); if(msg) { db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": { sender: myName, msg: msg, ts: Date.now(), isSystem: false }, "lastActive": Date.now() }); input.value = ''; } }
+
+/* --- SERVER ACTIONS --- */
+function recycleDeck(discardPile) {
+    let cleanDeck = discardPile.map(c => {
+        let copy = {...c};
+        delete copy.chosenColor; 
+        return copy;
+    });
+    return shuffleDeck(cleanDeck);
+}
+
+async function serverDrawCard(pIdx, count, isPenalty = false) {
+    let newDeck = [...gameDeck], newDiscard = [...gameDiscard];
+    let newHands = gameHands.map(h => [...h]); 
+    
+    if(newDeck.length < count && newDiscard.length > 1) { 
+        let top = newDiscard.pop(); 
+        newDeck = recycleDeck(newDiscard); 
+        newDiscard = [top]; 
+    }
+    for(let i=0; i<count; i++) if(newDeck.length > 0) newHands[pIdx].push(newDeck.pop());
+    let pUpdates = [...gamePlayers]; pUpdates[pIdx].hand = newHands[pIdx]; pUpdates[pIdx].saidSonTabak = false;
+    
+    let updates = { "players": pUpdates, "gameState.deck": newDeck, "gameState.discardPile": newDiscard, "gameState.drawStack": 0, "gameState.hasDrawn": true, "gameState.lastAction": { type: 'draw', pIdx, count, timestamp: Date.now() }, "lastActive": Date.now(), "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> ${count} kart çekti.`, ts: Date.now(), isSystem: true } };
+    if(isPenalty) {
+        updates["gameState.hasDrawn"] = false; 
+        updates["gameState.lastChat"].msg += " (Ceza)";
+    }
+    
+    await db.collection("rooms").doc(currentRoomId).update(updates);
+}
+async function serverPassTurn(pIdx) { await db.collection("rooms").doc(currentRoomId).update({ "gameState.currentPlayer": (currentPlayer + direction + 4) % 4, "gameState.hasDrawn": false, "gameState.vulnerablePlayerIdx": -1, "lastActive": Date.now(), "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> Pas geçti.`, ts: Date.now(), isSystem: true } }); }
+
+async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredSonTabak = false) {
+    let newHands = gameHands.map(h => [...h]); 
+    let newDiscard = [...gameDiscard];
+    if(!newHands[pIdx] || !newHands[pIdx][cIdx]) return;
+
+    let card = newHands[pIdx][cIdx]; if(cardWithColor) card = cardWithColor;
+    
+    newHands[pIdx].splice(cIdx, 1); 
+    newDiscard.push(card);
+    
+    let newDir = direction, newDrawStack = drawStack, nextP = currentPlayer, newWinner = -1;
+    let playerUpdates = [...gamePlayers]; playerUpdates[pIdx].saidSonTabak = false;
+    if(newHands[pIdx].length === 0) newWinner = pIdx;
+    
+    if(card.val === 'Wild Mixer') { 
+        newDir = mixerDir || 1; 
+    } else if (card.val === 'Reverse') { 
+        newDir *= -1; 
+    }
+
+    if(newWinner === -1) { 
+        if(card.val === 'Block') nextP = (currentPlayer + (newDir * 2) + 4) % 4; 
+        else nextP = (currentPlayer + newDir + 4) % 4; 
+    }
+
+    if(card.val === '+1') newDrawStack += 1; if(card.val === '+2') newDrawStack += 2; if(card.val === 'Wild Meze') newDrawStack += 1; if(card.val === 'Wild Anti-Draw') newDrawStack = 0;
+    
+    if(card.val === 'Wild Table') { 
+        let counts = newHands.map(h => h.length); 
+        let allCards = []; 
+        newHands.forEach(h => { allCards.push(...h); h.length = 0; }); 
+        allCards = shuffleDeck(allCards); 
+        for(let i=0; i<4; i++) {
+            for(let j=0; j<counts[i]; j++) {
+                if(allCards.length > 0) newHands[i].push(allCards.pop());
+            }
+        }
+    }
+    
+    if(card.val === 'Wild Mixer') { 
+        if(newDir === 1) { let temp = newHands[3]; newHands[3] = newHands[2]; newHands[2] = newHands[1]; newHands[1] = newHands[0]; newHands[0] = temp; } 
+        else { let temp = newHands[0]; newHands[0] = newHands[1]; newHands[1] = newHands[2]; newHands[2] = newHands[3]; newHands[3] = temp; } 
+    }
+    if(card.val === 'Wild Pot') { 
+        for(let k=0; k<4; k++) {
+            let targetP = (pIdx + (k * newDir) + 4) % 4; 
+            if(gameDeck.length > 0) newHands[targetP].push(gameDeck.pop());
+        }
+    }
+    if(card.val === 'Wild Meze') { let prevP = (pIdx - newDir + 4) % 4; if(gameDeck.length > 0) newHands[prevP].push(gameDeck.pop()); }
+    playerUpdates = playerUpdates.map((p, i) => ({...p, hand: newHands[i]}));
+    
+    let isSafe = gamePlayers[pIdx].saidSonTabak || declaredSonTabak;
+    let newVulnerable = (newHands[pIdx].length === 1 && !isSafe) ? pIdx : -1; 
+    if(nextP === newVulnerable) newVulnerable = -1;
+    
+    let cardName = card.type === 'num' ? `${card.val} ${VEGETABLES[card.color]}` : (card.val==='Wild' ? `Güveç (${VEGETABLES[card.chosenColor]})` : (CARD_NAMES[card.val] || card.val));
+    if(card.val === 'Wild Anti-Draw') cardName += " (Joker)";
+
+    let updates = { "players": playerUpdates, "gameState.discardPile": newDiscard, "gameState.currentPlayer": nextP, "gameState.direction": newDir, "gameState.drawStack": newDrawStack, "gameState.vulnerablePlayerIdx": newVulnerable, "gameState.hasDrawn": false, "gameState.lastAction": { type: 'play', pIdx, card, timestamp: Date.now() }, "lastActive": Date.now(), "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> ${cardName} attı.`, ts: Date.now(), isSystem: true } };
+    if(card.val === 'Wild Pot' || card.val === 'Wild Meze' || card.val === 'Wild Table') updates["gameState.deck"] = gameDeck;
+    if(newWinner !== -1) { 
+        updates["gameState.gameActive"] = false; 
+        updates["gameState.winnerIdx"] = newWinner; 
+        let roundScores = newHands.map(h => h.reduce((sum, c) => sum + (c.type==='num'?parseInt(c.val):20), 0)); 
+        updates["players"] = playerUpdates.map((p, i) => ({ ...p, score: p.score + roundScores[i], lastRoundScore: roundScores[i] })); 
+    }
+    await db.collection("rooms").doc(currentRoomId).update(updates);
+}
+async function serverPunishVulnerable(victimIdx) { 
+    let newDeck = [...gameDeck], newHands = gameHands.map(h=>[...h]), c = newDeck.pop(); if(c) newHands[victimIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[victimIdx].hand = newHands[victimIdx]; 
+    await db.collection("rooms").doc(currentRoomId).update({ "players": pUpdates, "gameState.deck": newDeck, "gameState.vulnerablePlayerIdx": -1, "gameState.lastAction": { type: 'challenge', success: true, victimIdx: victimIdx, timestamp: Date.now() } }); 
+}
+async function serverPunishChallenger(challengerIdx) { 
+    let newDeck = [...gameDeck], newHands = gameHands.map(h=>[...h]), c = newDeck.pop(); if(c) newHands[challengerIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[challengerIdx].hand = newHands[challengerIdx]; pUpdates[challengerIdx].challengeUsed = true; let nextP = (currentPlayer + direction + 4) % 4; 
+    await db.collection("rooms").doc(currentRoomId).update({ "players": pUpdates, "gameState.deck": newDeck, "gameState.currentPlayer": nextP, "gameState.hasDrawn": false, "gameState.lastAction": { type: 'challenge', success: false, victimIdx: challengerIdx, timestamp: Date.now() } }); 
+}
+
+async function nextRound() {
+    if(!isHost) return;
+    document.getElementById('end-modal').style.display = 'none';
+    const newDeck = createFullDeck();
+    const hands = [[], [], [], []];
+    for(let i=0; i<7; i++) { for(let p=0; p<4; p++) hands[p].push(newDeck.pop()); }
+    const updatedPlayers = gamePlayers.map((p, i) => ({ ...p, hand: hands[i], isReady: false, saidSonTabak: false, challengeUsed: false }));
+    let first = newDeck.pop(); while(first.color === 'wild' || first.type === 'action') { newDeck.unshift(first); first = newDeck.pop(); }
+    const nextState = { deck: newDeck, discardPile: [first], currentPlayer: lastWinner, direction: 1, drawStack: 0, gameActive: true, lastAction: { type: 'newRound', timestamp: Date.now() }, vulnerablePlayerIdx: -1, playerColors: playerColors, lastChat: { sender: "Sistem", msg: "Yeni El Başladı!", ts: Date.now(), isSystem: true }, hasDrawn: false };
+    await db.collection("rooms").doc(currentRoomId).update({ players: updatedPlayers, gameState: nextState, lastActive: Date.now() });
+}
+
+async function hostBotTurn() {
+    try {
+        if(!isHost) return;
+        const currentPObj = gamePlayers[currentPlayer];
+        if(!currentPObj || !currentPObj.isBot) return; 
+
+        const triggerChat = async (cat) => {
+            let pType = currentPObj.personality || 'Dengeli';
+            let pool = CHAT_POOL[pType] || CHAT_POOL['Dengeli'];
+            let msgs = pool[cat] || pool['draw_many'];
+            let msg = msgs[Math.floor(Math.random()*msgs.length)];
+            db.collection("rooms").doc(currentRoomId).update({
+                "gameState.lastChat": { sender: currentPObj.name, msg: msg, ts: Date.now(), isSystem: false }
+            }).catch(e => console.log("Chat error", e));
+        };
+
+        if(vulnerablePlayerIdx !== -1 && vulnerablePlayerIdx !== currentPlayer) {
+            if(Math.random() < 0.95) { 
+                await serverPunishVulnerable(vulnerablePlayerIdx);
+                await db.collection("rooms").doc(currentRoomId).update({ 
+                    "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[currentPlayer]}">${currentPObj.name}</b> uyanıklık yaptı ve itiraz etti!`, ts: Date.now(), isSystem: true } 
+                });
+                await wait(1500); 
+            }
+        }
+
+        const hand = gameHands[currentPlayer];
+        let playableIdx = -1;
+        let willSaySonTabak = false;
+        
+        if(drawStack > 0) {
+            playableIdx = hand.findIndex(c => c.val === '+2' || (c.val === '+1' && gameDiscard[gameDiscard.length-1].val==='+1') || c.val === 'Wild Meze' || c.val === 'Wild Anti-Draw');
+        } else {
+            playableIdx = hand.findIndex(c => canPlay(c));
+        }
+
+        if(playableIdx !== -1 && hand.length === 2) {
+             if(Math.random() > 0.1) {
+                 await serverBotSaySonTabak(currentPlayer); 
+                 willSaySonTabak = true;
+             }
+        }
+
+        if (drawStack > 0 && playableIdx === -1) {
+            triggerChat("draw_many");
+            await serverDrawCard(currentPlayer, drawStack, true); 
+            setTimeout(() => serverPassTurn(currentPlayer), 1500 + (drawStack*600)); 
+            return;
+        }
+
+        if(playableIdx !== -1) {
+            let card = hand[playableIdx];
+            if(card.color === 'wild') {
+                if (card.val === 'Wild Anti-Draw') {
+                    let top = gameDiscard[gameDiscard.length - 1];
+                    let currentActiveColor = top.chosenColor || top.color;
+                    if (currentActiveColor === 'wild') currentActiveColor = ['red','green','yellow','purple'][Math.floor(Math.random()*4)];
+                    card.chosenColor = currentActiveColor;
+                } else {
+                    triggerChat("wild");
+                    card.chosenColor = ['red','green','yellow','purple'][Math.floor(Math.random()*4)];
+                }
+            }
+            if(card.val === '+2') triggerChat("plus2");
+            if(card.val === 'Block') triggerChat("block");
+            
+            if(card.val === 'Wild Mixer') await serverPlayCard(currentPlayer, playableIdx, card, 1, willSaySonTabak); 
+            else await serverPlayCard(currentPlayer, playableIdx, card, 1, willSaySonTabak);
+        } else {
+            if(!hasDrawn) await serverDrawCard(currentPlayer, 1);
+            else await serverPassTurn(currentPlayer);
+        }
+    } catch(e) {
+        console.error("Bot Logic Error:", e);
+        throw e;
+    }
+}
+
+async function serverBotSaySonTabak(pIdx) {
+    let pUpdates = [...gamePlayers]; pUpdates[pIdx].saidSonTabak = true;
+    let pColor = playerColors[pIdx];
+    await db.collection("rooms").doc(currentRoomId).update({ players: pUpdates, "gameState.vulnerablePlayerIdx": -1, "gameState.lastAction": { type: 'sonTabak', pIdx: pIdx, timestamp: Date.now() }, "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${pColor}">${gamePlayers[pIdx].name}</b> SON TABAK dedi!`, ts: Date.now(), isSystem: true } });
+}
+
+/* --- YARDIMCI GÖRSELLER & ANİMASYONLAR --- */
+function updateUI() {
+    if(myPlayerIdx === -1) return;
+    let aL = document.getElementById('arrow-left'), aR = document.getElementById('arrow-right'), aT1 = document.getElementById('arrow-top-1'), aT2 = document.getElementById('arrow-top-2');
+    aL.className = 'arrow-icon'; aR.className = 'arrow-icon'; aT1.className = 'arrow-top-static'; aT2.className = 'arrow-top-static';
+
+    if(direction === 1) { aL.innerText = '⬆️'; aR.innerText = '⬇️'; aT1.innerText = '➡️'; aT2.innerText = '➡️'; } else { aL.innerText = '⬇️'; aR.innerText = '⬆️'; aT1.innerText = '⬅️'; aT2.innerText = '⬅️'; }
+    if(gameActive) {
+        let topCard = gameDiscard[gameDiscard.length-1]; let activeColor = topCard ? (topCard.chosenColor || topCard.color) : null; if(activeColor === 'wild') activeColor = 'neutral';
+        let glowClass = activeColor ? `glow-${activeColor}` : '';
+        let relCurrent = (currentPlayer - myPlayerIdx + 4) % 4, relNext = ((currentPlayer+direction+4)%4 - myPlayerIdx + 4) % 4;
+        let tArr = null;
+        if((relCurrent===0 && relNext===1) || (relCurrent===1 && relNext===0)) tArr = aL;
+        if((relCurrent===1 && relNext===2) || (relCurrent===2 && relNext===1)) tArr = aT1;
+        if((relCurrent===2 && relNext===3) || (relCurrent===3 && relNext===2)) tArr = aT2;
+        if((relCurrent===3 && relNext===0) || (relCurrent===0 && relNext===3)) tArr = aR;
+        if(tArr && glowClass) tArr.classList.add('active', glowClass);
+    }
+
+    if(gameDeck) document.getElementById('deck-count').innerText = gameDeck.length;
+    let pBadge = document.getElementById('penalty-badge');
+    if(drawStack > 0) { pBadge.innerText = "+" + drawStack; pBadge.style.display = 'flex'; pBadge.className = `p-${Math.min(drawStack,6)}`; } else pBadge.style.display = 'none';
+
+    let sortedP = [...gamePlayers].sort((a,b)=>a.score - b.score);
+    let html = "";
+    sortedP.forEach(p => {
+         let color = playerColors[gamePlayers.findIndex(x => x.uid===p.uid)] || '#333';
+         let isMe = p.uid === myUid;
+         html += `<tr class="${isMe?'me-row':''}"><td style="color:${color}; font-weight:${isMe?'900':'normal'};">${p.name}</td><td style="text-align:right;">${p.score}</td></tr>`;
+    });
+    document.getElementById('score-table').querySelector('tbody').innerHTML = html;
+
+    let dp = document.getElementById('discard-pile');
+    if(gameDiscard.length > 0) {
+        let c = gameDiscard[gameDiscard.length-1];
+        dp.innerHTML = createCardHTML(c);
+        let activeColor = c.chosenColor || c.color;
+        let cont = document.querySelector('.game-container');
+        cont.classList.remove('ambient-red', 'ambient-green', 'ambient-yellow', 'ambient-purple');
+        if(activeColor !== 'wild') cont.classList.add(`ambient-${activeColor}`);
+    }
+
+    if (!isDealing) {
+        let ph = document.getElementById('player-hand'); ph.innerHTML = '';
+        if(currentPlayer === myPlayerIdx) ph.classList.add('current-player-area'); else ph.classList.remove('current-player-area');
+        gameHands[myPlayerIdx].forEach((c, idx) => {
+            let div = document.createElement('div'); div.innerHTML = createCardHTML(c); let el = div.firstElementChild;
+            if(currentPlayer === myPlayerIdx && canPlay(c)) { el.classList.add('playable'); el.onclick = () => playerPlayCard(idx); } else el.style.opacity = 0.6;
+            ph.appendChild(el);
+        });
+    }
+
+    const visualIndices = [ (myPlayerIdx + 1) % 4, (myPlayerIdx + 2) % 4, (myPlayerIdx + 3) % 4 ];
+    for(let i=0; i<3; i++) {
+        let realIdx = visualIndices[i]; let p = gamePlayers[realIdx]; let elId = `bot${i+1}`;
+        if(p) {
+            let pColor = playerColors[realIdx] || '#333';
+            document.getElementById(`${elId}-name`).innerHTML = `<span style="color:${pColor}">${p.name}</span> (${p.hand.length})`;
+            let stack = document.getElementById(`${elId}-stack`); stack.innerHTML = "";
+            let visibleCount = Math.min(p.hand.length, 6);
+            let totalW = 60 + (visibleCount > 0 ? (visibleCount-1)*8 : 0);
+            stack.style.width = totalW + 'px';
+            for(let j=0; j<visibleCount; j++) {
+                let mc = document.createElement('div'); mc.className = 'mini-card-back'; mc.style.top = (j*4)+'px'; mc.style.left = (j*8)+'px'; stack.appendChild(mc);
+            }
+            if(currentPlayer === realIdx) document.getElementById(`${elId}-wrapper`).classList.add('current-player'); else document.getElementById(`${elId}-wrapper`).classList.remove('current-player');
+        }
+    }
+
+    let stBtn = document.getElementById('son-tabak-btn');
+    stBtn.disabled = !(currentPlayer === myPlayerIdx && gameHands[myPlayerIdx].length <= 2 && !gamePlayers[myPlayerIdx].saidSonTabak);
+    let chBtn = document.getElementById('challenge-btn');
+    chBtn.disabled = !(currentPlayer === myPlayerIdx && !gamePlayers[myPlayerIdx].challengeUsed);
+}
+
+function animateFly(from, to, html, callback) {
+    if(!from || !to) { if(callback) callback(); return; }
+    let f = from.getBoundingClientRect(); let t = to.getBoundingClientRect();
+    let el = document.createElement('div');
+    if(html) { let w = document.createElement('div'); w.innerHTML = html; el = w.firstElementChild; el.classList.add('flying-card'); } else { el.className = 'card card-back-style flying-card'; }
+    
+    // START CENTERED
+    let startX = f.left + f.width/2 - 52; 
+    let startY = f.top + f.height/2 - 77;
+    
+    // END CENTERED
+    let endX = t.left + t.width/2 - 52; 
+    let endY = t.top + t.height/2 - 77;
+    
+    // SOFRA FIX: If from='play-area' (table center)
+    if(from.id === 'play-area') {
+        let pa = document.getElementById('play-area').getBoundingClientRect();
+        startX = pa.left + pa.width/2 - 52;
+        startY = pa.top + pa.height/2 - 77;
+    }
+    
+    el.style.left = startX + 'px'; 
+    el.style.top = startY + 'px'; 
+    document.body.appendChild(el);
+    
+    void el.offsetWidth; 
+    
+    el.style.left = endX + 'px'; 
+    el.style.top = endY + 'px'; 
+    
+    setTimeout(() => { el.remove(); if(callback) callback(); }, ANIM_CONFIG.FLY_BUFFER);
+}
+function animateReverse() { 
+    return new Promise(resolve => {
+        document.querySelectorAll('.arrow-icon').forEach(el => { el.classList.add('arrow-spin'); });
+        document.querySelectorAll('.arrow-top-static').forEach(el => { el.classList.add('arrow-spin'); });
+        setTimeout(() => { 
+            document.querySelectorAll('.arrow-icon').forEach(el => { el.classList.remove('arrow-spin'); }); 
+            document.querySelectorAll('.arrow-top-static').forEach(el => { el.classList.remove('arrow-spin'); }); 
+            resolve(); 
+        }, 1200);
+    });
+}
+function animateBlock(pIdx) {
+    let victimIdx = (pIdx + direction + 4) % 4;
+    let targetId = victimIdx === myPlayerIdx ? 'player-hand' : `bot${(victimIdx - myPlayerIdx + 4) % 4}-wrapper`;
+    let el = document.getElementById(targetId);
+    if(el) {
+        let b = document.createElement('div'); b.innerText = '🔪'; b.className = 'blocked-anim';
+        let r = el.getBoundingClientRect(); b.style.left = r.left+(r.width/2)+'px'; b.style.top = r.top+(r.height/2)+'px';
+        document.body.appendChild(b); setTimeout(()=>b.remove(),2000);
+    }
+}
+function animateTableEffect() {
+    return new Promise(resolve => {
+        let centerEl = document.getElementById('play-area'); let rect = centerEl.getBoundingClientRect();
+        let centerX = rect.left + rect.width/2; let centerY = rect.top + rect.height/2;
+        let animCards = [];
+        ['player-hand','bot1-wrapper','bot2-wrapper','bot3-wrapper'].forEach(id => {
+            let el = document.getElementById(id); if(el) {
+                let r = el.getBoundingClientRect();
+                for(let k=0; k<3; k++) {
+                    let ac = document.createElement('div'); ac.className = 'mini-card-back'; 
+                    ac.style.zIndex = 5000; ac.style.left = r.left + 'px'; ac.style.top = r.top + 'px';
+                    document.body.appendChild(ac); animCards.push(ac);
+                }
+            }
+        });
+        setTimeout(() => {
+            animCards.forEach(ac => { ac.style.transition = 'all 1.2s ease-in-out'; ac.style.left = (centerX - 30) + 'px'; ac.style.top = (centerY - 45) + 'px'; ac.style.transform = 'rotate(720deg)'; });
+        }, 50);
+        setTimeout(() => { 
+            animCards.forEach(ac => { let angle = Math.random() * Math.PI * 2; let dist = 400; ac.style.left = (centerX + Math.cos(angle)*dist) + 'px'; ac.style.top = (centerY + Math.sin(angle)*dist) + 'px'; ac.style.opacity = 0; });
+            setTimeout(() => { animCards.forEach(ac => ac.remove()); resolve(); }, 1200);
+        }, 1500);
+    });
+}
+function animateMixerEffect(dir) {
+    return new Promise(resolve => {
+        let dp = document.getElementById('play-area'); let rect = dp.getBoundingClientRect();
+        let cx = rect.left + rect.width/2; let cy = rect.top + rect.height/2;
+        let mixerContainer = document.createElement('div'); mixerContainer.className = 'mixer-container'; mixerContainer.style.left = cx + 'px'; mixerContainer.style.top = cy + 'px';
+        document.body.appendChild(mixerContainer);
+        for(let i=0; i<8; i++) {
+            let c = document.createElement('div'); c.className = 'mixer-card card-back-style'; c.style.transform = `rotate(${(i/8)*360}deg) translateY(-70px)`; mixerContainer.appendChild(c);
+        }
+        setTimeout(() => { mixerContainer.style.transition = 'transform 2s ease-in-out'; mixerContainer.style.transform = `rotate(${dir * 720}deg)`; }, 100);
+        setTimeout(() => { mixerContainer.remove(); resolve(); }, 2200);
+    });
+}
+function animatePotEffect(senderIdx, dir) {
+    let source = document.getElementById('draw-pile');
+    for(let k=0; k<4; k++) {
+        let targetPIdx = (senderIdx + (k * dir) + 4) % 4;
+        let targetId = targetPIdx === myPlayerIdx ? 'player-hand' : `bot${(targetPIdx - myPlayerIdx + 4) % 4}-wrapper`;
+        setTimeout(() => { 
+            animateFly(source, document.getElementById(targetId), null); 
+        }, k * ANIM_CONFIG.DRAW_INTERVAL);
+    }
+}
+function animateMezeEffect(senderIdx) {
+    let prevIdx = (senderIdx - direction + 4) % 4;
+    let targetId = prevIdx === myPlayerIdx ? 'player-hand' : `bot${(prevIdx - myPlayerIdx + 4) % 4}-wrapper`;
+    animateFly(document.getElementById('draw-pile'), document.getElementById(targetId), null);
+}
+async function animateInitialDeal() {
+    let piles = [];
+    isDealing = true; 
+    document.getElementById('player-hand').innerHTML = '';
+    
+    let targets = ['player-hand', 'bot1-wrapper', 'bot2-wrapper', 'bot3-wrapper'];
+    let myHandClone = [...gameHands[myPlayerIdx]]; 
+    let myCardIndex = 0;
+
+    for(let round=0; round<7; round++) {
+        for(let p=0; p<4; p++) {
+            let targetId = targets[p];
+            let cardHtml = null;
+            if (p === 0 && myCardIndex < myHandClone.length) {
+                cardHtml = createCardHTML(myHandClone[myCardIndex]);
+            }
+
+            animateFly(document.getElementById('draw-pile'), document.getElementById(targetId), cardHtml, () => {
+                if (p === 0 && cardHtml) {
+                    let div = document.createElement('div'); 
+                    div.innerHTML = cardHtml; 
+                    let el = div.firstElementChild;
+                    el.style.opacity = 0.6; 
+                    document.getElementById('player-hand').appendChild(el);
+                }
+            });
+            if(p===0) myCardIndex++;
+            await wait(ANIM_CONFIG.INITIAL_DEAL); 
+        }
+    }
+    document.getElementById('player-hand').innerHTML = '';
+    isDealing = false; 
+    updateUI();
+}
+function startVegetableRain() {
+    const canvas = document.getElementById('confetti-canvas'); const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    const emojis = ['🥦', '🍅', '🥔', '🍆']; let drops = [];
+    for(let i=0; i<30; i++) drops.push({x:Math.random()*canvas.width, y:-50, vy:Math.random()*3+2, vx:Math.random()*2-1, rot:Math.random()*360, rotSpeed:(Math.random()-0.5)*5, emoji:emojis[Math.floor(Math.random()*4)], size:Math.random()*20+20});
+    let isActive = true; setTimeout(() => isActive=false, 4000);
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if(isActive && Math.random() < 0.3) drops.push({x:Math.random()*canvas.width, y:-50, vy:Math.random()*3+2, vx:Math.random()*2-1, rot:Math.random()*360, rotSpeed:(Math.random()-0.5)*5, emoji:emojis[Math.floor(Math.random()*4)], size:Math.random()*20+20});
+        for (let i = 0; i < drops.length; i++) {
+            let d = drops[i]; ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(d.rot * Math.PI / 180); ctx.font = `${d.size}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(d.emoji, 0, 0); ctx.restore();
+            d.y += d.vy; d.x += d.vx + Math.sin(d.y / 50) * 0.5; d.rot += d.rotSpeed;
+            if (d.y > canvas.height + 50) { if(isActive) drops[i] = {x:Math.random()*canvas.width, y:-50, vy:Math.random()*3+2, vx:Math.random()*2-1, rot:Math.random()*360, rotSpeed:(Math.random()-0.5)*5, emoji:emojis[Math.floor(Math.random()*4)], size:Math.random()*20+20}; else { drops.splice(i, 1); i--; } }
+        }
+        if (drops.length > 0 || isActive) requestAnimationFrame(animate); else ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    animate();
+}
+
+function openRules() { document.getElementById('rules-modal').style.display = 'flex'; }
+function leaveGame() { document.getElementById('leave-modal').style.display = 'flex'; }
+function confirmLeaveGame() {
+    if(!currentRoomId) return; 
+    
+    // Stop listeners and heartbeat
+    if(roomUnsubscribe) roomUnsubscribe();
+    if(heartbeatInterval) clearInterval(heartbeatInterval);
+    
+    updateGlobalStatus('lobby'); // Reset Status to Lobby
+
+    // UI Reset
+    document.getElementById('main-game-wrapper').style.display = 'none';
+    document.getElementById('waiting-room-overlay').style.display = 'none';
+    document.getElementById('leave-modal').style.display = 'none';
+    document.getElementById('end-modal').style.display = 'none';
+    document.getElementById('lobby-overlay').style.display = 'flex';
+
+    db.collection("rooms").doc(currentRoomId).get().then(doc => {
+        if(!doc.exists) { 
+             currentRoomId = null; isHost = false;
+             return; 
+        }
+        let ps = doc.data().players || [];
+        let rData = doc.data();
+        let isPlaying = rData.status === 'playing';
+
+        if(ps.length <= 1) {
+            db.collection("rooms").doc(currentRoomId).delete()
+                .catch(e => console.log("Room delete error", e))
+                .finally(() => { currentRoomId = null; isHost = false; });
+        } else {
+            let newPs;
+            if(isPlaying) {
+                newPs = ps.map(p => {
+                    if(p.uid === myUid) {
+                        return {
+                            ...p,
+                            uid: 'replaced_bot_' + Date.now(),
+                            name: '🤖 ' + p.name,
+                            isBot: true,
+                            isReady: true,
+                            personality: 'Agresif',
+                            lastSeen: Date.now()
+                        };
+                    }
+                    return p;
+                });
+            } else {
+                newPs = ps.filter(p => p.uid !== myUid);
+            }
+            
+            db.collection("rooms").doc(currentRoomId).update({ players: newPs })
+                .catch(e => console.log("Leave update error", e))
+                .finally(() => { currentRoomId = null; isHost = false; });
+        }
+    });
+    
+    // Reset Game State Variables
+    localPlayers = [];
+    gameHands = [];
+    gameDeck = [];
+    actionQueue = [];
+    isProcessingQueue = false;
+    previousPlayersList = [];
+}
+
+/* --- UTILS --- */
+const VEGETABLES = { red: '🍅', green: '🥦', yellow: '🥔', purple: '🍆' };
+const SPECIALS = { '+1': '📦', '+2': '📦📦', 'Reverse': '♻️', 'Block': '🔪', 'Wild': 'GUVEC', 'Wild Anti-Draw': '🧻', 'Wild Pot': '🍲', 'Wild Table': '🍽️', 'Wild Mixer': '🌪️', 'Wild Meze': '🍱' };
+function createCardHTML(card) {
+    let emoji = (card.type === 'num') ? VEGETABLES[card.color] : (card.val === 'Wild' ? `<div class="guvec-grid"><span>🍅</span><span>🥦</span><span>🥔</span><span>🍆</span></div>` : (SPECIALS[card.val] || card.val));
+    let cls = (card.color === 'wild') ? 'wild-bg' : card.color;
+    let borderStyle = card.chosenColor ? `border-color: ${card.chosenColor==='red'?'#e74c3c':card.chosenColor==='green'?'#2ecc71':card.chosenColor==='yellow'?'#f39c12':'#9b59b6'} !important; border-width: 3px;` : '';
+    let cornerTxt = (card.type === 'num') ? card.val : '';
+    return `<div class="card ${cls}" style="${borderStyle}" data-val="${card.val}"><div class="card-corner top-left">${cornerTxt}</div><div class="card-emoji">${emoji}</div><div class="card-corner bottom-right">${cornerTxt}</div></div>`;
+}
+function toggleInfoView(el) { el.classList.toggle('flipped'); }
+function openPatternModal() { 
+    const grid = document.getElementById('pattern-grid'); grid.innerHTML = ''; 
+    CARD_PATTERNS.forEach(p => { 
+        let d = document.createElement('div'); 
+        d.className = 'pattern-opt'; 
+        d.style.background = p; 
+        d.onclick = () => { 
+            document.documentElement.style.setProperty('--card-pattern', p);
+            currentPattern = p; 
+            updateUI(); 
+            closePatternModal(); 
+        }; 
+        grid.appendChild(d); 
+    }); 
+    document.getElementById('pattern-modal').style.display = 'flex'; 
+}
+function closePatternModal() { document.getElementById('pattern-modal').style.display = 'none'; }
+function handleChatKey(e) { if(e.key === 'Enter') playerSendMessage(); }
+function toggleReadyState() { if(!currentRoomId) return; amIReady = !amIReady; let btn = document.getElementById('end-continue-btn'); btn.innerText = amIReady ? "Bekleniyor..." : "Devam Et ⏳"; btn.classList.toggle('btn-blue'); btn.classList.toggle('btn-dark'); let ps = [...gamePlayers]; let meIdx = ps.findIndex(p => p.uid === myUid); if(meIdx !== -1) { ps[meIdx].isReady = amIReady; db.collection("rooms").doc(currentRoomId).update({ players: ps, lastActive: Date.now() }); } }
+
+const cleanupRoom = async () => { if(heartbeatInterval) clearInterval(heartbeatInterval); };
+
+function shuffleDeck(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
+function createFullDeck() { let d = []; ['red','green','yellow','purple'].forEach(c => { d.push({color:c,val:'0',type:'num',name:'0'}); for(let i=1; i<=9; i++) d.push({color:c,val:i.toString(),type:'num',name:i}); ['+1','Reverse','Block'].forEach(v=>d.push({color:c,val:v,type:'action',name:v})); }); for(let i=0;i<2;i++) { d.push({color:'wild',val:'Wild',type:'wild',name:'Güveç'}); d.push({color:'wild',val:'+2',type:'wild',name:'+2'}); d.push({color:'wild',val:'Wild Anti-Draw',type:'wild',name:'Tuvalet Kağıdı'}); d.push({color:'wild',val:'Wild Pot',type:'wild',name:'Düdüklü Tencere'}); d.push({color:'wild',val:'Wild Meze',type:'wild',name:'Meze'}); } d.push({color:'wild',val:'Wild Table',type:'wild',name:'Sofra'}); d.push({color:'wild',val:'Wild Mixer',type:'wild',name:'Mikser'}); return shuffleDeck(d); }
+function showSonTabakPopup(name) { let p = document.getElementById('son-tabak-popup'); document.getElementById('son-tabak-who').innerText = name + " dedi!"; p.style.display = 'block'; setTimeout(() => p.style.display = 'none', ANIM_CONFIG.POPUP); }
+function showChallengePopup(success, title, detail) { 
+    let p = document.getElementById('challenge-popup'); 
+    document.getElementById('challenge-who').innerText = title || "İTİRAZ!"; 
+    document.getElementById('challenge-result').innerText = detail || (success ? "BAŞARILI! ✅" : "HATALI! ❌"); 
+    p.className = success ? 'challenge-valid' : 'challenge-invalid'; 
+    p.style.display = 'block'; 
+    setTimeout(() => p.style.display = 'none', ANIM_CONFIG.POPUP); 
+}
+function addSystemLog(html) { const logList = document.getElementById('system-log'); const li = document.createElement('li'); li.innerHTML = html; logList.prepend(li); }
+function addChatLog(name, msg, color) { const chatDiv = document.getElementById('chat-messages'); const msgDiv = document.createElement('div'); msgDiv.className = `chat-line`; msgDiv.innerHTML = `<span class="chat-name" style="color:${color}; font-weight:bold;">${name}:</span><span class="chat-text">${msg}</span>`; chatDiv.appendChild(msgDiv); chatDiv.scrollTop = chatDiv.scrollHeight; }
+function showToast(msg) { let t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', ANIM_CONFIG.TOAST); }
+function showEndGame(winnerIdx, finalPlayers) {
+    lastWinner = winnerIdx;
+    const winnerName = finalPlayers[winnerIdx].name;
+    document.getElementById('winner-text').innerText = `🎉 ${winnerName} Kazandı!`;
+    document.getElementById('ai-summary').innerHTML = `🎤 <b>Spiker:</b> "Vay vay vay! ${winnerName} resmen masayı süpürdü!"`;
+    document.getElementById('end-modal').style.display = 'flex';
+    updateReadyStatusUI(); startVegetableRain(); SoundFX.playFanfare();
+}
+function updateReadyStatusUI() {
+    let allReady = true; gamePlayers.forEach(p => { if(!p.isBot && !p.isReady) allReady = false; });
+    let sortedP = [...gamePlayers].sort((a,b)=>a.score - b.score);
+    let html = `<table style="width:100%; border-collapse:collapse;">`; 
+    sortedP.forEach(p => { 
+        let isMe = p.uid === myUid; 
+        let pColor = playerColors[gamePlayers.findIndex(x=>x.uid===p.uid)] || '#333';
+        let lastRoundScore = p.lastRoundScore !== undefined ? `+${p.lastRoundScore}` : '';
+        html += `<tr style="${isMe ? 'background-color: #fff9c4; font-weight: bold; border-left: 4px solid #f1c40f;' : ''}">
+                    <td style="padding: 8px 10px; border-bottom: 1px solid #eee; color:${pColor};">${p.name}</td>
+                    <td style="padding: 8px 10px; border-bottom: 1px solid #eee; text-align:right;">
+                        <span style="color:#e74c3c; font-size:0.9em; margin-right:5px;">${lastRoundScore}</span>
+                        (Toplam: ${p.score}) ${(p.isReady||p.isBot)?'✅':'⏳'}
+                    </td>
+                 </tr>`; 
+    });
+    html += `</table>`;
+    document.getElementById('final-scores').innerHTML = html;
+    if(isHost) document.getElementById('host-start-btn').style.display = allReady ? 'block' : 'none';
+}
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+</script>
+</body>
+</html>
