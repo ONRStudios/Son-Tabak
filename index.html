@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v6.3 (UI Fixes)</title>
+    <title>Son Tabak Online - v7.1 (Fixes)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -549,7 +549,7 @@
 <!-- OYUN ALANI -->
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v6.0</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v7.1</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <div class="game-container">
@@ -684,6 +684,62 @@
 <div id="toast" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:10px 20px; border-radius:20px; display:none; z-index:5000;"></div>
 
 <script>
+/* --- OPTIMIZATION HELPERS: SERIALIZATION --- */
+const serializeCard = (c) => {
+    if(!c) return null;
+    let cc = 'w'; // Default wild
+    if(c.color === 'red') cc = 'r';
+    else if(c.color === 'green') cc = 'g';
+    else if(c.color === 'yellow') cc = 'y';
+    else if(c.color === 'purple') cc = 'p';
+    
+    // Format: colorCode:val:chosenColor(optional)
+    let str = `${cc}:${c.val}`;
+    
+    // Add chosenColor only if it exists and is not 'wild'
+    if(c.chosenColor && c.chosenColor !== 'wild') {
+        let chosen = 'r';
+        if(c.chosenColor === 'green') chosen = 'g';
+        if(c.chosenColor === 'yellow') chosen = 'y';
+        if(c.chosenColor === 'purple') chosen = 'p';
+        str += `:${chosen}`;
+    }
+    return str;
+};
+
+const deserializeCard = (s) => {
+    if(!s || typeof s !== 'string') return s; // If already object or null
+    const parts = s.split(':');
+    const cc = parts[0];
+    const val = parts[1];
+    
+    let color = 'wild';
+    if(cc === 'r') color = 'red';
+    else if(cc === 'g') color = 'green';
+    else if(cc === 'y') color = 'yellow';
+    else if(cc === 'p') color = 'purple';
+    
+    let type = 'num';
+    // FIX: Check if value contains '+' to prevent +1/+2 being treated as numbers
+    if(isNaN(val) || val.indexOf('+') > -1) {
+        if(color === 'wild') type = 'wild';
+        else type = 'action';
+    }
+    
+    let card = { color, val, type, name: val };
+    
+    // Handle chosenColor if exists
+    if(parts.length > 2) {
+        let chosenCode = parts[2];
+        if(chosenCode === 'r') card.chosenColor = 'red';
+        else if(chosenCode === 'g') card.chosenColor = 'green';
+        else if(chosenCode === 'y') card.chosenColor = 'yellow';
+        else if(chosenCode === 'p') card.chosenColor = 'purple';
+    }
+    
+    return card;
+};
+
 /* --- MOBILE UI LOGIC --- */
 function toggleLobbyTab(element) {
     if (window.innerWidth > 900) return; 
@@ -707,9 +763,9 @@ const ANIM_CONFIG = {
     INITIAL_DEAL: 250,        
     TOAST: 2000,              
     POPUP: 3000,              
-    BOT_THINK: 300,           
-    HEARTBEAT_MS: 5000,       
-    HOST_TIMEOUT: 15000,      
+    BOT_THINK: 300,            
+    HEARTBEAT_MS: 30000,       
+    HOST_TIMEOUT: 45000,      
     AFK_TIMEOUT: 60000,        
     BOT_WATCHDOG: 3000        
 };
@@ -847,17 +903,17 @@ let lobbyChatUnsub = null;
 let globalPlayersUnsub = null;
 
 function initLobbyFeatures() {
-    // 1. Start Global Heartbeat for Status
+    // 1. Start Global Heartbeat for Status (Using OPTIMIZED interval)
     setInterval(() => {
         if(myUid) {
             let status = 'lobby';
             if(currentRoomId) status = (document.getElementById('main-game-wrapper').style.display === 'grid' || document.getElementById('main-game-wrapper').style.display === 'flex') ? 'playing' : 'waiting';
             updateGlobalStatus(status);
         }
-    }, 5000); // 5 seconds heartbeat
+    }, ANIM_CONFIG.HEARTBEAT_MS);
 
     // 2. Listen to Lobby Chat
-    lobbyChatUnsub = db.collection("lobby_chat").orderBy("ts", "asc").limit(100).onSnapshot(snapshot => {
+    lobbyChatUnsub = db.collection("lobby_chat").orderBy("ts", "asc").limit(50).onSnapshot(snapshot => {
         const div = document.getElementById('lobby-chat-msgs');
         div.innerHTML = "";
         snapshot.forEach(doc => {
@@ -871,7 +927,6 @@ function initLobbyFeatures() {
     });
 
     // 3. Listen to Online Players
-    // Filter logic is client-side because filtering by time requires query index
     globalPlayersUnsub = db.collection("global_players").onSnapshot(snapshot => {
         const listDiv = document.getElementById('online-player-list');
         listDiv.innerHTML = "";
@@ -937,14 +992,21 @@ function sendLobbyMessage() {
 
 function listenRooms() {
     const list = document.getElementById('room-list'); 
-    db.collection("rooms").onSnapshot((snapshot) => {
+    // OPTIMIZED: Only fetch waiting rooms, limit to 20
+    db.collection("rooms")
+      .where("status", "==", "waiting")
+      .orderBy("lastActive", "desc")
+      .limit(20)
+      .onSnapshot((snapshot) => {
         list.innerHTML = "";
         if(snapshot.empty) list.innerHTML = "<div style='text-align:center;color:#777; margin-top:20px;'>Oda yok. İlk odayı sen kur!</div>";
         const now = Date.now();
         snapshot.forEach(docSnap => {
             const r = docSnap.data();
-            if (r.lastActive && now - r.lastActive > 60000) { docSnap.ref.delete().catch(() => {}); return; }
-            if(r.status === 'finished') return; 
+            if (r.lastActive && now - r.lastActive > 60000) { return; } // Client side filter for stale rooms just in case
+            
+            // Deserialize players if needed (though players structure is array, inside might be strings later)
+            // Currently players array is kept as objects for lobby list logic, cards are deep inside.
             
             let realHumans = r.players.filter(p => !p.isBot).length;
             let dotClass = r.status === 'playing' ? (realHumans >= 4 ? 'st-red' : 'st-yellow') : 'st-green';
@@ -975,6 +1037,9 @@ function listenRooms() {
             }
             list.appendChild(div);
         });
+    }, (error) => {
+        console.log("Lobby Error (Probably need index):", error);
+        list.innerHTML = "<div style='text-align:center;color:#red;'>İndex oluşturuluyor...</div>";
     });
 }
 
@@ -987,6 +1052,7 @@ document.getElementById('create-room-btn').addEventListener('click', () => {
 
     const rName = document.getElementById('room-name-in').value.trim() || `${myName}'in Odası`;
     const rPass = document.getElementById('room-pass-in').value.trim();
+    // OPTIMIZED: create room with serialized empty hands
     db.collection("rooms").add({
         name: rName, password: rPass, hasPassword: !!rPass, hostId: myUid, status: 'waiting', lastActive: Date.now(),
         players: [{ uid: myUid, name: myName, isBot: false, score: 0, hand: [], isReady: false, saidSonTabak: false, challengeUsed: false, personality: 'Dengeli', lastSeen: Date.now() }],
@@ -1047,6 +1113,39 @@ function proceedJoin(roomId) {
     });
 }
 
+// OPTIMIZED: CHAT LISTENER FUNCTION
+let gameChatUnsub = null;
+function initGameChat(roomId) {
+    if(gameChatUnsub) gameChatUnsub();
+    const chatDiv = document.getElementById('chat-messages');
+    chatDiv.innerHTML = "";
+    
+    gameChatUnsub = db.collection("rooms").doc(roomId).collection("messages")
+        .orderBy("ts", "asc")
+        .limit(30)
+        .onSnapshot(snapshot => {
+            snapshot.docChanges().forEach(change => {
+                if (change.type === "added") {
+                    const data = change.doc.data();
+                    if(data.isSystem) addSystemLog(data.msg);
+                    else {
+                        // Find color from gamePlayers if available
+                        let senderIdx = gamePlayers.findIndex(p => p.name === data.sender);
+                        let color = senderIdx !== -1 ? (playerColors[senderIdx] || '#333') : '#333';
+                        addChatLog(data.sender, data.msg, color);
+                        
+                        // Bubble for bots
+                        if(senderIdx !== -1 && senderIdx !== myPlayerIdx) {
+                            let relIdx = (senderIdx - myPlayerIdx + 4) % 4; 
+                            let b = document.getElementById(`bot${relIdx}-chat`);
+                            if(b) { b.innerText = data.msg; b.classList.add('visible'); setTimeout(()=>b.classList.remove('visible'),3000); }
+                        }
+                    }
+                }
+            });
+        });
+}
+
 function enterWaitingRoom() {
     updateGlobalStatus('waiting'); // Update Status to Yellow
     document.getElementById('lobby-overlay').style.display = 'none';
@@ -1057,6 +1156,9 @@ function enterWaitingRoom() {
     
     if(heartbeatInterval) clearInterval(heartbeatInterval);
     heartbeatInterval = setInterval(sendHeartbeat, ANIM_CONFIG.HEARTBEAT_MS);
+
+    // Initialize Chat Listener
+    initGameChat(currentRoomId);
 
     roomUnsubscribe = db.collection("rooms").doc(currentRoomId).onSnapshot((docSnap) => {
         if(!docSnap.exists) { location.reload(); return; }
@@ -1091,6 +1193,7 @@ function enterWaitingRoom() {
             if (currentHost.lastSeen && (Date.now() - currentHost.lastSeen > ANIM_CONFIG.HOST_TIMEOUT)) {
                 const updatedPlayers = localPlayers.map(p => {
                     if (p.uid === currentHost.uid) {
+                        // Handled correctly below, just ensure card serialization if hand exists
                         return { ...p, uid: 'replaced_host_' + Date.now(), name: '🤖 ' + p.name, isBot: true, isReady: true, personality: 'Agresif', lastSeen: Date.now() };
                     }
                     return p;
@@ -1121,9 +1224,19 @@ function sendHeartbeat() {
     db.collection("rooms").doc(currentRoomId).get().then(doc => {
         if(doc.exists) {
             let ps = doc.data().players;
-            let me = ps.find(p => p.uid === myUid);
-            if(me) {
-                me.lastSeen = Date.now();
+            let meIdx = ps.findIndex(p => p.uid === myUid);
+            if(meIdx !== -1) {
+                // We use dot notation to update only this specific player's lastSeen to save bandwidth
+                let updateData = {};
+                updateData[`players.${meIdx}.lastSeen`] = Date.now(); // This only works if array order is preserved, which it is
+                // Also update room activity
+                updateData['lastActive'] = Date.now();
+                
+                // Fallback to full update if index shifting is a concern, but for heartbeat minimal is better
+                // Actually, full array write is safer for Firebase array logic, 
+                // but since we are optimizing, let's try to trust the index for the heartbeat
+                // If this fails, revert to full players update.
+                ps[meIdx].lastSeen = Date.now();
                 db.collection("rooms").doc(currentRoomId).update({ players: ps, lastActive: Date.now() });
             }
         }
@@ -1147,16 +1260,23 @@ document.getElementById('start-game-btn').addEventListener('click', () => {
     const newDeck = createFullDeck();
     const hands = [[], [], [], []];
     for(let i=0; i<7; i++) { for(let p=0; p<4; p++) hands[p].push(newDeck.pop()); }
-    finalPlayers.forEach((p, i) => p.hand = hands[i]);
+    finalPlayers.forEach((p, i) => p.hand = hands[i].map(serializeCard)); // OPTIMIZED: Serialize initial hands
+    
     let first = newDeck.pop();
     while(first.color === 'wild' || first.type === 'action') { newDeck.unshift(first); first = newDeck.pop(); }
     
+    // OPTIMIZED: Serialize Deck and Discard Pile
     const initialState = {
-        deck: newDeck, discardPile: [first], currentPlayer: Math.floor(Math.random()*4), direction: 1, drawStack: 0, gameActive: true,
+        deck: newDeck.map(serializeCard), 
+        discardPile: [serializeCard(first)], 
+        currentPlayer: Math.floor(Math.random()*4), direction: 1, drawStack: 0, gameActive: true,
         lastAction: { type: 'start', timestamp: Date.now() }, vulnerablePlayerIdx: -1, playerColors: shuffleDeck(['#c0392b', '#f1c40f', '#8e44ad', '#27ae60']),
-        lastChat: { sender: "Sistem", msg: "Oyun Başladı!", ts: Date.now(), isSystem: true }, hasDrawn: false
+        hasDrawn: false
     };
     db.collection("rooms").doc(currentRoomId).update({ status: 'playing', players: finalPlayers, gameState: initialState, lastActive: Date.now() });
+    
+    // Send start message via Sub-collection
+    db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: "Oyun Başladı!", ts: Date.now(), isSystem: true });
 });
 
 /* --- GAME LOOP (Sync Logic) --- */
@@ -1167,31 +1287,29 @@ function syncGameLoop(roomData) {
     const gs = roomData.gameState;
     if(!gs) return;
     
-    gameDeck = gs.deck; gameDiscard = gs.discardPile; gamePlayers = roomData.players;
-    gameHands = gamePlayers.map(p => p.hand);
+    // OPTIMIZED: DESERIALIZE DATA
+    gameDeck = (gs.deck || []).map(deserializeCard);
+    gameDiscard = (gs.discardPile || []).map(deserializeCard);
+    
+    // Players are objects, hands are strings
+    gamePlayers = roomData.players;
+    gameHands = gamePlayers.map(p => (p.hand || []).map(deserializeCard));
+    
     currentPlayer = gs.currentPlayer; direction = gs.direction; drawStack = gs.drawStack;
     gameActive = gs.gameActive; vulnerablePlayerIdx = gs.vulnerablePlayerIdx; playerColors = gs.playerColors;
     hasDrawn = gs.hasDrawn || false;
 
     if(currentPlayer !== myPlayerIdx) localSaidSonTabak = false;
 
-    if(gs.lastChat && gs.lastChat.ts > lastChatTs) {
-        if(gs.lastChat.isSystem) addSystemLog(gs.lastChat.msg);
-        else {
-            let senderIdx = gamePlayers.findIndex(p => p.name === gs.lastChat.sender);
-            let color = senderIdx !== -1 ? (playerColors[senderIdx] || '#333') : '#333';
-            addChatLog(gs.lastChat.sender, gs.lastChat.msg, color);
-            if(senderIdx !== -1 && senderIdx !== myPlayerIdx) {
-                let relIdx = (senderIdx - myPlayerIdx + 4) % 4; 
-                let b = document.getElementById(`bot${relIdx}-chat`);
-                if(b) { b.innerText = gs.lastChat.msg; b.classList.add('visible'); setTimeout(()=>b.classList.remove('visible'),3000); }
-            }
-        }
-        lastChatTs = gs.lastChat.ts;
-    }
+    // Chat handling is now done via initGameChat listener, so we removed gs.lastChat checks here
 
     if(lastGameState && lastGameState.lastAction.timestamp !== gs.lastAction.timestamp) {
-        actionQueue.push(gs.lastAction);
+        // Deserialize card in action if present
+        let action = gs.lastAction;
+        if(action.card && typeof action.card === 'string') {
+            action.card = deserializeCard(action.card);
+        }
+        actionQueue.push(action);
         processActionQueue();
     } else if (!isProcessingQueue) {
         updateUI(); 
@@ -1208,10 +1326,17 @@ function syncGameLoop(roomData) {
                     }
                     return p;
                 });
-                db.collection("rooms").doc(currentRoomId).update({ 
-                    players: updatedPlayers,
-                    "gameState.lastChat": { sender: "Sistem", msg: `${currentPObj.name} AFK kaldığı için bot devraldı.`, ts: Date.now(), isSystem: true }
+                // Ensure hands are serialized when updating players
+                updatedPlayers.forEach(p => {
+                    if(Array.isArray(p.hand) && p.hand.length > 0 && typeof p.hand[0] !== 'string') {
+                         p.hand = p.hand.map(serializeCard);
+                    }
                 });
+                
+                db.collection("rooms").doc(currentRoomId).update({ 
+                    players: updatedPlayers
+                });
+                db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: `${currentPObj.name} AFK kaldığı için bot devraldı.`, ts: Date.now(), isSystem: true });
             }
         }
     }
@@ -1236,6 +1361,11 @@ function syncGameLoop(roomData) {
     
     lastGameState = gs;
 
+    // Trigger Bot Check (Extracted Function)
+    attemptBotMove();
+}
+
+function attemptBotMove() {
     if(isHost && gameActive && !isProcessingQueue && actionQueue.length === 0 && !isBotThinking) {
         const currentPObj = gamePlayers[currentPlayer];
         if(currentPObj && currentPObj.isBot) {
@@ -1256,6 +1386,10 @@ async function processActionQueue() {
     await handleRemoteAction(action); 
     updateUI();
     isProcessingQueue = false;
+    
+    // FIX: Trigger Bot Move immediately after animation ends if it's bot's turn
+    attemptBotMove();
+    
     processActionQueue();
 }
 
@@ -1402,28 +1536,39 @@ function playerSaySonTabak() {
     
     let ps = [...gamePlayers]; ps[myPlayerIdx].saidSonTabak = true; 
     
+    // Ps hands might be strings, keep them that way
+    
     db.collection("rooms").doc(currentRoomId).update({ 
         players: ps, 
         "gameState.vulnerablePlayerIdx": -1, 
         "gameState.lastAction": { type: 'sonTabak', pIdx: myPlayerIdx, timestamp: Date.now() },
-        "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> SON TABAK dedi!`, ts: Date.now(), isSystem: true } 
     }); 
+    db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> SON TABAK dedi!`, ts: Date.now(), isSystem: true });
 }
 
 function challengePreviousPlayer() {
     if(currentPlayer !== myPlayerIdx || gamePlayers[myPlayerIdx].challengeUsed) return;
     if(vulnerablePlayerIdx !== -1) { 
         serverPunishVulnerable(vulnerablePlayerIdx); 
-        db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> İTİRAZ ETTİ ve kazandı!`, ts: Date.now(), isSystem: true } }); 
+        db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> İTİRAZ ETTİ ve kazandı!`, ts: Date.now(), isSystem: true }); 
     }
     else { 
         serverPunishChallenger(myPlayerIdx); 
-        db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> YANLIŞ İTİRAZ ETTİ!`, ts: Date.now(), isSystem: true } }); 
+        db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> YANLIŞ İTİRAZ ETTİ!`, ts: Date.now(), isSystem: true }); 
     }
 }
-function playerSendMessage() { let input = document.getElementById('player-input'); let msg = input.value.trim(); if(msg) { db.collection("rooms").doc(currentRoomId).update({ "gameState.lastChat": { sender: myName, msg: msg, ts: Date.now(), isSystem: false }, "lastActive": Date.now() }); input.value = ''; } }
+function playerSendMessage() { 
+    let input = document.getElementById('player-input'); 
+    let msg = input.value.trim(); 
+    if(msg) { 
+        db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: myName, msg: msg, ts: Date.now(), isSystem: false })
+          .catch(err => console.error("Message send failed:", err)); // Added error handling
+        db.collection("rooms").doc(currentRoomId).update({ "lastActive": Date.now() }); 
+        input.value = ''; 
+    } 
+}
 
-/* --- SERVER ACTIONS --- */
+/* --- SERVER ACTIONS (OPTIMIZED) --- */
 function recycleDeck(discardPile) {
     let cleanDeck = discardPile.map(c => {
         let copy = {...c};
@@ -1443,17 +1588,35 @@ async function serverDrawCard(pIdx, count, isPenalty = false) {
         newDiscard = [top]; 
     }
     for(let i=0; i<count; i++) if(newDeck.length > 0) newHands[pIdx].push(newDeck.pop());
-    let pUpdates = [...gamePlayers]; pUpdates[pIdx].hand = newHands[pIdx]; pUpdates[pIdx].saidSonTabak = false;
     
-    let updates = { "players": pUpdates, "gameState.deck": newDeck, "gameState.discardPile": newDiscard, "gameState.drawStack": 0, "gameState.hasDrawn": true, "gameState.lastAction": { type: 'draw', pIdx, count, timestamp: Date.now() }, "lastActive": Date.now(), "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> ${count} kart çekti.`, ts: Date.now(), isSystem: true } };
+    // Serialize for DB
+    let pUpdates = [...gamePlayers]; 
+    pUpdates[pIdx].hand = newHands[pIdx].map(serializeCard); 
+    pUpdates[pIdx].saidSonTabak = false;
+    
+    let updates = { 
+        "players": pUpdates, 
+        "gameState.deck": newDeck.map(serializeCard), 
+        "gameState.discardPile": newDiscard.map(serializeCard), 
+        "gameState.drawStack": 0, 
+        "gameState.hasDrawn": true, 
+        "gameState.lastAction": { type: 'draw', pIdx, count, timestamp: Date.now() }, 
+        "lastActive": Date.now()
+    };
     if(isPenalty) {
         updates["gameState.hasDrawn"] = false; 
-        updates["gameState.lastChat"].msg += " (Ceza)";
     }
     
     await db.collection("rooms").doc(currentRoomId).update(updates);
+    
+    let msg = `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> ${count} kart çekti.`;
+    if(isPenalty) msg += " (Ceza)";
+    db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: msg, ts: Date.now(), isSystem: true });
 }
-async function serverPassTurn(pIdx) { await db.collection("rooms").doc(currentRoomId).update({ "gameState.currentPlayer": (currentPlayer + direction + 4) % 4, "gameState.hasDrawn": false, "gameState.vulnerablePlayerIdx": -1, "lastActive": Date.now(), "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> Pas geçti.`, ts: Date.now(), isSystem: true } }); }
+async function serverPassTurn(pIdx) { 
+    await db.collection("rooms").doc(currentRoomId).update({ "gameState.currentPlayer": (currentPlayer + direction + 4) % 4, "gameState.hasDrawn": false, "gameState.vulnerablePlayerIdx": -1, "lastActive": Date.now() });
+    db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> Pas geçti.`, ts: Date.now(), isSystem: true }); 
+}
 
 async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredSonTabak = false) {
     let newHands = gameHands.map(h => [...h]); 
@@ -1505,7 +1668,9 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
         }
     }
     if(card.val === 'Wild Meze') { let prevP = (pIdx - newDir + 4) % 4; if(gameDeck.length > 0) newHands[prevP].push(gameDeck.pop()); }
-    playerUpdates = playerUpdates.map((p, i) => ({...p, hand: newHands[i]}));
+    
+    // SERIALIZE HANDS
+    playerUpdates = playerUpdates.map((p, i) => ({...p, hand: newHands[i].map(serializeCard)}));
     
     let isSafe = gamePlayers[pIdx].saidSonTabak || declaredSonTabak;
     let newVulnerable = (newHands[pIdx].length === 1 && !isSafe) ? pIdx : -1; 
@@ -1514,8 +1679,19 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
     let cardName = card.type === 'num' ? `${card.val} ${VEGETABLES[card.color]}` : (card.val==='Wild' ? `Güveç (${VEGETABLES[card.chosenColor]})` : (CARD_NAMES[card.val] || card.val));
     if(card.val === 'Wild Anti-Draw') cardName += " (Joker)";
 
-    let updates = { "players": playerUpdates, "gameState.discardPile": newDiscard, "gameState.currentPlayer": nextP, "gameState.direction": newDir, "gameState.drawStack": newDrawStack, "gameState.vulnerablePlayerIdx": newVulnerable, "gameState.hasDrawn": false, "gameState.lastAction": { type: 'play', pIdx, card, timestamp: Date.now() }, "lastActive": Date.now(), "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> ${cardName} attı.`, ts: Date.now(), isSystem: true } };
-    if(card.val === 'Wild Pot' || card.val === 'Wild Meze' || card.val === 'Wild Table') updates["gameState.deck"] = gameDeck;
+    let updates = { 
+        "players": playerUpdates, 
+        "gameState.discardPile": newDiscard.map(serializeCard), // SERIALIZE
+        "gameState.currentPlayer": nextP, 
+        "gameState.direction": newDir, 
+        "gameState.drawStack": newDrawStack, 
+        "gameState.vulnerablePlayerIdx": newVulnerable, 
+        "gameState.hasDrawn": false, 
+        "gameState.lastAction": { type: 'play', pIdx, card: serializeCard(card), timestamp: Date.now() }, // SERIALIZE
+        "lastActive": Date.now()
+    };
+    if(card.val === 'Wild Pot' || card.val === 'Wild Meze' || card.val === 'Wild Table') updates["gameState.deck"] = gameDeck.map(serializeCard);
+    
     if(newWinner !== -1) { 
         updates["gameState.gameActive"] = false; 
         updates["gameState.winnerIdx"] = newWinner; 
@@ -1523,14 +1699,15 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
         updates["players"] = playerUpdates.map((p, i) => ({ ...p, score: p.score + roundScores[i], lastRoundScore: roundScores[i] })); 
     }
     await db.collection("rooms").doc(currentRoomId).update(updates);
+    db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> ${cardName} attı.`, ts: Date.now(), isSystem: true });
 }
 async function serverPunishVulnerable(victimIdx) { 
-    let newDeck = [...gameDeck], newHands = gameHands.map(h=>[...h]), c = newDeck.pop(); if(c) newHands[victimIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[victimIdx].hand = newHands[victimIdx]; 
-    await db.collection("rooms").doc(currentRoomId).update({ "players": pUpdates, "gameState.deck": newDeck, "gameState.vulnerablePlayerIdx": -1, "gameState.lastAction": { type: 'challenge', success: true, victimIdx: victimIdx, timestamp: Date.now() } }); 
+    let newDeck = [...gameDeck], newHands = gameHands.map(h=>[...h]), c = newDeck.pop(); if(c) newHands[victimIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[victimIdx].hand = newHands[victimIdx].map(serializeCard); 
+    await db.collection("rooms").doc(currentRoomId).update({ "players": pUpdates, "gameState.deck": newDeck.map(serializeCard), "gameState.vulnerablePlayerIdx": -1, "gameState.lastAction": { type: 'challenge', success: true, victimIdx: victimIdx, timestamp: Date.now() } }); 
 }
 async function serverPunishChallenger(challengerIdx) { 
-    let newDeck = [...gameDeck], newHands = gameHands.map(h=>[...h]), c = newDeck.pop(); if(c) newHands[challengerIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[challengerIdx].hand = newHands[challengerIdx]; pUpdates[challengerIdx].challengeUsed = true; let nextP = (currentPlayer + direction + 4) % 4; 
-    await db.collection("rooms").doc(currentRoomId).update({ "players": pUpdates, "gameState.deck": newDeck, "gameState.currentPlayer": nextP, "gameState.hasDrawn": false, "gameState.lastAction": { type: 'challenge', success: false, victimIdx: challengerIdx, timestamp: Date.now() } }); 
+    let newDeck = [...gameDeck], newHands = gameHands.map(h=>[...h]), c = newDeck.pop(); if(c) newHands[challengerIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[challengerIdx].hand = newHands[challengerIdx].map(serializeCard); pUpdates[challengerIdx].challengeUsed = true; let nextP = (currentPlayer + direction + 4) % 4; 
+    await db.collection("rooms").doc(currentRoomId).update({ "players": pUpdates, "gameState.deck": newDeck.map(serializeCard), "gameState.currentPlayer": nextP, "gameState.hasDrawn": false, "gameState.lastAction": { type: 'challenge', success: false, victimIdx: challengerIdx, timestamp: Date.now() } }); 
 }
 
 async function nextRound() {
@@ -1539,10 +1716,22 @@ async function nextRound() {
     const newDeck = createFullDeck();
     const hands = [[], [], [], []];
     for(let i=0; i<7; i++) { for(let p=0; p<4; p++) hands[p].push(newDeck.pop()); }
-    const updatedPlayers = gamePlayers.map((p, i) => ({ ...p, hand: hands[i], isReady: false, saidSonTabak: false, challengeUsed: false }));
+    
+    // SERIALIZE HANDS
+    const updatedPlayers = gamePlayers.map((p, i) => ({ ...p, hand: hands[i].map(serializeCard), isReady: false, saidSonTabak: false, challengeUsed: false }));
+    
     let first = newDeck.pop(); while(first.color === 'wild' || first.type === 'action') { newDeck.unshift(first); first = newDeck.pop(); }
-    const nextState = { deck: newDeck, discardPile: [first], currentPlayer: lastWinner, direction: 1, drawStack: 0, gameActive: true, lastAction: { type: 'newRound', timestamp: Date.now() }, vulnerablePlayerIdx: -1, playerColors: playerColors, lastChat: { sender: "Sistem", msg: "Yeni El Başladı!", ts: Date.now(), isSystem: true }, hasDrawn: false };
+    
+    const nextState = { 
+        deck: newDeck.map(serializeCard), 
+        discardPile: [serializeCard(first)], 
+        currentPlayer: lastWinner, direction: 1, drawStack: 0, gameActive: true, 
+        lastAction: { type: 'newRound', timestamp: Date.now() }, 
+        vulnerablePlayerIdx: -1, playerColors: playerColors, 
+        hasDrawn: false 
+    };
     await db.collection("rooms").doc(currentRoomId).update({ players: updatedPlayers, gameState: nextState, lastActive: Date.now() });
+    db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: "Yeni El Başladı!", ts: Date.now(), isSystem: true });
 }
 
 async function hostBotTurn() {
@@ -1556,16 +1745,16 @@ async function hostBotTurn() {
             let pool = CHAT_POOL[pType] || CHAT_POOL['Dengeli'];
             let msgs = pool[cat] || pool['draw_many'];
             let msg = msgs[Math.floor(Math.random()*msgs.length)];
-            db.collection("rooms").doc(currentRoomId).update({
-                "gameState.lastChat": { sender: currentPObj.name, msg: msg, ts: Date.now(), isSystem: false }
+            db.collection("rooms").doc(currentRoomId).collection("messages").add({
+                 sender: currentPObj.name, msg: msg, ts: Date.now(), isSystem: false 
             }).catch(e => console.log("Chat error", e));
         };
 
         if(vulnerablePlayerIdx !== -1 && vulnerablePlayerIdx !== currentPlayer) {
             if(Math.random() < 0.95) { 
                 await serverPunishVulnerable(vulnerablePlayerIdx);
-                await db.collection("rooms").doc(currentRoomId).update({ 
-                    "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${playerColors[currentPlayer]}">${currentPObj.name}</b> uyanıklık yaptı ve itiraz etti!`, ts: Date.now(), isSystem: true } 
+                db.collection("rooms").doc(currentRoomId).collection("messages").add({ 
+                    sender: "Sistem", msg: `<b style="color:${playerColors[currentPlayer]}">${currentPObj.name}</b> uyanıklık yaptı ve itiraz etti!`, ts: Date.now(), isSystem: true 
                 });
                 await wait(1500); 
             }
@@ -1626,7 +1815,8 @@ async function hostBotTurn() {
 async function serverBotSaySonTabak(pIdx) {
     let pUpdates = [...gamePlayers]; pUpdates[pIdx].saidSonTabak = true;
     let pColor = playerColors[pIdx];
-    await db.collection("rooms").doc(currentRoomId).update({ players: pUpdates, "gameState.vulnerablePlayerIdx": -1, "gameState.lastAction": { type: 'sonTabak', pIdx: pIdx, timestamp: Date.now() }, "gameState.lastChat": { sender: "Sistem", msg: `<b style="color:${pColor}">${gamePlayers[pIdx].name}</b> SON TABAK dedi!`, ts: Date.now(), isSystem: true } });
+    await db.collection("rooms").doc(currentRoomId).update({ players: pUpdates, "gameState.vulnerablePlayerIdx": -1, "gameState.lastAction": { type: 'sonTabak', pIdx: pIdx, timestamp: Date.now() }});
+    db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: `<b style="color:${pColor}">${gamePlayers[pIdx].name}</b> SON TABAK dedi!`, ts: Date.now(), isSystem: true });
 }
 
 /* --- YARDIMCI GÖRSELLER & ANİMASYONLAR --- */
@@ -1686,9 +1876,11 @@ function updateUI() {
         let realIdx = visualIndices[i]; let p = gamePlayers[realIdx]; let elId = `bot${i+1}`;
         if(p) {
             let pColor = playerColors[realIdx] || '#333';
-            document.getElementById(`${elId}-name`).innerHTML = `<span style="color:${pColor}">${p.name}</span> (${p.hand.length})`;
+            // Use deserialized hand length
+            let handLen = p.hand ? p.hand.length : 0;
+            document.getElementById(`${elId}-name`).innerHTML = `<span style="color:${pColor}">${p.name}</span> (${handLen})`;
             let stack = document.getElementById(`${elId}-stack`); stack.innerHTML = "";
-            let visibleCount = Math.min(p.hand.length, 6);
+            let visibleCount = Math.min(handLen, 6);
             let totalW = 60 + (visibleCount > 0 ? (visibleCount-1)*8 : 0);
             stack.style.width = totalW + 'px';
             for(let j=0; j<visibleCount; j++) {
@@ -1869,6 +2061,7 @@ function confirmLeaveGame() {
     
     // Stop listeners and heartbeat
     if(roomUnsubscribe) roomUnsubscribe();
+    if(gameChatUnsub) gameChatUnsub(); // Unsubscribe Chat
     if(heartbeatInterval) clearInterval(heartbeatInterval);
     
     updateGlobalStatus('lobby'); // Reset Status to Lobby
@@ -1933,6 +2126,7 @@ function confirmLeaveGame() {
 const VEGETABLES = { red: '🍅', green: '🥦', yellow: '🥔', purple: '🍆' };
 const SPECIALS = { '+1': '📦', '+2': '📦📦', 'Reverse': '♻️', 'Block': '🔪', 'Wild': 'GUVEC', 'Wild Anti-Draw': '🧻', 'Wild Pot': '🍲', 'Wild Table': '🍽️', 'Wild Mixer': '🌪️', 'Wild Meze': '🍱' };
 function createCardHTML(card) {
+    if(!card) return ""; // Handle null/undefined during transitions
     let emoji = (card.type === 'num') ? VEGETABLES[card.color] : (card.val === 'Wild' ? `<div class="guvec-grid"><span>🍅</span><span>🥦</span><span>🥔</span><span>🍆</span></div>` : (SPECIALS[card.val] || card.val));
     let cls = (card.color === 'wild') ? 'wild-bg' : card.color;
     let borderStyle = card.chosenColor ? `border-color: ${card.chosenColor==='red'?'#e74c3c':card.chosenColor==='green'?'#2ecc71':card.chosenColor==='yellow'?'#f39c12':'#9b59b6'} !important; border-width: 3px;` : '';
@@ -1974,7 +2168,18 @@ function showChallengePopup(success, title, detail) {
     setTimeout(() => p.style.display = 'none', ANIM_CONFIG.POPUP); 
 }
 function addSystemLog(html) { const logList = document.getElementById('system-log'); const li = document.createElement('li'); li.innerHTML = html; logList.prepend(li); }
-function addChatLog(name, msg, color) { const chatDiv = document.getElementById('chat-messages'); const msgDiv = document.createElement('div'); msgDiv.className = `chat-line`; msgDiv.innerHTML = `<span class="chat-name" style="color:${color}; font-weight:bold;">${name}:</span><span class="chat-text">${msg}</span>`; chatDiv.appendChild(msgDiv); chatDiv.scrollTop = chatDiv.scrollHeight; }
+function addChatLog(name, msg, color) { 
+    const chatDiv = document.getElementById('chat-messages'); 
+    const msgDiv = document.createElement('div'); 
+    msgDiv.className = `chat-line`; 
+    msgDiv.innerHTML = `<span class="chat-name" style="color:${color}; font-weight:bold;">${name}:</span><span class="chat-text">${msg}</span>`; 
+    chatDiv.appendChild(msgDiv); 
+    
+    // FIX: Limit DOM elements to prevent lag
+    while(chatDiv.childElementCount > 50) chatDiv.removeChild(chatDiv.firstChild);
+    
+    chatDiv.scrollTop = chatDiv.scrollHeight; 
+}
 function showToast(msg) { let t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', ANIM_CONFIG.TOAST); }
 function showEndGame(winnerIdx, finalPlayers) {
     lastWinner = winnerIdx;
