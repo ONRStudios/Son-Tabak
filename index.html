@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v7.3 (Kural Güncellemesi)</title>
+    <title>Son Tabak Online - v7.4 (Lounge Update)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -304,6 +304,31 @@
         #leave-modal .modal-box { border: 4px solid #c0392b; }
         #mixer-info { font-size: 0.85em; background: #ecf0f1; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: left; }
         
+        /* --- NEW LOUNGE STYLES --- */
+        #leave-modal { z-index: 10005 !important; } /* Fix Z-Index */
+
+        .wr-container { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        .wr-header { background: #e67e22; color: white; padding: 10px 20px; border-radius: 15px; width: 100%; box-sizing: border-box; box-shadow: 0 5px 15px rgba(230, 126, 34, 0.4); }
+        .wr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin: 15px 0; }
+        .wr-card { 
+            background: #f9f9f9; border: 2px solid #eee; border-radius: 15px; padding: 15px 10px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            transition: all 0.3s ease; position: relative; overflow: hidden;
+        }
+        .wr-card.active { border-color: #3498db; background: #ebf5fb; box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2); }
+        .wr-card.host-card { border-color: #f1c40f; background: #fef9e7; }
+        .wr-avatar { 
+            width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; 
+            font-size: 1.5em; margin-bottom: 5px; color: white; box-shadow: 0 3px 6px rgba(0,0,0,0.1); 
+            animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes bounceIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .wr-name { font-weight: bold; font-size: 0.9em; color: #34495e; }
+        .wr-role { font-size: 0.7em; color: #95a5a6; margin-top: 2px; }
+        .wr-status { position: absolute; top: 5px; right: 5px; width: 10px; height: 10px; border-radius: 50%; background: #ccc; }
+        .wr-status.ready { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
+        .host-crown { position: absolute; top: -5px; left: -5px; font-size: 1.2em; transform: rotate(-15deg); }
+
         /* MOBILE OPTIMIZATION */
         @media screen and (max-width: 900px) {
             body { 
@@ -525,25 +550,33 @@
     </div>
 </div>
 
-<!-- BEKLEME ODASI -->
+<!-- BEKLEME ODASI (NEW LOUNGE DESIGN) -->
 <div id="waiting-room-overlay" class="modal">
-    <div class="modal-box">
-        <h3 id="wr-room-name">Masa: ...</h3>
-        <p>Oyuncular bekleniyor (<span id="wr-count">0</span>/4)</p>
-        <ul id="wr-player-list" class="player-list"></ul>
-        <div id="wr-host-controls" style="display:none;">
-            <p style="font-size:0.8em; color:#e67e22;">Eksik oyuncular yerine Bot (🤖) eklenecek.</p>
-            <button class="game-btn btn-blue" id="start-game-btn">Oyunu Başlat 🚀</button>
+    <div class="modal-box" style="max-width: 500px; width: 90%; background: #fff;">
+        <div class="wr-container">
+            <div class="wr-header">
+                <h3 id="wr-room-name" style="margin:0; font-size:1.2em;">Masa Bekleniyor</h3>
+                <span style="font-size:0.8em; opacity:0.8;">Host'un başlatması bekleniyor...</span>
+            </div>
+            
+            <div class="wr-grid" id="wr-player-grid">
+                <!-- Cards will be injected here -->
+            </div>
+
+            <div id="wr-host-controls" style="display:none; width:100%;">
+                <p style="font-size:0.8em; color:#e67e22; margin:5px 0;">Eksik oyuncular yerine Bot (🤖) eklenecek.</p>
+                <button class="game-btn btn-blue" id="start-game-btn">Oyunu Başlat 🚀</button>
+            </div>
+            <div id="wr-guest-controls" style="width:100%; text-align:center;">
+                <p style="color:#7f8c8d; font-size:0.9em;">Masa sahibi bekleniyor... ⏳</p>
+            </div>
+            
+            <button class="game-btn btn-red" id="leave-room-btn" style="width:50%; margin-top:10px;">Masan Ayrıl</button>
         </div>
-        <div id="wr-guest-controls">
-            <p>Host'un başlatması bekleniyor...</p>
-        </div>
-        <br>
-        <button class="game-btn btn-red" id="leave-room-btn">Çıkış</button>
     </div>
 </div>
 
-<!-- ÇIKIŞ ONAY MODALI -->
+<!-- ÇIKIŞ ONAY MODALI (Z-INDEX FIXED) -->
 <div id="leave-modal" class="modal">
     <div class="modal-box">
         <h3>🚨 Oyundan Çık?</h3>
@@ -559,7 +592,7 @@
 <!-- OYUN ALANI -->
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v7.3</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v7.4</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <div class="game-container">
@@ -762,12 +795,10 @@ const ANIM_CONFIG = {
     FLY_BUFFER: 1100,         
     DRAW_INTERVAL: 600,        
     INITIAL_DEAL: 250,        
-    TOAST: 2000,              
-    POPUP: 3000,              
+    TOAST: 2000,               
+    POPUP: 3000,               
     BOT_THINK: 300,            
     HEARTBEAT_MS: 30000,       
-    HOST_TIMEOUT: 45000,      
-    AFK_TIMEOUT: 60000,        
     BOT_WATCHDOG: 3000        
 };
 
@@ -984,7 +1015,7 @@ function sendLobbyMessage() {
 
 function listenRooms() {
     const list = document.getElementById('room-list'); 
-    // FIXED: Removed .where("status", "==", "waiting") to show playing rooms too
+    // UPDATED: Filter active rooms for 5 minutes instead of 1
     db.collection("rooms")
       .orderBy("lastActive", "desc")
       .limit(20)
@@ -994,7 +1025,8 @@ function listenRooms() {
         const now = Date.now();
         snapshot.forEach(docSnap => {
             const r = docSnap.data();
-            if (r.lastActive && now - r.lastActive > 60000) { return; } 
+            // Filter rooms older than 5 minutes (300000ms)
+            if (r.lastActive && now - r.lastActive > 300000) { return; } 
             
             let realHumans = r.players.filter(p => !p.isBot).length;
             let totalBots = r.players.filter(p => p.isBot).length;
@@ -1188,29 +1220,35 @@ function enterWaitingRoom() {
         const firstHuman = localPlayers.find(p => !p.isBot);
         isHost = (firstHuman && firstHuman.uid === myUid);
 
-        // HOST DROPPED LOGIC (Assign new host bot, but NO KICK for regular AFK)
-        const humanPlayers = localPlayers.filter(p => !p.isBot);
-        if (humanPlayers.length >= 2 && humanPlayers[1].uid === myUid) {
-            const currentHost = humanPlayers[0]; 
-            if (currentHost.lastSeen && (Date.now() - currentHost.lastSeen > ANIM_CONFIG.HOST_TIMEOUT)) {
-                // Logic to replace host ONLY if they are completely gone/timeout
-                const updatedPlayers = localPlayers.map(p => {
-                    if (p.uid === currentHost.uid) {
-                        return { ...p, uid: 'replaced_host_' + Date.now(), name: '🤖 ' + p.name, isBot: true, isReady: true, lastSeen: Date.now() };
-                    }
-                    return p;
-                });
-                db.collection("rooms").doc(currentRoomId).update({ players: updatedPlayers }).then(() => showToast("Host düştü, yerine bot geçti!"));
-            }
-        }
-
         document.getElementById(isHost ? 'wr-host-controls' : 'wr-guest-controls').style.display = 'block';
         document.getElementById(!isHost ? 'wr-host-controls' : 'wr-guest-controls').style.display = 'none';
         document.getElementById('wr-room-name').innerText = `Masa: ${data.name}`;
-        document.getElementById('wr-count').innerText = localPlayers.length;
-        const ul = document.getElementById('wr-player-list'); ul.innerHTML = "";
-        localPlayers.forEach(p => { ul.innerHTML += `<li class="player-item"><span>${p.isBot?'🤖 ':''}${p.name}</span> ${(p.uid===firstHuman?.uid)?'(Host)':''}</li>`; });
         
+        // --- NEW LOUNGE CARD RENDER ---
+        const grid = document.getElementById('wr-player-grid');
+        grid.innerHTML = "";
+        
+        localPlayers.forEach(p => {
+            const isMe = p.uid === myUid;
+            const isHostPlayer = p.uid === firstHuman?.uid;
+            // Generate deterministic color from name for avatar
+            const colors = ['#e74c3c', '#2ecc71', '#3498db', '#9b59b6', '#f1c40f', '#e67e22'];
+            const colorIdx = p.name.length % colors.length;
+            const avatarColor = colors[colorIdx];
+            const firstLetter = p.name.charAt(0).toUpperCase();
+
+            const card = document.createElement('div');
+            card.className = `wr-card ${isMe ? 'active' : ''} ${isHostPlayer ? 'host-card' : ''}`;
+            card.innerHTML = `
+                ${isHostPlayer ? '<div class="host-crown">👑</div>' : ''}
+                <div class="wr-status ready"></div>
+                <div class="wr-avatar" style="background:${avatarColor}">${p.isBot ? '🤖' : firstLetter}</div>
+                <div class="wr-name">${p.name}</div>
+                <div class="wr-role">${isHostPlayer ? 'Masa Sahibi' : (p.isBot ? 'Bot' : 'Oyuncu')}</div>
+            `;
+            grid.appendChild(card);
+        });
+
         if(data.status === 'playing') {
             document.getElementById('waiting-room-overlay').style.display = 'none';
             document.getElementById('main-game-wrapper').style.display = 'grid';
@@ -1230,14 +1268,10 @@ function sendHeartbeat() {
             if(meIdx !== -1) {
                 // We use dot notation to update only this specific player's lastSeen to save bandwidth
                 let updateData = {};
-                updateData[`players.${meIdx}.lastSeen`] = Date.now(); // This only works if array order is preserved, which it is
+                updateData[`players.${meIdx}.lastSeen`] = Date.now(); 
                 // Also update room activity
                 updateData['lastActive'] = Date.now();
                 
-                // Fallback to full update if index shifting is a concern, but for heartbeat minimal is better
-                // Actually, full array write is safer for Firebase array logic, 
-                // but since we are optimizing, let's try to trust the index for the heartbeat
-                // If this fails, revert to full players update.
                 ps[meIdx].lastSeen = Date.now();
                 db.collection("rooms").doc(currentRoomId).update({ players: ps, lastActive: Date.now() });
             }
@@ -1284,6 +1318,15 @@ let lastBotActionTime = 0;
 
 function syncGameLoop(roomData) {
     const gs = roomData.gameState;
+    
+    // --- 5 MINUTE AUTO-DELETE CHECK (HOST ONLY) ---
+    // If the room has been inactive for more than 5 minutes (300000ms), delete it.
+    if(isHost && roomData.lastActive && (Date.now() - roomData.lastActive > 300000)) {
+        console.log("Room inactive for 5 mins. Closing...");
+        confirmLeaveGame(); // This will trigger delete as host leaves
+        return;
+    }
+
     if(!gs) return;
     
     // OPTIMIZED: DESERIALIZE DATA
@@ -2109,11 +2152,13 @@ function confirmLeaveGame() {
     
     updateGlobalStatus('lobby'); // Reset Status to Lobby
 
-    // UI Reset
+    // UI Reset - FORCE HIDE ALL GAME SCREENS
     document.getElementById('main-game-wrapper').style.display = 'none';
     document.getElementById('waiting-room-overlay').style.display = 'none';
     document.getElementById('leave-modal').style.display = 'none';
     document.getElementById('end-modal').style.display = 'none';
+    
+    // SHOW LOBBY
     document.getElementById('lobby-overlay').style.display = 'flex';
 
     db.collection("rooms").doc(currentRoomId).get().then(doc => {
