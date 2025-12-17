@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v7.1 (Fixes)</title>
+    <title>Son Tabak Online - v7.2 (No-Log & Scroll Fix)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -21,8 +21,22 @@
             --accent: #f1c40f;
         }
 
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: #333; margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; user-select: none; -webkit-tap-highlight-color: transparent; }
-        /* FIX: Confetti Z-Index increased to appear above modals */
+        /* SCROLL FIX: Removed fixed height and overflow hidden constraints */
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: var(--bg-color); 
+            color: #333; 
+            margin: 0; 
+            min-height: 100vh; /* Changed from height to min-height */
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            overflow-y: auto; /* Allow scrolling */
+            overflow-x: hidden;
+            user-select: none; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
         #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20000; }
         
         /* --- GİRİŞ EKRANI --- */
@@ -127,7 +141,7 @@
         /* --- OYUN ALANI DÜZENİ --- */
         #main-game-wrapper { display: none; }
         .main-wrapper { 
-            display: grid; width: 98%; max-width: 1400px; height: 98vh; gap: 10px; padding: 5px; box-sizing: border-box; 
+            display: grid; width: 98%; max-width: 1400px; height: auto; min-height: 98vh; gap: 10px; padding: 5px; box-sizing: border-box; 
             grid-template-columns: 1fr 300px; grid-template-rows: auto 1fr auto; 
             grid-template-areas: "game logo" "game panel" "game buttons"; 
         }
@@ -138,27 +152,24 @@
         .brand-sub { font-size: 0.7em; margin: 0; margin-left: auto; color: var(--primary); font-weight: 800; }
 
         .right-panel { grid-area: panel; display: flex; flex-direction: column; gap: 10px; height: 100%; overflow: hidden; }
-        .flip-container { background-color: transparent; width: 100%; height: 200px; perspective: 1000px; cursor: pointer; flex-shrink: 0; }
-        .flip-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; border-radius: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
-        .flip-container.flipped .flip-inner { transform: rotateY(180deg); }
-        .flip-front, .flip-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: #fff; border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; }
-        .flip-back { transform: rotateY(180deg); background: #fdfdfd; }
+        
+        /* REMOVED FLIP LOGIC - Just standard container now */
+        .info-container { background: #fff; width: 100%; border-radius: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.2); overflow: hidden; display: flex; flex-direction: column; height: 200px; }
+        
         .panel-header { font-weight: bold; color: #fff; background: #34495e; padding: 5px; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center; padding-left: 10px; padding-right: 10px;}
         
         #score-table { width: 100%; font-size: 0.85em; border-collapse: collapse; margin-top: 5px; table-layout: fixed; }
         #score-table td { padding: 4px 6px; border-bottom: 1px solid #eee; text-align: left; vertical-align: middle; font-size: 0.9em; }
         .me-row { background-color: #fff9c4; font-weight: bold; border-left: 4px solid #f1c40f; }
 
-        #system-log { overflow-y: auto; flex-grow: 1; font-size: 0.75em; text-align: left; padding: 5px; list-style: none; margin: 0; }
-        #system-log li { padding: 2px 0; border-bottom: 1px dashed #eee; color: #555; }
-        .chat-container { background: #fff; border-radius: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.2); flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .chat-container { background: #fff; border-radius: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.2); flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; height: 300px; }
         #chat-messages { flex-grow: 1; overflow-y: auto; padding: 10px; font-size: 0.85em; display: flex; flex-direction: column; gap: 4px; background: #fcfcfc; text-align: left;}
         .chat-line { line-height: 1.4; border-bottom: 1px solid #eee; padding-bottom: 2px;}
         .chat-input-area { display: flex; padding: 5px; border-top: 1px solid #eee; box-sizing: border-box; width: 100%; }
         #player-input { flex-grow: 1; border: 1px solid #ccc; border-radius: 20px; padding: 5px 10px; font-size: 0.8em; outline: none; min-width: 0; }
         #send-btn { background: #3498db; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; margin-left: 5px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.2em; flex-shrink: 0; }
 
-        .game-container { grid-area: game; background: #ecf0f1; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.7); display: grid; grid-template-rows: auto 1fr auto; align-items: center; justify-items: center; position: relative; overflow: hidden; padding: 10px 0; background-color: #fdfbf7; background-image: repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(231, 76, 60, 0.10) 50px, rgba(231, 76, 60, 0.10) 100px), repeating-linear-gradient(0deg, transparent, transparent 50px, rgba(231, 76, 60, 0.10) 50px, rgba(231, 76, 60, 0.10) 100px); transition: box-shadow 0.5s; border: 4px solid transparent; height: 100%; }
+        .game-container { grid-area: game; background: #ecf0f1; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.7); display: grid; grid-template-rows: auto 1fr auto; align-items: center; justify-items: center; position: relative; overflow: hidden; padding: 10px 0; background-color: #fdfbf7; background-image: repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(231, 76, 60, 0.10) 50px, rgba(231, 76, 60, 0.10) 100px), repeating-linear-gradient(0deg, transparent, transparent 50px, rgba(231, 76, 60, 0.10) 50px, rgba(231, 76, 60, 0.10) 100px); transition: box-shadow 0.5s; border: 4px solid transparent; height: 100%; min-height: 600px; }
         .ambient-red { box-shadow: inset 0 0 60px rgba(231, 76, 60, 0.4) !important; border-color: #c0392b !important; }
         .ambient-green { box-shadow: inset 0 0 60px rgba(46, 204, 113, 0.4) !important; border-color: #27ae60 !important; }
         .ambient-yellow { box-shadow: inset 0 0 60px rgba(241, 196, 15, 0.4) !important; border-color: #f39c12 !important; }
@@ -215,15 +226,14 @@
         .card-emoji { font-size: 4.5em; display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
         
         /* FIX +2 CARD LAYOUT (PC MODE) */
-        /* Bu kısım PC modunda emojilerin taşmasını ve üst üste binmesini engeller */
         .card[data-val="+2"] .card-emoji { 
             font-size: 2.2em !important; 
             letter-spacing: -2px !important;
             line-height: 1; 
             padding: 0; 
-            white-space: nowrap !important; /* Satır kaymasını engeller */
+            white-space: nowrap !important;
             display: flex !important; 
-            flex-direction: row !important; /* Yan yana dizer */
+            flex-direction: row !important;
             justify-content: center; 
             align-items: center; 
             gap: 2px !important; 
@@ -297,7 +307,11 @@
         
         /* MOBILE OPTIMIZATION */
         @media screen and (max-width: 900px) {
-            body { height: 100vh; overflow: hidden; background: #2c3e50; }
+            body { 
+                /* Mobile specific tweaks, but keep scroll capability */
+                min-height: 100vh;
+                background: #2c3e50; 
+            }
             #login-overlay { padding: 20px; box-sizing: border-box; }
             .login-input-group { width: 90% !important; padding: 25px; }
             .game-title-login { font-size: 2.2em; }
@@ -390,11 +404,11 @@
                 grid-template-rows: 40px 1fr 120px 40px; 
                 grid-template-areas: "logo" "game" "panel" "buttons"; 
                 width: 100%; 
-                height: 100vh; 
+                min-height: 100vh;
+                height: auto; 
                 padding: 5px; 
                 gap: 5px; 
                 box-sizing: border-box; 
-                overflow: hidden; 
             }
             
             #brand-area { grid-area: logo; padding: 4px 8px; flex-direction: row; align-items: center; gap: 5px; border-radius: 10px; margin: 0; height: 100%; box-sizing: border-box; }
@@ -419,10 +433,9 @@
             #son-tabak-btn, #challenge-btn { padding: 8px 15px; font-size: 0.9em; margin-bottom: 2px; }
             #son-tabak-popup, #challenge-popup { position: fixed !important; transform: translate(-50%, -50%) scale(0.7); }
             .right-panel { grid-area: panel; flex-direction: row; height: 100%; gap: 5px; padding: 0; box-sizing: border-box; overflow: hidden; }
-            .flip-container { height: 100%; flex: 1; }
+            .info-container { height: 100%; flex: 1; }
             .chat-container { height: 100%; flex: 1; }
             #score-table td { padding: 2px 4px; font-size: 0.7em; }
-            #system-log li { padding: 1px 0; font-size: 0.65em; }
             #chat-messages { font-size: 0.65em !important; padding: 2px !important; gap: 1px !important; }
             .chat-line { line-height: 1.1 !important; margin-bottom: 2px !important; }
             .panel-header { font-size: 0.75em; padding: 3px; }
@@ -549,7 +562,7 @@
 <!-- OYUN ALANI -->
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v7.1</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v7.2</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <div class="game-container">
@@ -593,17 +606,9 @@
         </div>
     </div>
     <div class="right-panel">
-        <div class="flip-container" onclick="toggleInfoView(this)">
-            <div class="flip-inner">
-                <div class="flip-front">
-                    <div class="panel-header"><span>🏆 Puan</span><span class="panel-hint">🖱️ Log</span></div>
-                    <table id="score-table"><tbody></tbody></table>
-                </div>
-                <div class="flip-back">
-                    <div class="panel-header" style="background:#7f8c8d;"><span>📝 Log</span><span class="panel-hint">🖱️ Puan</span></div>
-                    <ul id="system-log"></ul>
-                </div>
-            </div>
+        <div class="info-container">
+            <div class="panel-header"><span>🏆 Puan</span></div>
+            <table id="score-table"><tbody></tbody></table>
         </div>
         <div class="chat-container">
             <div id="chat-messages"></div>
@@ -992,9 +997,8 @@ function sendLobbyMessage() {
 
 function listenRooms() {
     const list = document.getElementById('room-list'); 
-    // OPTIMIZED: Only fetch waiting rooms, limit to 20
+    // FIXED: Removed .where("status", "==", "waiting") to show playing rooms too
     db.collection("rooms")
-      .where("status", "==", "waiting")
       .orderBy("lastActive", "desc")
       .limit(20)
       .onSnapshot((snapshot) => {
@@ -1003,20 +1007,28 @@ function listenRooms() {
         const now = Date.now();
         snapshot.forEach(docSnap => {
             const r = docSnap.data();
-            if (r.lastActive && now - r.lastActive > 60000) { return; } // Client side filter for stale rooms just in case
-            
-            // Deserialize players if needed (though players structure is array, inside might be strings later)
-            // Currently players array is kept as objects for lobby list logic, cards are deep inside.
+            if (r.lastActive && now - r.lastActive > 60000) { return; } 
             
             let realHumans = r.players.filter(p => !p.isBot).length;
-            let dotClass = r.status === 'playing' ? (realHumans >= 4 ? 'st-red' : 'st-yellow') : 'st-green';
-            let botCount = r.players.filter(p => p.isBot).length;
-            let joinText = "Katıl";
+            let totalBots = r.players.filter(p => p.isBot).length;
             
+            // Logic for colors
+            // Green: Waiting (Not started)
+            // Yellow: Playing but has Bots (Can be joined)
+            // Red: Playing and Full (No Bots)
+            let dotClass = 'st-green';
             if (r.status === 'playing') {
-                if (botCount > 0) joinText = "Oyuna Gir 🚀";
+                if (totalBots > 0) dotClass = 'st-yellow';
+                else dotClass = 'st-red';
+            }
+            
+            let joinText = "Katıl";
+            if (r.status === 'playing') {
+                if (totalBots > 0) joinText = "Oyuna Gir 🚀";
                 else joinText = "Dolu 🔒"; 
             }
+            
+            if (r.hasPassword) joinText = "🔒 " + joinText;
 
             const div = document.createElement('div');
             div.className = 'lobby-room-item';
@@ -1028,7 +1040,8 @@ function listenRooms() {
                 </div>
             `;
             
-            if (r.status !== 'playing' || botCount > 0) {
+            // Allow joining if waiting OR playing with available bots
+            if (r.status !== 'playing' || totalBots > 0) {
                 const joinBtn = document.createElement('button');
                 joinBtn.className = 'room-action-btn'; 
                 joinBtn.innerText = joinText;
@@ -1039,7 +1052,7 @@ function listenRooms() {
         });
     }, (error) => {
         console.log("Lobby Error (Probably need index):", error);
-        list.innerHTML = "<div style='text-align:center;color:#red;'>İndex oluşturuluyor...</div>";
+        list.innerHTML = "<div style='text-align:center;color:red;font-size:0.8em;'>Sorgu hatası. İndex bekleniyor...</div>";
     });
 }
 
@@ -1079,31 +1092,36 @@ function proceedJoin(roomId) {
         const rData = doc.data();
         let players = rData.players;
         
-        if(players.length >= 4 && !players.some(p => p.isBot)) return alert("Oda tamamen dolu!");
-        
         let targetIndex = -1;
+        
+        // 1. Try to find a bot with my exact name (Rejoining logic)
         const sameNameBotIdx = players.findIndex(p => p.isBot && p.name.includes(myName));
         if (sameNameBotIdx !== -1) {
             targetIndex = sameNameBotIdx;
         } else {
+            // 2. Otherwise find ANY bot
             const botIdx = players.findIndex(p => p.isBot);
             if (botIdx !== -1) targetIndex = botIdx;
         }
 
         if (targetIndex !== -1) {
+            // Replacing a bot or rejoining
             players[targetIndex] = {
                 ...players[targetIndex],
                 uid: myUid,
-                name: myName,
+                name: myName, // Reset name to player name (remove 🤖 prefix)
                 isBot: false,
-                isReady: rData.status === 'playing', 
+                isReady: rData.status === 'playing', // Auto ready if joining mid-game
                 lastSeen: Date.now()
             };
             roomRef.update({ players: players }).then(() => {
                 currentRoomId = roomId; isHost = false; enterWaitingRoom();
             });
         } else {
+            // Normal join (waiting room not full)
             if(rData.status === 'playing') return alert("Oda dolu ve bot yok!");
+            if(players.length >= 4) return alert("Oda tamamen dolu!");
+            
             roomRef.update({
                 players: firebase.firestore.FieldValue.arrayUnion({ uid: myUid, name: myName, isBot: false, score: 0, hand: [], isReady: false, saidSonTabak: false, challengeUsed: false, personality: 'Dengeli', lastSeen: Date.now() })
             }).then(() => {
@@ -1127,7 +1145,9 @@ function initGameChat(roomId) {
             snapshot.docChanges().forEach(change => {
                 if (change.type === "added") {
                     const data = change.doc.data();
-                    if(data.isSystem) addSystemLog(data.msg);
+                    if(data.isSystem) {
+                        // NO LOGGING TO UI AS REQUESTED
+                    }
                     else {
                         // Find color from gamePlayers if available
                         let senderIdx = gamePlayers.findIndex(p => p.name === data.sender);
@@ -1165,20 +1185,20 @@ function enterWaitingRoom() {
         const data = docSnap.data();
         localPlayers = data.players;
 
-        // JOIN/LEAVE LOGIC
+        // JOIN/LEAVE LOGIC - TOAST ONLY
         if(previousPlayersList.length > 0) {
             localPlayers.forEach(p => {
                 if(!previousPlayersList.find(op => op.uid === p.uid)) {
                     if(!p.isBot) {
                         showToast(`${p.name} odaya katıldı!`);
-                        addSystemLog(`<b>${p.name}</b> odaya katıldı.`);
+                        // SYSTEM LOG REMOVED
                     }
                 }
             });
             previousPlayersList.forEach(op => {
                 if(!localPlayers.find(p => p.uid === op.uid)) {
-                      showToast(`${op.name} ayrıldı.`);
-                      addSystemLog(`<b>${op.name}</b> ayrıldı.`);
+                       showToast(`${op.name} ayrıldı.`);
+                       // SYSTEM LOG REMOVED
                 }
             });
         }
@@ -1187,13 +1207,14 @@ function enterWaitingRoom() {
         const firstHuman = localPlayers.find(p => !p.isBot);
         isHost = (firstHuman && firstHuman.uid === myUid);
 
+        // HOST DROPPED LOGIC (Assign new host bot, but NO KICK for regular AFK)
         const humanPlayers = localPlayers.filter(p => !p.isBot);
         if (humanPlayers.length >= 2 && humanPlayers[1].uid === myUid) {
             const currentHost = humanPlayers[0]; 
             if (currentHost.lastSeen && (Date.now() - currentHost.lastSeen > ANIM_CONFIG.HOST_TIMEOUT)) {
+                // Logic to replace host ONLY if they are completely gone/timeout
                 const updatedPlayers = localPlayers.map(p => {
                     if (p.uid === currentHost.uid) {
-                        // Handled correctly below, just ensure card serialization if hand exists
                         return { ...p, uid: 'replaced_host_' + Date.now(), name: '🤖 ' + p.name, isBot: true, isReady: true, personality: 'Agresif', lastSeen: Date.now() };
                     }
                     return p;
@@ -1275,8 +1296,7 @@ document.getElementById('start-game-btn').addEventListener('click', () => {
     };
     db.collection("rooms").doc(currentRoomId).update({ status: 'playing', players: finalPlayers, gameState: initialState, lastActive: Date.now() });
     
-    // Send start message via Sub-collection
-    db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: "Oyun Başladı!", ts: Date.now(), isSystem: true });
+    // NO SYSTEM LOG
 });
 
 /* --- GAME LOOP (Sync Logic) --- */
@@ -1315,31 +1335,8 @@ function syncGameLoop(roomData) {
         updateUI(); 
     }
     
-    if(isHost && gameActive && !isBotThinking) {
-        let currentPObj = gamePlayers[currentPlayer];
-        if(!currentPObj.isBot) {
-            let timeSinceAction = Date.now() - gs.lastAction.timestamp;
-            if(timeSinceAction > ANIM_CONFIG.AFK_TIMEOUT) {
-                const updatedPlayers = gamePlayers.map(p => {
-                    if (p.uid === currentPObj.uid) {
-                        return { ...p, uid: 'afk_bot_' + Date.now(), name: '🤖 ' + p.name, isBot: true, isReady: true, personality: 'Dengeli', lastSeen: Date.now() };
-                    }
-                    return p;
-                });
-                // Ensure hands are serialized when updating players
-                updatedPlayers.forEach(p => {
-                    if(Array.isArray(p.hand) && p.hand.length > 0 && typeof p.hand[0] !== 'string') {
-                         p.hand = p.hand.map(serializeCard);
-                    }
-                });
-                
-                db.collection("rooms").doc(currentRoomId).update({ 
-                    players: updatedPlayers
-                });
-                db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: `${currentPObj.name} AFK kaldığı için bot devraldı.`, ts: Date.now(), isSystem: true });
-            }
-        }
-    }
+    // REMOVED AFK KICK LOGIC FOR GAMEPLAY
+    // Previously here was a block checking timeSinceAction > AFK_TIMEOUT. Deleted.
 
     if(isBotThinking && Date.now() - lastBotActionTime > ANIM_CONFIG.BOT_WATCHDOG) {
         console.warn("Bot takıldı! Sıfırlanıyor...");
@@ -1543,18 +1540,18 @@ function playerSaySonTabak() {
         "gameState.vulnerablePlayerIdx": -1, 
         "gameState.lastAction": { type: 'sonTabak', pIdx: myPlayerIdx, timestamp: Date.now() },
     }); 
-    db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> SON TABAK dedi!`, ts: Date.now(), isSystem: true });
+    // NO SYSTEM LOG
 }
 
 function challengePreviousPlayer() {
     if(currentPlayer !== myPlayerIdx || gamePlayers[myPlayerIdx].challengeUsed) return;
     if(vulnerablePlayerIdx !== -1) { 
         serverPunishVulnerable(vulnerablePlayerIdx); 
-        db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> İTİRAZ ETTİ ve kazandı!`, ts: Date.now(), isSystem: true }); 
+        // NO SYSTEM LOG
     }
     else { 
         serverPunishChallenger(myPlayerIdx); 
-        db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: `<b style="color:${playerColors[myPlayerIdx]}">${myName}</b> YANLIŞ İTİRAZ ETTİ!`, ts: Date.now(), isSystem: true }); 
+        // NO SYSTEM LOG
     }
 }
 function playerSendMessage() { 
@@ -1609,13 +1606,11 @@ async function serverDrawCard(pIdx, count, isPenalty = false) {
     
     await db.collection("rooms").doc(currentRoomId).update(updates);
     
-    let msg = `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> ${count} kart çekti.`;
-    if(isPenalty) msg += " (Ceza)";
-    db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: msg, ts: Date.now(), isSystem: true });
+    // NO SYSTEM LOG
 }
 async function serverPassTurn(pIdx) { 
     await db.collection("rooms").doc(currentRoomId).update({ "gameState.currentPlayer": (currentPlayer + direction + 4) % 4, "gameState.hasDrawn": false, "gameState.vulnerablePlayerIdx": -1, "lastActive": Date.now() });
-    db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> Pas geçti.`, ts: Date.now(), isSystem: true }); 
+    // NO SYSTEM LOG
 }
 
 async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredSonTabak = false) {
@@ -1699,7 +1694,7 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
         updates["players"] = playerUpdates.map((p, i) => ({ ...p, score: p.score + roundScores[i], lastRoundScore: roundScores[i] })); 
     }
     await db.collection("rooms").doc(currentRoomId).update(updates);
-    db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: `<b style="color:${playerColors[pIdx]}">${gamePlayers[pIdx].name}</b> ${cardName} attı.`, ts: Date.now(), isSystem: true });
+    // NO SYSTEM LOG
 }
 async function serverPunishVulnerable(victimIdx) { 
     let newDeck = [...gameDeck], newHands = gameHands.map(h=>[...h]), c = newDeck.pop(); if(c) newHands[victimIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[victimIdx].hand = newHands[victimIdx].map(serializeCard); 
@@ -1731,7 +1726,7 @@ async function nextRound() {
         hasDrawn: false 
     };
     await db.collection("rooms").doc(currentRoomId).update({ players: updatedPlayers, gameState: nextState, lastActive: Date.now() });
-    db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: "Yeni El Başladı!", ts: Date.now(), isSystem: true });
+    // NO SYSTEM LOG
 }
 
 async function hostBotTurn() {
@@ -1753,9 +1748,7 @@ async function hostBotTurn() {
         if(vulnerablePlayerIdx !== -1 && vulnerablePlayerIdx !== currentPlayer) {
             if(Math.random() < 0.95) { 
                 await serverPunishVulnerable(vulnerablePlayerIdx);
-                db.collection("rooms").doc(currentRoomId).collection("messages").add({ 
-                    sender: "Sistem", msg: `<b style="color:${playerColors[currentPlayer]}">${currentPObj.name}</b> uyanıklık yaptı ve itiraz etti!`, ts: Date.now(), isSystem: true 
-                });
+                // NO SYSTEM LOG
                 await wait(1500); 
             }
         }
@@ -1816,7 +1809,7 @@ async function serverBotSaySonTabak(pIdx) {
     let pUpdates = [...gamePlayers]; pUpdates[pIdx].saidSonTabak = true;
     let pColor = playerColors[pIdx];
     await db.collection("rooms").doc(currentRoomId).update({ players: pUpdates, "gameState.vulnerablePlayerIdx": -1, "gameState.lastAction": { type: 'sonTabak', pIdx: pIdx, timestamp: Date.now() }});
-    db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: "Sistem", msg: `<b style="color:${pColor}">${gamePlayers[pIdx].name}</b> SON TABAK dedi!`, ts: Date.now(), isSystem: true });
+    // NO SYSTEM LOG
 }
 
 /* --- YARDIMCI GÖRSELLER & ANİMASYONLAR --- */
@@ -2133,7 +2126,6 @@ function createCardHTML(card) {
     let cornerTxt = (card.type === 'num') ? card.val : '';
     return `<div class="card ${cls}" style="${borderStyle}" data-val="${card.val}"><div class="card-corner top-left">${cornerTxt}</div><div class="card-emoji">${emoji}</div><div class="card-corner bottom-right">${cornerTxt}</div></div>`;
 }
-function toggleInfoView(el) { el.classList.toggle('flipped'); }
 function openPatternModal() { 
     const grid = document.getElementById('pattern-grid'); grid.innerHTML = ''; 
     CARD_PATTERNS.forEach(p => { 
@@ -2167,7 +2159,6 @@ function showChallengePopup(success, title, detail) {
     p.style.display = 'block'; 
     setTimeout(() => p.style.display = 'none', ANIM_CONFIG.POPUP); 
 }
-function addSystemLog(html) { const logList = document.getElementById('system-log'); const li = document.createElement('li'); li.innerHTML = html; logList.prepend(li); }
 function addChatLog(name, msg, color) { 
     const chatDiv = document.getElementById('chat-messages'); 
     const msgDiv = document.createElement('div'); 
