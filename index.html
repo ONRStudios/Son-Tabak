@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v7.2 (No-Log & Scroll Fix)</title>
+    <title>Son Tabak Online - v7.3 (Kural Güncellemesi)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -21,17 +21,17 @@
             --accent: #f1c40f;
         }
 
-        /* SCROLL FIX: Removed fixed height and overflow hidden constraints */
+        /* SCROLL FIX */
         body { 
             font-family: 'Segoe UI', sans-serif; 
             background-color: var(--bg-color); 
             color: #333; 
             margin: 0; 
-            min-height: 100vh; /* Changed from height to min-height */
+            min-height: 100vh; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            overflow-y: auto; /* Allow scrolling */
+            overflow-y: auto; 
             overflow-x: hidden;
             user-select: none; 
             -webkit-tap-highlight-color: transparent; 
@@ -134,9 +134,9 @@
             display: flex; align-items: center; padding: 4px 8px; border-bottom: 1px solid #f5f5f5; font-size: 0.85em; color: #555; background: white; border-radius: 4px;
         }
         .p-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
-        .p-dot-lobby { background: #2ecc71; box-shadow: 0 0 4px #2ecc71; } /* Yeşil: Lobide */
-        .p-dot-wait { background: #f1c40f; box-shadow: 0 0 4px #f1c40f; } /* Sarı: Masada */
-        .p-dot-play { background: #e74c3c; box-shadow: 0 0 4px #e74c3c; } /* Kırmızı: Oyunda */
+        .p-dot-lobby { background: #2ecc71; box-shadow: 0 0 4px #2ecc71; }
+        .p-dot-wait { background: #f1c40f; box-shadow: 0 0 4px #f1c40f; }
+        .p-dot-play { background: #e74c3c; box-shadow: 0 0 4px #e74c3c; }
 
         /* --- OYUN ALANI DÜZENİ --- */
         #main-game-wrapper { display: none; }
@@ -153,7 +153,6 @@
 
         .right-panel { grid-area: panel; display: flex; flex-direction: column; gap: 10px; height: 100%; overflow: hidden; }
         
-        /* REMOVED FLIP LOGIC - Just standard container now */
         .info-container { background: #fff; width: 100%; border-radius: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.2); overflow: hidden; display: flex; flex-direction: column; height: 200px; }
         
         .panel-header { font-weight: bold; color: #fff; background: #34495e; padding: 5px; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center; padding-left: 10px; padding-right: 10px;}
@@ -349,10 +348,9 @@
                 padding: 15px; 
             }
             
-            /* FIX: Side-by-Side Players & Chat (Sol alt ve Sağ alt) */
-            /* width değerlerini güvenli olması için %48 gibi bir değere çektim */
+            /* FIX: Side-by-Side Players & Chat */
             .lobby-col.players-col {
-                width: calc(50% - 6px); /* Gap payı ile birlikte %50'den biraz az */
+                width: calc(50% - 6px); 
                 flex: none;
                 height: 250px; 
                 max-height: 250px !important; 
@@ -365,7 +363,7 @@
             }
 
             .lobby-chat-wrapper { 
-                width: calc(50% - 6px); /* Gap payı ile birlikte %50'den biraz az */
+                width: calc(50% - 6px); 
                 box-sizing: border-box; 
                 height: 250px; 
                 flex: none;
@@ -424,7 +422,6 @@
             #arrow-left { left: 5px; } #arrow-right { right: 5px; } #arrow-top-1, #arrow-top-2 { font-size: 1.5em; margin: 0; }
             .flying-card { transform: scale(0.8); transform-origin: top left; }
             
-            /* Mobile adjustment for +2 card can remain similar or slightly tuned */
             .card[data-val="+2"] .card-emoji { font-size: 2.0em !important; gap: 1px !important; }
             
             #player-hand { min-height: 80px; padding: 4px; gap: 3px; border-width: 2px; }
@@ -562,7 +559,7 @@
 <!-- OYUN ALANI -->
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v7.2</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v7.3</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <div class="game-container">
@@ -630,10 +627,10 @@
         <h3>📖 Nasıl Oynanır?</h3>
         <p style="font-size:0.9em;">
             1. Amaç elindeki kartları bitirmektir.<br>
-            2. Yerdeki kart ile aynı renk veya aynı sayı/sembol atabilirsin.<br>
-            3. Özel kartlar (Mikser, Sofra, Güveç) rengi değiştirir veya oyunun akışını bozar.<br>
-            4. Elinde 2 kart varken hamle yapıp 1 karta düşeceğin zaman "SON TABAK" demeyi unutma!<br>
-            5. Unutanlara "İTİRAZ ET" butonu ile ceza verebilirsin.<br>
+            2. <b>Sayı Kartı Zorunluluğu:</b> Elinde oynanabilir bir Sayı Kartı (0-9) varsa, onu oynamak zorundasın. Kart çekemezsin.<br>
+            3. <b>Saklama Kuralı:</b> Elinde sadece Joker veya Aksiyon kartı varsa, oynamayıp desteden çekebilirsin.<br>
+            4. <b>Çek-Oyna:</b> Kart çektiğinde, gelen kart oynanabilir bir Sayı Kartı ise <b>atmak zorundasın</b>. Değilse pas geçebilirsin.<br>
+            5. "SON TABAK" demeyi unutma!<br>
             6. Bol şans! 🍅🥦
         </p>
         <button class="game-btn btn-blue" onclick="document.getElementById('rules-modal').style.display='none'">Anladım</button>
@@ -725,7 +722,6 @@ const deserializeCard = (s) => {
     else if(cc === 'p') color = 'purple';
     
     let type = 'num';
-    // FIX: Check if value contains '+' to prevent +1/+2 being treated as numbers
     if(isNaN(val) || val.indexOf('+') > -1) {
         if(color === 'wild') type = 'wild';
         else type = 'action';
@@ -823,7 +819,7 @@ try {
     alert("Firebase Hatası: " + e.message);
 }
 
-/* --- SES VE CHAT --- */
+/* --- SES --- */
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioCtx = new AudioContext();
 
@@ -847,15 +843,6 @@ const SoundFX = {
     playError: () => { SoundFX.playTone(100, 'square', 0.2); },
     playFanfare: () => { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => SoundFX.playTone(f, 'square', 0.4), i * 150)); },
     playUno: () => SoundFX.playTone(1200, 'sine', 0.5)
-};
-
-const CHAT_POOL = {
-    "Agresif": { "start_good": ["Dağılın!", "Acımam."], "block": ["Geç!", "Bekle!"], "plus2": ["Al bakalım!", "+2 cnm"], "wild": ["Ben ne dersem o!"], "draw_many": ["Dükkanı aldım!", "Bu ne?!"], "win": ["Ezdim!", "Kral benim!"], "fail": ["Olamaz!", "Hile!"] },
-    "Stratejik": { "start_good": ["Plan hazır."], "block": ["Sıradaki."], "plus2": ["Stratejik hamle."], "wild": ["Renk değişimi."], "draw_many": ["Plan değişti."], "win": ["Matematik kazandı."], "fail": ["Hesap hatası."] },
-    "Panik Atak": { "start_good": ["Heyecanlıyım!"], "block": ["Pardon!", "Özür!"], "plus2": ["Kızma n'olur!"], "wild": ["Ay ne seçsem?"], "draw_many": ["Boğuluyorum!", "İmdat!"], "win": ["Ben mi kazandım?"], "fail": ["Görmedim!"] },
-    "Rahat": { "start_good": ["Akarı var."], "block": ["Soluklan.", "Yavaş."], "plus2": ["Hediye.", "Yorma kendini."], "wild": ["Değişiklik iyidir."], "draw_many": ["Ooo bana girdi.", "Nasip."], "win": ["Tertemiz.", "Kolaydı."], "fail": ["Dalmışım."] },
-    "Gıcık": { "start_good": ["Ezikler."], "block": ["Kudur!", "Zaa!"], "plus2": ["Beter ol.", "Ağlama."], "wild": ["Biat edin!"], "draw_many": ["Hile var!", "Of ya."], "win": ["Çok kolaysınız."], "fail": ["Önemli değil."] },
-    "Dengeli": { "start_good": ["Başlayalım."], "block": ["Geç bakalım."], "plus2": ["+2 çek."], "wild": ["Renk değişsin."], "draw_many": ["Bayağı çektim."], "win": ["Güzel oyun."], "fail": ["Tüh."] }
 };
 
 let myUid = null; let myName = ""; let currentRoomId = null; let isHost = false;
@@ -1012,10 +999,6 @@ function listenRooms() {
             let realHumans = r.players.filter(p => !p.isBot).length;
             let totalBots = r.players.filter(p => p.isBot).length;
             
-            // Logic for colors
-            // Green: Waiting (Not started)
-            // Yellow: Playing but has Bots (Can be joined)
-            // Red: Playing and Full (No Bots)
             let dotClass = 'st-green';
             if (r.status === 'playing') {
                 if (totalBots > 0) dotClass = 'st-yellow';
@@ -1068,7 +1051,7 @@ document.getElementById('create-room-btn').addEventListener('click', () => {
     // OPTIMIZED: create room with serialized empty hands
     db.collection("rooms").add({
         name: rName, password: rPass, hasPassword: !!rPass, hostId: myUid, status: 'waiting', lastActive: Date.now(),
-        players: [{ uid: myUid, name: myName, isBot: false, score: 0, hand: [], isReady: false, saidSonTabak: false, challengeUsed: false, personality: 'Dengeli', lastSeen: Date.now() }],
+        players: [{ uid: myUid, name: myName, isBot: false, score: 0, hand: [], isReady: false, saidSonTabak: false, challengeUsed: false, lastSeen: Date.now() }],
         gameState: null
     }).then(ref => {
         currentRoomId = ref.id; isHost = true; enterWaitingRoom();
@@ -1123,7 +1106,7 @@ function proceedJoin(roomId) {
             if(players.length >= 4) return alert("Oda tamamen dolu!");
             
             roomRef.update({
-                players: firebase.firestore.FieldValue.arrayUnion({ uid: myUid, name: myName, isBot: false, score: 0, hand: [], isReady: false, saidSonTabak: false, challengeUsed: false, personality: 'Dengeli', lastSeen: Date.now() })
+                players: firebase.firestore.FieldValue.arrayUnion({ uid: myUid, name: myName, isBot: false, score: 0, hand: [], isReady: false, saidSonTabak: false, challengeUsed: false, lastSeen: Date.now() })
             }).then(() => {
                 currentRoomId = roomId; isHost = false; enterWaitingRoom();
             });
@@ -1191,14 +1174,12 @@ function enterWaitingRoom() {
                 if(!previousPlayersList.find(op => op.uid === p.uid)) {
                     if(!p.isBot) {
                         showToast(`${p.name} odaya katıldı!`);
-                        // SYSTEM LOG REMOVED
                     }
                 }
             });
             previousPlayersList.forEach(op => {
                 if(!localPlayers.find(p => p.uid === op.uid)) {
-                       showToast(`${op.name} ayrıldı.`);
-                       // SYSTEM LOG REMOVED
+                        showToast(`${op.name} ayrıldı.`);
                 }
             });
         }
@@ -1215,7 +1196,7 @@ function enterWaitingRoom() {
                 // Logic to replace host ONLY if they are completely gone/timeout
                 const updatedPlayers = localPlayers.map(p => {
                     if (p.uid === currentHost.uid) {
-                        return { ...p, uid: 'replaced_host_' + Date.now(), name: '🤖 ' + p.name, isBot: true, isReady: true, personality: 'Agresif', lastSeen: Date.now() };
+                        return { ...p, uid: 'replaced_host_' + Date.now(), name: '🤖 ' + p.name, isBot: true, isReady: true, lastSeen: Date.now() };
                     }
                     return p;
                 });
@@ -1268,11 +1249,9 @@ document.getElementById('start-game-btn').addEventListener('click', () => {
     if(localPlayers.length < 2) return alert("En az 2 oyuncu!");
     let finalPlayers = [...localPlayers];
     const botNames = ["🤖 Rifu", "🤖 Utku", "🤖 Kübra"];
-    const personalities = ["Agresif", "Stratejik", "Panik Atak", "Rahat", "Gıcık"];
     let botIdx = 0;
     while(finalPlayers.length < 4) {
-        let pType = personalities[Math.floor(Math.random()*personalities.length)];
-        finalPlayers.push({ uid: 'bot_' + Date.now() + '_' + botIdx, name: botNames[botIdx % botNames.length], isBot: true, score: 0, hand: [], isReady: true, saidSonTabak: false, challengeUsed: false, personality: pType, lastSeen: Date.now() });
+        finalPlayers.push({ uid: 'bot_' + Date.now() + '_' + botIdx, name: botNames[botIdx % botNames.length], isBot: true, score: 0, hand: [], isReady: true, saidSonTabak: false, challengeUsed: false, lastSeen: Date.now() });
         botIdx++;
     }
     finalPlayers = shuffleDeck(finalPlayers);
@@ -1321,8 +1300,6 @@ function syncGameLoop(roomData) {
 
     if(currentPlayer !== myPlayerIdx) localSaidSonTabak = false;
 
-    // Chat handling is now done via initGameChat listener, so we removed gs.lastChat checks here
-
     if(lastGameState && lastGameState.lastAction.timestamp !== gs.lastAction.timestamp) {
         // Deserialize card in action if present
         let action = gs.lastAction;
@@ -1335,9 +1312,6 @@ function syncGameLoop(roomData) {
         updateUI(); 
     }
     
-    // REMOVED AFK KICK LOGIC FOR GAMEPLAY
-    // Previously here was a block checking timeSinceAction > AFK_TIMEOUT. Deleted.
-
     if(isBotThinking && Date.now() - lastBotActionTime > ANIM_CONFIG.BOT_WATCHDOG) {
         console.warn("Bot takıldı! Sıfırlanıyor...");
         isBotThinking = false;
@@ -1377,7 +1351,20 @@ function attemptBotMove() {
 
 /* --- ACTION HANDLING --- */
 async function processActionQueue() {
-    if(isProcessingQueue || actionQueue.length === 0) return;
+    if(isProcessingQueue) return;
+    
+    if(actionQueue.length === 0) {
+        // QUEUE EMPTY - CHECK WINNER
+        // FIX: Explicitly check for winner when queue is drained
+        if (lastGameState && lastGameState.winnerIdx !== undefined && lastGameState.winnerIdx !== -1 && lastGameState.gameActive === false) {
+             if(document.getElementById('end-modal').style.display !== 'flex') {
+                 showEndGame(lastGameState.winnerIdx, gamePlayers);
+                 updateReadyStatusUI();
+             }
+        }
+        return;
+    }
+    
     isProcessingQueue = true;
     const action = actionQueue.shift();
     await handleRemoteAction(action); 
@@ -1480,9 +1467,34 @@ function canPlay(card) {
 
 function playerDrawCard() {
     if(currentPlayer !== myPlayerIdx) return;
-    if(drawStack === 0 && gameHands[myPlayerIdx].some(c => canPlay(c))) { showToast("Oynanacak kartın var!"); return; }
-    if(hasDrawn) { serverPassTurn(myPlayerIdx); return; }
     
+    // NEW RULE: Check if player has playable NUMBER cards
+    const hand = gameHands[myPlayerIdx];
+    const hasPlayableNum = hand.some(c => c.type === 'num' && canPlay(c));
+    
+    // If not in penalty mode (drawStack == 0) and has playable number, MUST play
+    if(drawStack === 0 && hasPlayableNum) {
+        showToast("Oynanabilir Sayı Kartın var! Oynamak zorundasın.");
+        return;
+    }
+
+    // IF already drawn, check logic for PASSING
+    if(hasDrawn) { 
+        // Logic for Passing Turn
+        // Check the LAST drawn card (it's the last in hand array)
+        if(hand.length > 0) {
+            const lastCard = hand[hand.length - 1];
+            // If the drawn card is a playable NUMBER card, player CANNOT pass
+            if(lastCard.type === 'num' && canPlay(lastCard)) {
+                showToast("Çektiğin Sayı Kartını oynamak zorundasın!");
+                return;
+            }
+        }
+        serverPassTurn(myPlayerIdx); 
+        return; 
+    }
+    
+    // Logic for Drawing
     let count = drawStack > 0 ? drawStack : 1;
     let isPenalty = drawStack > 0;
     
@@ -1491,6 +1503,7 @@ function playerDrawCard() {
         setTimeout(() => serverPassTurn(myPlayerIdx), 1500 + (count*600)); 
     }
 }
+
 function playerPlayCard(idx) {
     if(currentPlayer !== myPlayerIdx) return;
     let card = gameHands[myPlayerIdx][idx];
@@ -1671,9 +1684,6 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
     let newVulnerable = (newHands[pIdx].length === 1 && !isSafe) ? pIdx : -1; 
     if(nextP === newVulnerable) newVulnerable = -1;
     
-    let cardName = card.type === 'num' ? `${card.val} ${VEGETABLES[card.color]}` : (card.val==='Wild' ? `Güveç (${VEGETABLES[card.chosenColor]})` : (CARD_NAMES[card.val] || card.val));
-    if(card.val === 'Wild Anti-Draw') cardName += " (Joker)";
-
     let updates = { 
         "players": playerUpdates, 
         "gameState.discardPile": newDiscard.map(serializeCard), // SERIALIZE
@@ -1735,70 +1745,110 @@ async function hostBotTurn() {
         const currentPObj = gamePlayers[currentPlayer];
         if(!currentPObj || !currentPObj.isBot) return; 
 
-        const triggerChat = async (cat) => {
-            let pType = currentPObj.personality || 'Dengeli';
-            let pool = CHAT_POOL[pType] || CHAT_POOL['Dengeli'];
-            let msgs = pool[cat] || pool['draw_many'];
-            let msg = msgs[Math.floor(Math.random()*msgs.length)];
-            db.collection("rooms").doc(currentRoomId).collection("messages").add({
-                 sender: currentPObj.name, msg: msg, ts: Date.now(), isSystem: false 
-            }).catch(e => console.log("Chat error", e));
-        };
-
+        // 1. Challenge Check (Punish vulnerable)
         if(vulnerablePlayerIdx !== -1 && vulnerablePlayerIdx !== currentPlayer) {
             if(Math.random() < 0.95) { 
                 await serverPunishVulnerable(vulnerablePlayerIdx);
-                // NO SYSTEM LOG
                 await wait(1500); 
             }
         }
 
         const hand = gameHands[currentPlayer];
-        let playableIdx = -1;
         let willSaySonTabak = false;
-        
-        if(drawStack > 0) {
-            playableIdx = hand.findIndex(c => c.val === '+2' || (c.val === '+1' && gameDiscard[gameDiscard.length-1].val==='+1') || c.val === 'Wild Meze' || c.val === 'Wild Anti-Draw');
-        } else {
-            playableIdx = hand.findIndex(c => canPlay(c));
-        }
 
-        if(playableIdx !== -1 && hand.length === 2) {
-             if(Math.random() > 0.1) {
-                 await serverBotSaySonTabak(currentPlayer); 
-                 willSaySonTabak = true;
-             }
-        }
+        // BOT NEW LOGIC: Must play Number card if available
+        let playableNums = hand.filter(c => c.type === 'num' && canPlay(c));
+        let playableSpecials = hand.filter(c => c.type !== 'num' && canPlay(c));
 
-        if (drawStack > 0 && playableIdx === -1) {
-            triggerChat("draw_many");
-            await serverDrawCard(currentPlayer, drawStack, true); 
-            setTimeout(() => serverPassTurn(currentPlayer), 1500 + (drawStack*600)); 
+        if(playableNums.length > 0) {
+            // Must play a number
+            let cardToPlay = playableNums[Math.floor(Math.random() * playableNums.length)];
+            let cardIdx = hand.indexOf(cardToPlay);
+            
+            if(hand.length === 2) { // 2 cards before play means 1 card left after
+                 if(Math.random() > 0.1) { await serverBotSaySonTabak(currentPlayer); willSaySonTabak = true; }
+            }
+            
+            await serverPlayCard(currentPlayer, cardIdx, cardToPlay, 1, willSaySonTabak);
             return;
         }
 
-        if(playableIdx !== -1) {
-            let card = hand[playableIdx];
-            if(card.color === 'wild') {
-                if (card.val === 'Wild Anti-Draw') {
-                    let top = gameDiscard[gameDiscard.length - 1];
-                    let currentActiveColor = top.chosenColor || top.color;
-                    if (currentActiveColor === 'wild') currentActiveColor = ['red','green','yellow','purple'][Math.floor(Math.random()*4)];
-                    card.chosenColor = currentActiveColor;
-                } else {
-                    triggerChat("wild");
-                    card.chosenColor = ['red','green','yellow','purple'][Math.floor(Math.random()*4)];
-                }
+        // If no numbers, handle special cases (Draw Stack)
+        if (drawStack > 0) {
+            // If has specials like +2 or Wild Meze (Already filtered into playableSpecials)
+            if(playableSpecials.length > 0) {
+                 let cardToPlay = playableSpecials[Math.floor(Math.random() * playableSpecials.length)];
+                 let cardIdx = hand.indexOf(cardToPlay);
+                 
+                 // Handle Color Choice (FIXED: Anti-Draw inherits color)
+                 if(cardToPlay.color === 'wild') {
+                     if(cardToPlay.val === 'Wild Anti-Draw') {
+                         let top = gameDiscard[gameDiscard.length-1];
+                         cardToPlay.chosenColor = top.chosenColor || top.color;
+                         if(cardToPlay.chosenColor === 'wild') cardToPlay.chosenColor = 'red';
+                     } else {
+                         cardToPlay.chosenColor = ['red','green','yellow','purple'][Math.floor(Math.random()*4)];
+                     }
+                 }
+                 
+                 await serverPlayCard(currentPlayer, cardIdx, cardToPlay, 1, willSaySonTabak);
+            } else {
+                 await serverDrawCard(currentPlayer, drawStack, true); 
+                 setTimeout(() => serverPassTurn(currentPlayer), 1500 + (drawStack*600)); 
             }
-            if(card.val === '+2') triggerChat("plus2");
-            if(card.val === 'Block') triggerChat("block");
-            
-            if(card.val === 'Wild Mixer') await serverPlayCard(currentPlayer, playableIdx, card, 1, willSaySonTabak); 
-            else await serverPlayCard(currentPlayer, playableIdx, card, 1, willSaySonTabak);
-        } else {
-            if(!hasDrawn) await serverDrawCard(currentPlayer, 1);
-            else await serverPassTurn(currentPlayer);
+            return;
         }
+
+        // No numbers, normal turn. Decide to play special or Draw (Hoarding)
+        // If has Drawn, check the drawn card
+        if (hasDrawn) {
+            // Check last card in hand
+            if(hand.length > 0) {
+                let lastCard = hand[hand.length - 1];
+                if(lastCard.type === 'num' && canPlay(lastCard)) {
+                    // Must play drawn number
+                    let cardIdx = hand.length - 1;
+                    if(hand.length === 2 && Math.random() > 0.1) { await serverBotSaySonTabak(currentPlayer); willSaySonTabak = true; }
+                    await serverPlayCard(currentPlayer, cardIdx, lastCard, 1, willSaySonTabak);
+                } else {
+                    // Pass turn (Keep special or unplayable card)
+                    await serverPassTurn(currentPlayer);
+                }
+            } else {
+                await serverPassTurn(currentPlayer);
+            }
+            return;
+        }
+
+        // Has not drawn yet. No numbers.
+        if (playableSpecials.length > 0) {
+            // 60% chance to play special, 40% chance to hoard/draw
+            if(Math.random() < 0.6) {
+                let cardToPlay = playableSpecials[Math.floor(Math.random() * playableSpecials.length)];
+                let cardIdx = hand.indexOf(cardToPlay);
+                
+                // Handle Color Choice (FIXED: Anti-Draw inherits color)
+                if(cardToPlay.color === 'wild') {
+                     if(cardToPlay.val === 'Wild Anti-Draw') {
+                         let top = gameDiscard[gameDiscard.length-1];
+                         cardToPlay.chosenColor = top.chosenColor || top.color;
+                         if(cardToPlay.chosenColor === 'wild') cardToPlay.chosenColor = 'red';
+                     } else {
+                         cardToPlay.chosenColor = ['red','green','yellow','purple'][Math.floor(Math.random()*4)];
+                     }
+                }
+
+                if(hand.length === 2 && Math.random() > 0.1) { await serverBotSaySonTabak(currentPlayer); willSaySonTabak = true; }
+                await serverPlayCard(currentPlayer, cardIdx, cardToPlay, 1, willSaySonTabak);
+            } else {
+                await serverDrawCard(currentPlayer, 1);
+                // Next tick will handle the drawn card logic above
+            }
+        } else {
+            // Nothing playable
+            await serverDrawCard(currentPlayer, 1);
+        }
+
     } catch(e) {
         console.error("Bot Logic Error:", e);
         throw e;
@@ -2090,7 +2140,6 @@ function confirmLeaveGame() {
                             name: '🤖 ' + p.name,
                             isBot: true,
                             isReady: true,
-                            personality: 'Agresif',
                             lastSeen: Date.now()
                         };
                     }
