@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v7.4 (Lounge Update)</title>
+    <title>Son Tabak Online - v7.6 (Performance Update)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -592,7 +592,7 @@
 <!-- OYUN ALANI -->
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v7.4</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v7.6</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <div class="game-container">
@@ -795,10 +795,10 @@ const ANIM_CONFIG = {
     FLY_BUFFER: 1100,         
     DRAW_INTERVAL: 600,        
     INITIAL_DEAL: 250,        
-    TOAST: 2000,               
-    POPUP: 3000,               
-    BOT_THINK: 300,            
-    HEARTBEAT_MS: 30000,       
+    TOAST: 2000,                
+    POPUP: 3000,                
+    BOT_THINK: 300,             
+    HEARTBEAT_MS: 30000,        
     BOT_WATCHDOG: 3000        
 };
 
@@ -898,6 +898,36 @@ function getRandomColor() {
     return color;
 }
 
+// --- NEW FUNCTION: JANITOR CLEANUP ---
+// This function runs on login to clean up stale rooms and players
+function performJanitorCleanup() {
+    const TEN_MIN_MS = 10 * 60 * 1000;
+    const cutoff = Date.now() - TEN_MIN_MS;
+    const batch = db.batch();
+    let opsCount = 0;
+
+    // 1. Clean Stale Rooms
+    db.collection("rooms").where("lastActive", "<", cutoff).get().then(snap => {
+        snap.forEach(doc => {
+            batch.delete(doc.ref);
+            opsCount++;
+        });
+
+        // 2. Clean Stale Players
+        db.collection("global_players").where("lastSeen", "<", cutoff).get().then(pSnap => {
+            pSnap.forEach(pDoc => {
+                batch.delete(pDoc.ref);
+                opsCount++;
+            });
+
+            // Commit only if there's work to do
+            if(opsCount > 0) {
+                batch.commit().then(() => console.log(`🧹 Temizlikçi: ${opsCount} öğe silindi.`)).catch(e => console.log("Temizlik hatası:", e));
+            }
+        });
+    }).catch(err => console.log("Janitor Error:", err));
+}
+
 document.getElementById('login-btn').addEventListener('click', () => {
     const name = document.getElementById('username-in').value.trim();
     if(!name) return alert("Lütfen bir isim gir!");
@@ -914,6 +944,9 @@ document.getElementById('login-btn').addEventListener('click', () => {
             initLobbyFeatures(); // START NEW FEATURES
             updateGlobalStatus('lobby'); // Set initial status
             listenRooms();
+            
+            // --- TRIGGER JANITOR ---
+            performJanitorCleanup();
         })
         .catch((e) => {
             alert("Giriş Hatası: " + e.message);
@@ -1015,7 +1048,7 @@ function sendLobbyMessage() {
 
 function listenRooms() {
     const list = document.getElementById('room-list'); 
-    // UPDATED: Filter active rooms for 5 minutes instead of 1
+    // UPDATED: Filter active rooms for 10 minutes instead of 1 (matches Janitor)
     db.collection("rooms")
       .orderBy("lastActive", "desc")
       .limit(20)
@@ -1025,8 +1058,8 @@ function listenRooms() {
         const now = Date.now();
         snapshot.forEach(docSnap => {
             const r = docSnap.data();
-            // Filter rooms older than 5 minutes (300000ms)
-            if (r.lastActive && now - r.lastActive > 300000) { return; } 
+            // Filter rooms older than 10 minutes (600000ms) - Visual Filter
+            if (r.lastActive && now - r.lastActive > 600000) { return; } 
             
             let realHumans = r.players.filter(p => !p.isBot).length;
             let totalBots = r.players.filter(p => p.isBot).length;
@@ -1127,6 +1160,7 @@ function proceedJoin(roomId) {
                 name: myName, // Reset name to player name (remove 🤖 prefix)
                 isBot: false,
                 isReady: rData.status === 'playing', // Auto ready if joining mid-game
+                isReady: true,
                 lastSeen: Date.now()
             };
             roomRef.update({ players: players }).then(() => {
@@ -1261,22 +1295,13 @@ function enterWaitingRoom() {
 
 function sendHeartbeat() {
     if(!currentRoomId || !myUid) return;
-    db.collection("rooms").doc(currentRoomId).get().then(doc => {
-        if(doc.exists) {
-            let ps = doc.data().players;
-            let meIdx = ps.findIndex(p => p.uid === myUid);
-            if(meIdx !== -1) {
-                // We use dot notation to update only this specific player's lastSeen to save bandwidth
-                let updateData = {};
-                updateData[`players.${meIdx}.lastSeen`] = Date.now(); 
-                // Also update room activity
-                updateData['lastActive'] = Date.now();
-                
-                ps[meIdx].lastSeen = Date.now();
-                db.collection("rooms").doc(currentRoomId).update({ players: ps, lastActive: Date.now() });
-            }
-        }
-    });
+    // OPTIMIZATION: Do not update main room doc. Update subcollection to avoid triggering download.
+    db.collection("rooms").doc(currentRoomId)
+      .collection("presence").doc(myUid)
+      .set({
+          name: myName,
+          lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
 }
 
 document.getElementById('start-game-btn').addEventListener('click', () => {
@@ -1319,10 +1344,10 @@ let lastBotActionTime = 0;
 function syncGameLoop(roomData) {
     const gs = roomData.gameState;
     
-    // --- 5 MINUTE AUTO-DELETE CHECK (HOST ONLY) ---
-    // If the room has been inactive for more than 5 minutes (300000ms), delete it.
-    if(isHost && roomData.lastActive && (Date.now() - roomData.lastActive > 300000)) {
-        console.log("Room inactive for 5 mins. Closing...");
+    // --- 10 MINUTE AUTO-DELETE CHECK (HOST ONLY) ---
+    // Janitor checks globally, but host can also leave if stuck
+    if(isHost && roomData.lastActive && (Date.now() - roomData.lastActive > 600000)) {
+        console.log("Room inactive for 10 mins. Closing...");
         confirmLeaveGame(); // This will trigger delete as host leaves
         return;
     }
@@ -1622,24 +1647,47 @@ function playerSendMessage() {
 }
 
 /* --- SERVER ACTIONS (OPTIMIZED) --- */
-function recycleDeck(discardPile) {
-    let cleanDeck = discardPile.map(c => {
-        let copy = {...c};
-        delete copy.chosenColor; 
-        return copy;
+// Reshuffling Helper (Builds a new deck minus the cards in play)
+function rebuildDeckFromState(currentHands, topDiscardCard) {
+    let fullDeck = createFullDeck().map(serializeCard);
+    
+    // Gather all cards currently in players' hands to remove them
+    let activeCards = [];
+    currentHands.forEach(hand => {
+        hand.forEach(c => activeCards.push(serializeCard(c)));
     });
-    return shuffleDeck(cleanDeck);
+    
+    // Also remove the top card of the discard pile
+    if(topDiscardCard) {
+        activeCards.push(serializeCard(topDiscardCard));
+    }
+    
+    // Filter the full deck
+    activeCards.forEach(cardStr => {
+        let idx = fullDeck.indexOf(cardStr);
+        if(idx > -1) {
+            fullDeck.splice(idx, 1);
+        }
+    });
+    
+    // Deserialize and Shuffle remaining
+    return shuffleDeck(fullDeck.map(deserializeCard));
 }
 
 async function serverDrawCard(pIdx, count, isPenalty = false) {
     let newDeck = [...gameDeck], newDiscard = [...gameDiscard];
     let newHands = gameHands.map(h => [...h]); 
     
-    if(newDeck.length < count && newDiscard.length > 1) { 
-        let top = newDiscard.pop(); 
-        newDeck = recycleDeck(newDiscard); 
-        newDiscard = [top]; 
+    // RESHUFFLE LOGIC
+    if(newDeck.length < count) { 
+        // Perform Smart Reshuffle
+        let topCard = newDiscard.length > 0 ? newDiscard[newDiscard.length - 1] : null;
+        newDeck = rebuildDeckFromState(newHands, topCard);
+        
+        // If still empty (extremely rare edge case where ALL cards are in hands), create full deck
+        if(newDeck.length === 0) newDeck = createFullDeck();
     }
+
     for(let i=0; i<count; i++) if(newDeck.length > 0) newHands[pIdx].push(newDeck.pop());
     
     // Serialize for DB
@@ -1678,6 +1726,12 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
     
     newHands[pIdx].splice(cIdx, 1); 
     newDiscard.push(card);
+    
+    // --- OPTIMIZATION: Truncate Discard Pile ---
+    if(newDiscard.length > 2) {
+        newDiscard = newDiscard.slice(-2);
+    }
+    // ------------------------------------------
     
     let newDir = direction, newDrawStack = drawStack, nextP = currentPlayer, newWinner = -1;
     let playerUpdates = [...gamePlayers]; playerUpdates[pIdx].saidSonTabak = false;
