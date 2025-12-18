@@ -2,12 +2,10 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v7.6 (Performance Update)</title>
+    <title>Son Tabak Online - v7.7 (Smart Bot & Optimization)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
-    <!-- FIREBASE (Compat Sürümleri) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -472,7 +470,6 @@
 <body>
 <canvas id="confetti-canvas"></canvas>
 
-<!-- GİRİŞ EKRANI -->
 <div id="login-overlay">
     <div class="brand-corner">🔥 Kalority</div>
     <div class="rules-corner"><button class="icon-btn" onclick="openRules()">📖</button></div>
@@ -496,14 +493,12 @@
     </div>
 </div>
 
-<!-- LOBİ EKRANI -->
 <div id="lobby-overlay">
     <div class="brand-corner" style="position:fixed; top:15px; left:20px;">🔥 Kalority</div>
     <div class="rules-corner" style="position:fixed; top:15px; right:20px;"><button class="icon-btn" style="background:#333;" onclick="openRules()">📖</button></div>
     <div class="production-corner" style="position:fixed; bottom:10px; left:20px; color:#555;">ONR Studios Production</div>
 
     <div class="lobby-grid">
-        <!-- SOL KOLON: ODA KUR -->
         <div class="lobby-col" id="col-create">
             <div class="col-title" onclick="toggleLobbyTab(this)">Masa Aç 🛋️</div>
             <div class="col-content create-form">
@@ -519,7 +514,6 @@
             </div>
         </div>
 
-        <!-- ORTA KOLON: MASALAR -->
         <div class="lobby-col open-tab" id="col-rooms">
             <div class="col-title" onclick="toggleLobbyTab(this)">Aktif Masalar 🍽️</div>
             <div class="col-content room-scroll" id="room-list">
@@ -527,16 +521,13 @@
             </div>
         </div>
 
-        <!-- SAĞ KOLON: OYUNCULAR (AKTİF) -->
         <div class="lobby-col players-col open-tab" id="col-players">
             <div class="col-title">Mutfaktakiler 👨‍🍳</div>
             <div class="col-content player-list-scroll" id="online-player-list">
-                <!-- Oyuncular buraya dinamik gelecek -->
                 <div style="text-align:center; color:#777; font-size:0.8em; padding:10px;">Yükleniyor...</div>
             </div>
         </div>
 
-        <!-- ALT CHAT: LOBİ CHAT (AKTİF) -->
         <div class="lobby-chat-wrapper">
             <div style="font-weight:bold; font-size:0.9em; color:#555; margin-bottom:5px; display:flex; justify-content:space-between;">
                 <span>Lobi Sohbeti 💬</span>
@@ -550,7 +541,6 @@
     </div>
 </div>
 
-<!-- BEKLEME ODASI (NEW LOUNGE DESIGN) -->
 <div id="waiting-room-overlay" class="modal">
     <div class="modal-box" style="max-width: 500px; width: 90%; background: #fff;">
         <div class="wr-container">
@@ -560,8 +550,7 @@
             </div>
             
             <div class="wr-grid" id="wr-player-grid">
-                <!-- Cards will be injected here -->
-            </div>
+                </div>
 
             <div id="wr-host-controls" style="display:none; width:100%;">
                 <p style="font-size:0.8em; color:#e67e22; margin:5px 0;">Eksik oyuncular yerine Bot (🤖) eklenecek.</p>
@@ -571,12 +560,11 @@
                 <p style="color:#7f8c8d; font-size:0.9em;">Masa sahibi bekleniyor... ⏳</p>
             </div>
             
-            <button class="game-btn btn-red" id="leave-room-btn" style="width:50%; margin-top:10px;">Masan Ayrıl</button>
+            <button class="game-btn btn-red" id="leave-room-btn" style="width:50%; margin-top:10px;">Masadan Ayrıl</button>
         </div>
     </div>
 </div>
 
-<!-- ÇIKIŞ ONAY MODALI (Z-INDEX FIXED) -->
 <div id="leave-modal" class="modal">
     <div class="modal-box">
         <h3>🚨 Oyundan Çık?</h3>
@@ -589,10 +577,9 @@
     </div>
 </div>
 
-<!-- OYUN ALANI -->
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v7.6</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v7.7</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <div class="game-container">
@@ -619,7 +606,6 @@
         </div>
         <div id="play-area">
             <div id="draw-pile" class="card card-back-style" onclick="playerDrawCard()">
-                <!-- REMOVED COUNTER -->
                 <div id="penalty-badge">+0</div> 
                 <div id="deck-count" style="position:absolute; bottom:10px; color:white; font-size:1.5em; text-shadow:1px 1px 2px #000;">0</div>
             </div>
@@ -960,13 +946,14 @@ let globalPlayersUnsub = null;
 
 function initLobbyFeatures() {
     // 1. Start Global Heartbeat for Status (Using OPTIMIZED interval)
+    // OPTIMIZED: Reduce writes significantly.
     setInterval(() => {
         if(myUid) {
             let status = 'lobby';
             if(currentRoomId) status = (document.getElementById('main-game-wrapper').style.display === 'grid' || document.getElementById('main-game-wrapper').style.display === 'flex') ? 'playing' : 'waiting';
             updateGlobalStatus(status);
         }
-    }, ANIM_CONFIG.HEARTBEAT_MS);
+    }, ANIM_CONFIG.HEARTBEAT_MS); // 30 seconds
 
     // 2. Listen to Lobby Chat
     lobbyChatUnsub = db.collection("lobby_chat").orderBy("ts", "asc").limit(50).onSnapshot(snapshot => {
@@ -991,8 +978,10 @@ function initLobbyFeatures() {
 
         snapshot.forEach(doc => {
             const data = doc.data();
-            // Show only players active in last 60 seconds
-            if(now - data.lastSeen < 60000) {
+            // Show only players active in last 60 seconds (Client-side filtering)
+            // Note: Since updates are now less frequent, we relax this filter visually or accept 'stale' data until sync
+            // Better: Filter < 5 minutes for visual list
+            if(now - data.lastSeen < 300000) {
                 activeCount++;
                 let dotClass = 'p-dot-lobby';
                 if(data.status === 'waiting') dotClass = 'p-dot-wait';
@@ -1012,13 +1001,23 @@ function initLobbyFeatures() {
     });
 }
 
+let lastReportedStatus = null;
+let lastReportedTime = 0;
+
 function updateGlobalStatus(status) {
     if(!myUid) return;
-    db.collection("global_players").doc(myUid).set({
-        name: myName,
-        status: status,
-        lastSeen: Date.now()
-    }, { merge: true });
+    const now = Date.now();
+    // OPTIMIZATION: Update ONLY if status changed OR if it's been > 5 mins (to satisfy Janitor)
+    if (status !== lastReportedStatus || now - lastReportedTime > 300000) {
+        lastReportedStatus = status;
+        lastReportedTime = now;
+        db.collection("global_players").doc(myUid).set({
+            name: myName,
+            status: status,
+            lastSeen: now
+        }, { merge: true });
+        console.log("Status Updated:", status); // Debug log
+    }
 }
 
 function sendLobbyMessage() {
@@ -1626,6 +1625,13 @@ function playerSaySonTabak() {
 
 function challengePreviousPlayer() {
     if(currentPlayer !== myPlayerIdx || gamePlayers[myPlayerIdx].challengeUsed) return;
+    
+    // --- PENALTY ESCAPE FIX: Cannot challenge if penalty stack is active ---
+    if(drawStack > 0) {
+        showToast("Cezalı durumda itiraz edemezsin!");
+        return;
+    }
+    
     if(vulnerablePlayerIdx !== -1) { 
         serverPunishVulnerable(vulnerablePlayerIdx); 
         // NO SYSTEM LOG
@@ -1877,14 +1883,17 @@ async function hostBotTurn() {
                  let cardToPlay = playableSpecials[Math.floor(Math.random() * playableSpecials.length)];
                  let cardIdx = hand.indexOf(cardToPlay);
                  
-                 // Handle Color Choice (FIXED: Anti-Draw inherits color)
+                 // Handle Color Choice (Smart Choice)
                  if(cardToPlay.color === 'wild') {
                      if(cardToPlay.val === 'Wild Anti-Draw') {
                          let top = gameDiscard[gameDiscard.length-1];
                          cardToPlay.chosenColor = top.chosenColor || top.color;
                          if(cardToPlay.chosenColor === 'wild') cardToPlay.chosenColor = 'red';
                      } else {
-                         cardToPlay.chosenColor = ['red','green','yellow','purple'][Math.floor(Math.random()*4)];
+                         // Pick most frequent color in hand
+                         let counts = {red:0, green:0, yellow:0, purple:0};
+                         hand.forEach(c => { if(c.color !== 'wild') counts[c.color]++; });
+                         cardToPlay.chosenColor = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
                      }
                  }
                  
@@ -1921,22 +1930,43 @@ async function hostBotTurn() {
         if (playableSpecials.length > 0) {
             // 60% chance to play special, 40% chance to hoard/draw
             if(Math.random() < 0.6) {
-                let cardToPlay = playableSpecials[Math.floor(Math.random() * playableSpecials.length)];
-                let cardIdx = hand.indexOf(cardToPlay);
+                // Prioritize MIXER or TABLE if hand is large
+                let priorityCard = null;
+                if(hand.length >= 5) {
+                    priorityCard = playableSpecials.find(c => c.val === 'Wild Table' || c.val === 'Wild Pot');
+                }
                 
-                // Handle Color Choice (FIXED: Anti-Draw inherits color)
+                let cardToPlay = priorityCard || playableSpecials[Math.floor(Math.random() * playableSpecials.length)];
+                let cardIdx = hand.indexOf(cardToPlay);
+                let mixDir = 1;
+
+                // Handle Wild Logic
                 if(cardToPlay.color === 'wild') {
                      if(cardToPlay.val === 'Wild Anti-Draw') {
                          let top = gameDiscard[gameDiscard.length-1];
                          cardToPlay.chosenColor = top.chosenColor || top.color;
                          if(cardToPlay.chosenColor === 'wild') cardToPlay.chosenColor = 'red';
                      } else {
-                         cardToPlay.chosenColor = ['red','green','yellow','purple'][Math.floor(Math.random()*4)];
+                         // Smart Color Pick
+                         let counts = {red:0, green:0, yellow:0, purple:0};
+                         hand.forEach(c => { if(c.color !== 'wild') counts[c.color]++; });
+                         cardToPlay.chosenColor = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+                     }
+
+                     // Smart Mixer Logic
+                     if(cardToPlay.val === 'Wild Mixer') {
+                         let leftIdx = (currentPlayer + 3) % 4;
+                         let rightIdx = (currentPlayer + 1) % 4;
+                         let leftCount = gameHands[leftIdx].length;
+                         let rightCount = gameHands[rightIdx].length;
+                         // If Right has fewer cards, use direction -1 (Leftward shift brings Right hand to me)
+                         if(rightCount < leftCount) mixDir = -1;
+                         else mixDir = 1; 
                      }
                 }
 
                 if(hand.length === 2 && Math.random() > 0.1) { await serverBotSaySonTabak(currentPlayer); willSaySonTabak = true; }
-                await serverPlayCard(currentPlayer, cardIdx, cardToPlay, 1, willSaySonTabak);
+                await serverPlayCard(currentPlayer, cardIdx, cardToPlay, mixDir, willSaySonTabak);
             } else {
                 await serverDrawCard(currentPlayer, 1);
                 // Next tick will handle the drawn card logic above
@@ -2033,7 +2063,8 @@ function updateUI() {
     let stBtn = document.getElementById('son-tabak-btn');
     stBtn.disabled = !(currentPlayer === myPlayerIdx && gameHands[myPlayerIdx].length <= 2 && !gamePlayers[myPlayerIdx].saidSonTabak);
     let chBtn = document.getElementById('challenge-btn');
-    chBtn.disabled = !(currentPlayer === myPlayerIdx && !gamePlayers[myPlayerIdx].challengeUsed);
+    // DISABLED IF DRAW STACK > 0 (Penalty Active)
+    chBtn.disabled = !(currentPlayer === myPlayerIdx && !gamePlayers[myPlayerIdx].challengeUsed && drawStack === 0);
 }
 
 function animateFly(from, to, html, callback) {
