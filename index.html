@@ -783,7 +783,7 @@ const ANIM_CONFIG = {
     INITIAL_DEAL: 250,        
     TOAST: 2000,                
     POPUP: 3000,                
-    BOT_THINK: 300,             
+    BOT_THINK: 300,              
     HEARTBEAT_MS: 30000,        
     BOT_WATCHDOG: 3000        
 };
@@ -2354,8 +2354,47 @@ function showToast(msg) { let t = document.getElementById('toast'); t.innerText 
 function showEndGame(winnerIdx, finalPlayers) {
     lastWinner = winnerIdx;
     const winnerName = finalPlayers[winnerIdx].name;
+
+    // --- SPİKER GÜNCELLEMESİ (BAŞLANGIÇ) ---
+    // Bu elde en çok ceza puanı yiyen oyuncuyu bul
+    let maxRoundScore = -1;
+    let worstRoundPlayerName = "";
+    
+    finalPlayers.forEach(p => {
+        // lastRoundScore undefined olabilir, kontrol et
+        let s = p.lastRoundScore || 0;
+        if(s > maxRoundScore) {
+            maxRoundScore = s;
+            worstRoundPlayerName = p.name;
+        }
+    });
+
+    let comments = [
+        `Vay vay vay! ${winnerName} resmen masayı süpürdü!`,
+        `İnanılmaz bir final! ${winnerName} rakiplerine nefes aldırmadı.`,
+        `Sebzeler havada uçuştu ama ${winnerName} tabağını bitiren ilk isim oldu!`,
+        `Bu ne hız ${winnerName}? Düdüklü tencere gibi basınç yaptın rakiplere!`,
+        `Tarihi bir an! ${winnerName} kazanan oldu.`,
+        `${winnerName} mutfağın efendisi olduğunu kanıtladı!`,
+        `Şefin tavsiyesi: ${winnerName} gibi oynayın!`
+    ];
+    
+    let roasts = [
+        `${worstRoundPlayerName} ise bu elin günah keçisi oldu, bir elde ${maxRoundScore} puan aldı!`,
+        `${worstRoundPlayerName}, bu el market alışverişine çıkmış gibisin, ${maxRoundScore} puan ne?!`,
+        `Sanırım ${worstRoundPlayerName} oyunu yanlış anladı, amaç kart toplamak değil atmaktı!`,
+        `${worstRoundPlayerName} için bir dakikalık saygı duruşu... Bu el çok canı yandı.`,
+        `${worstRoundPlayerName} bu gidişle bulaşıkları yıkayacak gibi duruyor.`,
+        `${worstRoundPlayerName} elindeki kartlarla kule yapabilir artık.`
+    ];
+
+    let randomComment = comments[Math.floor(Math.random() * comments.length)];
+    let randomRoast = roasts[Math.floor(Math.random() * roasts.length)];
+
     document.getElementById('winner-text').innerText = `🎉 ${winnerName} Kazandı!`;
-    document.getElementById('ai-summary').innerHTML = `🎤 <b>Spiker:</b> "Vay vay vay! ${winnerName} resmen masayı süpürdü!"`;
+    document.getElementById('ai-summary').innerHTML = `🎤 <b>Spiker:</b> "${randomComment} ${randomRoast}"`;
+    // --- SPİKER GÜNCELLEMESİ (BİTİŞ) ---
+
     document.getElementById('end-modal').style.display = 'flex';
     updateReadyStatusUI(); startVegetableRain(); SoundFX.playFanfare();
 }
