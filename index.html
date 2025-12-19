@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v0.9 (Open Beta)</title>
+    <title>Son Tabak Online - v0.92 (Beta Patch)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Google Fonts: Patrick Hand (Comic Sans alternatifi) -->
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
@@ -583,7 +583,7 @@
 
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.9 (Beta)</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.91 (Beta)</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <div class="game-container">
@@ -1520,6 +1520,20 @@ async function handleRemoteAction(action) {
         if(action.card.val === 'Wild Mixer') await animateMixerEffect(direction); 
         if(action.card.val === 'Wild Pot') animatePotEffect(pIdx, direction);
         if(action.card.val === 'Wild Meze') animateMezeEffect(pIdx);
+
+        // --- NEW: END GAME PENALTY ANIMATION ---
+        if(action.penaltyCount && action.penaltyCount > 0) {
+            // Calculate who the victim is. The currentPlayer global is updated to the next person (victim)
+            // relative to the action.
+            let targetIdx = currentPlayer;
+            let targetId = targetIdx === myPlayerIdx ? 'player-hand' : `bot${(targetIdx - myPlayerIdx + 4) % 4}-wrapper`;
+            
+            for(let i=0; i<action.penaltyCount; i++) {
+                animateFly(document.getElementById('draw-pile'), document.getElementById(targetId), null);
+                await wait(150); // Fast burst for effect
+            }
+            await wait(500); // Pause before end screen shows
+        }
     } 
     else if(action.type === 'draw') {
         SoundFX.playDraw();
@@ -1748,7 +1762,7 @@ async function serverDrawCard(pIdx, count, isPenalty = false) {
         "gameState.discardPile": newDiscard.map(serializeCard), 
         "gameState.drawStack": 0, 
         "gameState.hasDrawn": true, 
-        "gameState.lastAction": { type: 'draw', pIdx, count, timestamp: Date.now() }, 
+        "gameState.lastAction": { type: 'draw', pIdx, count, timestamp: Date.now(), isPenalty: isPenalty }, 
         "lastActive": Date.now()
     };
     if(isPenalty) {
@@ -1897,6 +1911,8 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
     }
     
     // --- FINAL WINNER CHECK & PENALTY ENFORCEMENT ---
+    let finalPenaltyCount = 0; // Store this for animation
+
     if(newHands[pIdx].length === 0) {
         newWinner = pIdx;
         
@@ -1912,6 +1928,7 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
             for(let k=0; k<newDrawStack; k++) {
                 if(gameDeck.length > 0) newHands[nextP].push(gameDeck.pop());
             }
+            finalPenaltyCount = newDrawStack; // Store actual count for animation
             newDrawStack = 0; // Penalty consumed
         }
     }
@@ -1920,6 +1937,15 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
     playerUpdates = playerUpdates.map((p, i) => ({...p, hand: newHands[i].map(serializeCard)}));
     
     let isSafe = gamePlayers[pIdx].saidSonTabak || declaredSonTabak;
+
+    // FIX: AUTO SAFE IF MIXER/TABLE SWAPPED TO 1 CARD
+    if(newHands[pIdx].length === 1 && !isSafe) {
+        if(card.val === 'Wild Mixer' || card.val === 'Wild Table') {
+            isSafe = true;
+            playerUpdates[pIdx].saidSonTabak = true; // Flag for next state
+        }
+    }
+
     let newVulnerable = (newHands[pIdx].length === 1 && !isSafe) ? pIdx : -1; 
     if(nextP === newVulnerable) newVulnerable = -1;
     
@@ -1931,10 +1957,10 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
         "gameState.drawStack": newDrawStack, 
         "gameState.vulnerablePlayerIdx": newVulnerable, 
         "gameState.hasDrawn": false, 
-        "gameState.lastAction": { type: 'play', pIdx, card: serializeCard(card), timestamp: Date.now() }, // SERIALIZE
+        "gameState.lastAction": { type: 'play', pIdx, card: serializeCard(card), timestamp: Date.now(), penaltyCount: finalPenaltyCount }, // SERIALIZE + ADD PENALTY
         "lastActive": Date.now()
     };
-    if(card.val === 'Wild Pot' || card.val === 'Wild Meze' || card.val === 'Wild Table' || newDrawStack > 0) updates["gameState.deck"] = gameDeck.map(serializeCard);
+    if(card.val === 'Wild Pot' || card.val === 'Wild Meze' || card.val === 'Wild Table' || finalPenaltyCount > 0) updates["gameState.deck"] = gameDeck.map(serializeCard);
     
     if(newWinner !== -1) { 
         updates["gameState.gameActive"] = false; 
@@ -1983,6 +2009,14 @@ async function hostBotTurn() {
         if(!isHost) return;
         const currentPObj = gamePlayers[currentPlayer];
         if(!currentPObj || !currentPObj.isBot) return; 
+
+        // TIMING BUG FIX: If bot just drew a penalty, stop! Wait for auto-pass.
+        if (lastGameState && lastGameState.lastAction && 
+            lastGameState.lastAction.type === 'draw' && 
+            lastGameState.lastAction.pIdx === currentPlayer && 
+            lastGameState.lastAction.isPenalty === true) {
+            return; 
+        }
 
         // 1. Challenge Check (Punish vulnerable)
         if(vulnerablePlayerIdx !== -1 && vulnerablePlayerIdx !== currentPlayer) {
@@ -2064,12 +2098,22 @@ async function hostBotTurn() {
 
         // Has not drawn yet. No numbers.
         if (playableSpecials.length > 0) {
-            // 60% chance to play special, 40% chance to hoard/draw
-            if(Math.random() < 0.6) {
-                // Prioritize MIXER or TABLE if hand is large
+            // SMART BOT: Check opponents' hand sizes
+            let minOpponentHand = 100;
+            for(let i=0; i<4; i++) { if(i !== currentPlayer) minOpponentHand = Math.min(minOpponentHand, gameHands[i].length); }
+
+            let hoardProb = 0.6; 
+            // If opponents are about to win (<= 2 cards), DUMP Wilds (20pts) to reduce penalty
+            if(minOpponentHand <= 2) hoardProb = 0.1; 
+
+            // 60% chance to play special normally, 40% chance to hoard/draw
+            if(Math.random() > hoardProb || minOpponentHand <= 2) {
+                // Prioritize MIXER or TABLE or Wilds (High Points) if losing
                 let priorityCard = null;
-                if(hand.length >= 5) {
-                    priorityCard = playableSpecials.find(c => c.val === 'Wild Table' || c.val === 'Wild Pot');
+                
+                if(minOpponentHand <= 2) {
+                    // Dump high value wilds
+                    priorityCard = playableSpecials.find(c => c.color === 'wild');
                 }
                 
                 let cardToPlay = priorityCard || playableSpecials[Math.floor(Math.random() * playableSpecials.length)];
@@ -2089,15 +2133,38 @@ async function hostBotTurn() {
                          cardToPlay.chosenColor = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
                      }
 
-                     // Smart Mixer Logic
+                     // Smart Mixer Logic (Comparison)
                      if(cardToPlay.val === 'Wild Mixer') {
                          let leftIdx = (currentPlayer + 3) % 4;
                          let rightIdx = (currentPlayer + 1) % 4;
                          let leftCount = gameHands[leftIdx].length;
                          let rightCount = gameHands[rightIdx].length;
-                         // If Right has fewer cards, use direction -1 (Leftward shift brings Right hand to me)
-                         if(rightCount < leftCount) mixDir = -1;
-                         else mixDir = 1; 
+                         let myCount = hand.length;
+                         
+                         // Determine targets
+                         // Default Right (1). Right player gives hand to me? No, Swap logic in Mixer:
+                         // if dir=1: P1 takes P0 (Right neighbor takes Me). Wait.
+                         // Let's look at logic: if(newDir === 1) { let temp = newHands[3]; ... newHands[1] = newHands[0]; }
+                         // P1 gets P0's hand. (Right neighbor gets My hand).
+                         // So I (P0) get P3's hand (Left neighbor).
+                         
+                         // So: Dir 1 (Right) => I take Left Neighbor's hand.
+                         // Dir -1 (Left) => I take Right Neighbor's hand.
+
+                         let targetCountRight = rightCount; // if dir -1
+                         let targetCountLeft = leftCount; // if dir 1
+
+                         if(targetCountRight < myCount && targetCountRight < targetCountLeft) {
+                             mixDir = -1; // Take Right hand
+                         } else if (targetCountLeft < myCount) {
+                             mixDir = 1; // Take Left hand
+                         } else {
+                             // Both have more cards than me? 
+                             // If I'm forced to play Mixer (only card), keep default. 
+                             // If I had a choice, I wouldn't be here (hoard logic).
+                             // But if minOpponentHand <= 2, I am dumping points.
+                             mixDir = 1;
+                         }
                      }
                 }
 
@@ -2248,7 +2315,8 @@ function animateReverse() {
 }
 function animateBlock(pIdx) {
     let victimIdx = (pIdx + direction + 4) % 4;
-    let targetId = victimIdx === myPlayerIdx ? 'player-hand' : `bot${(victimIdx - myPlayerIdx + 4) % 4}-wrapper`;
+    // FIXED: Target the card STACK for bots to center animation correctly
+    let targetId = victimIdx === myPlayerIdx ? 'player-hand' : `bot${(victimIdx - myPlayerIdx + 4) % 4}-stack`;
     let el = document.getElementById(targetId);
     if(el) {
         let b = document.createElement('div'); b.innerText = '🔪'; b.className = 'blocked-anim';
