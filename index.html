@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v7.9 (Font & Optimizasyon)</title>
+    <title>Son Tabak Online - v0.9 (Open Beta)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Google Fonts: Patrick Hand (Comic Sans alternatifi) -->
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
@@ -20,7 +20,6 @@
             --bg-color: #2c3e50;
             --primary: #e67e22;
             --accent: #f1c40f;
-            /* Font Güncellemesi */
             --main-font: 'Patrick Hand', cursive; 
         }
 
@@ -584,7 +583,7 @@
 
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v7.9</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.9 (Beta)</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <div class="game-container">
@@ -658,26 +657,22 @@
             <li><b>Renk veya Sayı:</b> Ortadaki kartın rengiyle veya sayısıyla aynı olan bir kart atabilirsin.</li>
             <li><b>Zorunlu Hamle:</b> Elinde oynanabilir bir <b>Sayı Kartı (0-9)</b> varsa, onu oynamak zorundasın! Saklayıp yerden kart çekemezsin (Sistem izin vermez).</li>
             <li><b>Stratejik Bekleme:</b> Elinde sadece Joker veya Aksiyon kartları varsa, bunları oynamayıp yerden kart çekebilirsin.</li>
-            <li><b>Çek-Oyna Kuralı:</b> Yerden kart çektiğinde, gelen kart oynanabilir bir Sayı kartıysa sistem onu otomatik oynatabilir veya oynamanı ister.</li>
         </ul>
 
-        <h4 style="color:#c0392b;">🔥 Özel Kartlar & Cezalar</h4>
+        <h4 style="color:#c0392b;">🔥 Oyun Sonu Kuralları (ÖNEMLİ!)</h4>
+        <p style="font-size:0.9em;">Son kartınızı attığınızda eğer o kartın bir özelliği varsa (ör: +2, Mikser, Sofra), önce özellik uygulanır, herkes kartını çeker veya eller değişir, <b>SONRA</b> oyun biter ve puanlar o anki ellere göre hesaplanır!</p>
         <ul style="font-size:0.9em; padding-left:20px;">
-            <li><b>📦 +1 ve 📦📦 +2:</b> Sonraki oyuncuya ceza kartı çektirir. Ceza yiyen oyuncu pas geçer. (Eğer elinde +2 varsa üstüne atıp cezayı bir sonrakine katlayarak devredebilirsin!)</li>
-            <li><b>🔪 Bıçak (Blok):</b> Sıradaki oyuncuyu atlar, oynatmaz.</li>
-            <li><b>♻️ Geri Dönüşüm:</b> Oyunun yönünü (Saat/Ters) değiştirir.</li>
-            <li><b>🍲 Düdüklü Tencere (Wild Pot):</b> Desteden herkese (sırayla) birer kart dağıtır. Ortalık karışır!</li>
-            <li><b>🍽️ Sofra (Wild Table):</b> Herkesin elini toplar, karıştırır ve rastgele geri dağıtır. Tam bir kaos!</li>
-            <li><b>🌪️ Mikser (Wild Mixer):</b> Yön seçimine göre herkes elindeki kartları yanındakine verir (Eller yer değiştirir).</li>
-            <li><b>🍱 Meze (Wild Meze):</b> Senden önceki oyuncuya 1 kart çektirir. İntikam soğuk yenir!</li>
-            <li><b>🧻 Tuvalet Kağıdı (Anti-Draw):</b> Ortada biriken cezaları (+4, +6 vb.) sıfırlar ve seni kurtarır.</li>
+            <li><b>+1 / +2 / Kümülatif Ceza:</b> Son kart olarak atarsanız, sıradaki oyuncu cezayı çeker, oyun öyle biter.</li>
+            <li><b>🍱 Meze:</b> Son kart olarak atılırsa, önceki oyuncu cezasını çeker ve oyun öyle biter.</li>
+            <li><b>🍽️ Sofra:</b> Son kart olarak atarsanız, sizin eliniz biter ve kenara çekilirsiniz. Sadece <b>KAYBEDENLERİN</b> elleri toplanır, karıştırılır ve yeniden dağıtılır.</li>
+            <li><b>🌪️ Mikser:</b> Son kart olarak atarsanız, siz kenara çekilirsiniz. Sadece <b>KAYBEDENLERİN</b> elleri seçtiğiniz yöne göre döner.</li>
+            <li><b>🚫 Düdüklü Tencere (Wild Pot) İle BİTİLEMEZ!</b> Eğer son kart olarak Düdüklü atarsanız, özellik çalışır (herkes çeker), sonra <b>SİZ DE 1 KART ÇEKMEK ZORUNDA KALIRSINIZ</b> ve oyun devam eder.</li>
         </ul>
 
         <h4 style="color:#f1c40f;">🚨 SON TABAK ve İTİRAZ</h4>
         <ul style="font-size:0.9em; padding-left:20px;">
             <li><b>Son Tabak:</b> Elinde 2 kart varken birini atıp TEK KART kalacaksan, kartı atmadan önce veya tam atarken <b>"SON TABAK"</b> butonuna basmalısın.</li>
             <li><b>Unutursan:</b> Sen "Son Tabak" demeden tur diğer oyuncuya geçerse, biri sana <b>"✋ İTİRAZ ET"</b> butonuyla itiraz edebilir. Yakalanırsan ceza kartı yersin!</li>
-            <li><b>Haksız İtiraz:</b> Biri sana haksız yere (zamanında basmışsan veya kart sayın 1 değilse) itiraz ederse, cezayı o yer!</li>
         </ul>
 
         <br>
@@ -917,28 +912,24 @@ function getRandomColor() {
 }
 
 // --- NEW FUNCTION: JANITOR CLEANUP ---
-// This function runs on login to clean up stale rooms and players
 function performJanitorCleanup() {
     const TEN_MIN_MS = 10 * 60 * 1000;
     const cutoff = Date.now() - TEN_MIN_MS;
     const batch = db.batch();
     let opsCount = 0;
 
-    // 1. Clean Stale Rooms
     db.collection("rooms").where("lastActive", "<", cutoff).get().then(snap => {
         snap.forEach(doc => {
             batch.delete(doc.ref);
             opsCount++;
         });
 
-        // 2. Clean Stale Players
         db.collection("global_players").where("lastSeen", "<", cutoff).get().then(pSnap => {
             pSnap.forEach(pDoc => {
                 batch.delete(pDoc.ref);
                 opsCount++;
             });
 
-            // Commit only if there's work to do
             if(opsCount > 0) {
                 batch.commit().then(() => console.log(`🧹 Temizlikçi: ${opsCount} öğe silindi.`)).catch(e => console.log("Temizlik hatası:", e));
             }
@@ -978,7 +969,6 @@ let globalPlayersUnsub = null;
 
 function initLobbyFeatures() {
     // 1. Start Global Heartbeat for Status (Using OPTIMIZED interval)
-    // OPTIMIZED: Reduce writes significantly.
     setInterval(() => {
         if(myUid) {
             let status = 'lobby';
@@ -988,7 +978,6 @@ function initLobbyFeatures() {
     }, ANIM_CONFIG.HEARTBEAT_MS); // 30 seconds
 
     // 2. Listen to Lobby Chat
-    // LIMIT CHANGE: 50 -> 10
     lobbyChatUnsub = db.collection("lobby_chat").orderBy("ts", "asc").limit(10).onSnapshot(snapshot => {
         const div = document.getElementById('lobby-chat-msgs');
         div.innerHTML = "";
@@ -1011,9 +1000,6 @@ function initLobbyFeatures() {
 
         snapshot.forEach(doc => {
             const data = doc.data();
-            // Show only players active in last 60 seconds (Client-side filtering)
-            // Note: Since updates are now less frequent, we relax this filter visually or accept 'stale' data until sync
-            // Better: Filter < 5 minutes for visual list
             if(now - data.lastSeen < 300000) {
                 activeCount++;
                 let dotClass = 'p-dot-lobby';
@@ -1040,7 +1026,6 @@ let lastReportedTime = 0;
 function updateGlobalStatus(status) {
     if(!myUid) return;
     const now = Date.now();
-    // OPTIMIZATION: Update ONLY if status changed OR if it's been > 5 mins (to satisfy Janitor)
     if (status !== lastReportedStatus || now - lastReportedTime > 300000) {
         lastReportedStatus = status;
         lastReportedTime = now;
@@ -1049,7 +1034,6 @@ function updateGlobalStatus(status) {
             status: status,
             lastSeen: now
         }, { merge: true });
-        console.log("Status Updated:", status); // Debug log
     }
 }
 
@@ -1058,17 +1042,13 @@ function sendLobbyMessage() {
     const msg = input.value.trim();
     if(!msg) return;
 
-    // Check message count to cleanup old ones (Simple Client-Side Logic)
     db.collection("lobby_chat").get().then(snap => {
-        // LIMIT CHANGE: 100 -> 10
         if(snap.size >= 10) {
-            // Find oldest and delete
             let oldestDoc = snap.docs[0];
             let minTs = oldestDoc.data().ts;
             snap.docs.forEach(d => { if(d.data().ts < minTs) { minTs = d.data().ts; oldestDoc = d; } });
             oldestDoc.ref.delete();
         }
-        // Add new
         db.collection("lobby_chat").add({
             sender: myName,
             msg: msg,
@@ -1081,12 +1061,10 @@ function sendLobbyMessage() {
 
 function listenRooms() {
     const list = document.getElementById('room-list'); 
-    // UPDATED: Filter active rooms for 10 minutes (Server Side Optimization)
-    // NOTE: This requires a Composite Index on Firestore (lastActive + lastActive).
     const tenMinsAgo = Date.now() - 600000;
     
     db.collection("rooms")
-      .where("lastActive", ">", tenMinsAgo) // OPTIMIZED: Don't fetch stale rooms
+      .where("lastActive", ">", tenMinsAgo)
       .orderBy("lastActive", "desc")
       .limit(20)
       .onSnapshot((snapshot) => {
@@ -1095,7 +1073,6 @@ function listenRooms() {
         const now = Date.now();
         snapshot.forEach(docSnap => {
             const r = docSnap.data();
-            // Double check (though where clause handles most)
             if (r.lastActive && now - r.lastActive > 600000) { return; } 
             
             let realHumans = r.players.filter(p => !p.isBot).length;
@@ -1125,7 +1102,6 @@ function listenRooms() {
                 </div>
             `;
             
-            // Allow joining if waiting OR playing with available bots
             if (r.status !== 'playing' || totalBots > 0) {
                 const joinBtn = document.createElement('button');
                 joinBtn.className = 'room-action-btn'; 
@@ -1375,8 +1351,6 @@ document.getElementById('start-game-btn').addEventListener('click', () => {
         hasDrawn: false
     };
     db.collection("rooms").doc(currentRoomId).update({ status: 'playing', players: finalPlayers, gameState: initialState, lastActive: Date.now() });
-    
-    // NO SYSTEM LOG
 });
 
 /* --- GAME LOOP (Sync Logic) --- */
@@ -1387,7 +1361,6 @@ function syncGameLoop(roomData) {
     const gs = roomData.gameState;
     
     // --- 10 MINUTE AUTO-DELETE CHECK (HOST ONLY) ---
-    // Janitor checks globally, but host can also leave if stuck
     if(isHost && roomData.lastActive && (Date.now() - roomData.lastActive > 600000)) {
         console.log("Room inactive for 10 mins. Closing...");
         confirmLeaveGame(); // This will trigger delete as host leaves
@@ -1805,49 +1778,144 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
     if(newDiscard.length > 2) {
         newDiscard = newDiscard.slice(-2);
     }
-    // ------------------------------------------
     
     let newDir = direction, newDrawStack = drawStack, nextP = currentPlayer, newWinner = -1;
     let playerUpdates = [...gamePlayers]; playerUpdates[pIdx].saidSonTabak = false;
-    if(newHands[pIdx].length === 0) newWinner = pIdx;
     
+    // --- UPDATE DIRECTION & NEXT PLAYER CALCULATION ---
     if(card.val === 'Wild Mixer') { 
         newDir = mixerDir || 1; 
     } else if (card.val === 'Reverse') { 
         newDir *= -1; 
     }
 
-    if(newWinner === -1) { 
-        if(card.val === 'Block') nextP = (currentPlayer + (newDir * 2) + 4) % 4; 
-        else nextP = (currentPlayer + newDir + 4) % 4; 
-    }
+    // Determine basic next player
+    if(card.val === 'Block') nextP = (currentPlayer + (newDir * 2) + 4) % 4; 
+    else nextP = (currentPlayer + newDir + 4) % 4; 
 
-    if(card.val === '+1') newDrawStack += 1; if(card.val === '+2') newDrawStack += 2; if(card.val === 'Wild Meze') newDrawStack += 1; if(card.val === 'Wild Anti-Draw') newDrawStack = 0;
+    // Determine Draw Stack
+    if(card.val === '+1') newDrawStack += 1; 
+    if(card.val === '+2') newDrawStack += 2; 
+    if(card.val === 'Wild Meze') newDrawStack += 1; 
+    if(card.val === 'Wild Anti-Draw') newDrawStack = 0;
     
-    if(card.val === 'Wild Table') { 
-        let counts = newHands.map(h => h.length); 
-        let allCards = []; 
-        newHands.forEach(h => { allCards.push(...h); h.length = 0; }); 
-        allCards = shuffleDeck(allCards); 
-        for(let i=0; i<4; i++) {
-            for(let j=0; j<counts[i]; j++) {
-                if(allCards.length > 0) newHands[i].push(allCards.pop());
-            }
-        }
-    }
-    
-    if(card.val === 'Wild Mixer') { 
-        if(newDir === 1) { let temp = newHands[3]; newHands[3] = newHands[2]; newHands[2] = newHands[1]; newHands[1] = newHands[0]; newHands[0] = temp; } 
-        else { let temp = newHands[0]; newHands[0] = newHands[1]; newHands[1] = newHands[2]; newHands[2] = newHands[3]; newHands[3] = temp; } 
-    }
-    if(card.val === 'Wild Pot') { 
+    // --- SPECIAL END GAME RULES (Must execute effects first) ---
+
+    // Düdüklü Tencere (Wild Pot) Rule: Cannot win.
+    if(card.val === 'Wild Pot') {
+        // Execute Pot Effect: Everyone draws 1
         for(let k=0; k<4; k++) {
             let targetP = (pIdx + (k * newDir) + 4) % 4; 
             if(gameDeck.length > 0) newHands[targetP].push(gameDeck.pop());
+            // Safe reshuffle if needed would go here, using existing helpers if integrated better
+        }
+        
+        // If this was the last card, force draw 1 additional card for player
+        if(newHands[pIdx].length === 0) {
+            if(gameDeck.length > 0) newHands[pIdx].push(gameDeck.pop());
+            newWinner = -1; // No winner
         }
     }
-    if(card.val === 'Wild Meze') { let prevP = (pIdx - newDir + 4) % 4; if(gameDeck.length > 0) newHands[prevP].push(gameDeck.pop()); }
+
+    // Wild Table Rule (Sofra)
+    else if(card.val === 'Wild Table') {
+        let isWinning = (newHands[pIdx].length === 0);
+        let playersToShuffle = [0,1,2,3];
+        
+        if(isWinning) {
+            // Exclude winner from shuffle
+            playersToShuffle = playersToShuffle.filter(i => i !== pIdx);
+        }
+
+        let counts = [];
+        let allCards = [];
+        
+        playersToShuffle.forEach(i => {
+            counts.push({idx: i, count: newHands[i].length});
+            allCards.push(...newHands[i]);
+            newHands[i] = []; // Empty hands
+        });
+        
+        allCards = shuffleDeck(allCards);
+        
+        // Redistribute
+        counts.forEach(c => {
+            for(let j=0; j<c.count; j++) {
+                if(allCards.length > 0) newHands[c.idx].push(allCards.pop());
+            }
+        });
+        
+        // If winning, newWinner will be set later by empty hand check
+    }
+
+    // Wild Mixer Rule
+    else if(card.val === 'Wild Mixer') {
+        let isWinning = (newHands[pIdx].length === 0);
+        
+        if(isWinning) {
+            // Rotate only losers
+            // Order depends on direction. 
+            // Standard Mixer Logic:
+            // If CW: P1 takes P0, P2 takes P1... NO.
+            // Logic implemented: let temp = newHands[3]; ... newHands[0] = temp;
+            // Let's implement rotation for remaining 3 players.
+            
+            let losers = [0,1,2,3].filter(i => i !== pIdx);
+            // Sort losers to maintain cycle order (e.g. 0, 2, 3)
+            // But we need to rotate relative to game direction.
+            // Simple rotation: Map values to next loser in direction
+            
+            let currentHandsMap = {};
+            losers.forEach(i => currentHandsMap[i] = [...newHands[i]]);
+            
+            for(let i=0; i<losers.length; i++) {
+                let current = losers[i];
+                // Find next loser in direction
+                let nextIndex = (i + newDir + losers.length) % losers.length; 
+                let sourceIndex = (i - newDir + losers.length) % losers.length;
+                // If I am 'current', I take from 'sourceIndex' in standard shift?
+                // Mixer code earlier:
+                // if(newDir === 1) { let temp = newHands[3]; newHands[3] = newHands[2]; newHands[2] = newHands[1]; newHands[1] = newHands[0]; newHands[0] = temp; }
+                // This shifts hands COUNTER to player index. (P0 gets P3's hand).
+                // Let's stick to simple swap logic.
+                
+                // Effective rotation for 3 players:
+                newHands[current] = currentHandsMap[losers[sourceIndex]];
+            }
+        } else {
+            // Standard Mixer Logic (Everyone)
+            if(newDir === 1) { let temp = newHands[3]; newHands[3] = newHands[2]; newHands[2] = newHands[1]; newHands[1] = newHands[0]; newHands[0] = temp; } 
+            else { let temp = newHands[0]; newHands[0] = newHands[1]; newHands[1] = newHands[2]; newHands[2] = newHands[3]; newHands[3] = temp; } 
+        }
+    }
     
+    // Wild Meze Logic
+    else if(card.val === 'Wild Meze') {
+        let prevP = (pIdx - newDir + 4) % 4; 
+        if(gameDeck.length > 0) newHands[prevP].push(gameDeck.pop()); 
+        // Logic already affects hands, so standard win check will see updated state
+    }
+    
+    // --- FINAL WINNER CHECK & PENALTY ENFORCEMENT ---
+    if(newHands[pIdx].length === 0) {
+        newWinner = pIdx;
+        
+        // Cumulative Penalty Check (+1, +2, Accumulated Stack)
+        // If ending with penalty, NEXT player draws the stack
+        if(newDrawStack > 0) {
+             // Perform Smart Reshuffle if needed before drawing
+            if(gameDeck.length < newDrawStack) { 
+                gameDeck = rebuildDeckFromState(newHands, newDiscard[newDiscard.length-1]);
+                if(gameDeck.length === 0) gameDeck = createFullDeck();
+            }
+
+            for(let k=0; k<newDrawStack; k++) {
+                if(gameDeck.length > 0) newHands[nextP].push(gameDeck.pop());
+            }
+            newDrawStack = 0; // Penalty consumed
+        }
+    }
+
     // SERIALIZE HANDS
     playerUpdates = playerUpdates.map((p, i) => ({...p, hand: newHands[i].map(serializeCard)}));
     
@@ -1866,7 +1934,7 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
         "gameState.lastAction": { type: 'play', pIdx, card: serializeCard(card), timestamp: Date.now() }, // SERIALIZE
         "lastActive": Date.now()
     };
-    if(card.val === 'Wild Pot' || card.val === 'Wild Meze' || card.val === 'Wild Table') updates["gameState.deck"] = gameDeck.map(serializeCard);
+    if(card.val === 'Wild Pot' || card.val === 'Wild Meze' || card.val === 'Wild Table' || newDrawStack > 0) updates["gameState.deck"] = gameDeck.map(serializeCard);
     
     if(newWinner !== -1) { 
         updates["gameState.gameActive"] = false; 
@@ -2196,9 +2264,13 @@ function animateTableEffect() {
         ['player-hand','bot1-wrapper','bot2-wrapper','bot3-wrapper'].forEach(id => {
             let el = document.getElementById(id); if(el) {
                 let r = el.getBoundingClientRect();
+                // FIX: Start form center of element
+                let startX = r.left + r.width/2 - 30; // Approx half card width
+                let startY = r.top + r.height/2 - 45; // Approx half card height
+
                 for(let k=0; k<3; k++) {
                     let ac = document.createElement('div'); ac.className = 'mini-card-back'; 
-                    ac.style.zIndex = 5000; ac.style.left = r.left + 'px'; ac.style.top = r.top + 'px';
+                    ac.style.zIndex = 5000; ac.style.left = startX + 'px'; ac.style.top = startY + 'px';
                     document.body.appendChild(ac); animCards.push(ac);
                 }
             }
@@ -2218,8 +2290,9 @@ function animateMixerEffect(dir) {
         let cx = rect.left + rect.width/2; let cy = rect.top + rect.height/2;
         let mixerContainer = document.createElement('div'); mixerContainer.className = 'mixer-container'; mixerContainer.style.left = cx + 'px'; mixerContainer.style.top = cy + 'px';
         document.body.appendChild(mixerContainer);
+        // FIX: Reduced radius (-40px instead of -70px)
         for(let i=0; i<8; i++) {
-            let c = document.createElement('div'); c.className = 'mixer-card card-back-style'; c.style.transform = `rotate(${(i/8)*360}deg) translateY(-70px)`; mixerContainer.appendChild(c);
+            let c = document.createElement('div'); c.className = 'mixer-card card-back-style'; c.style.transform = `rotate(${(i/8)*360}deg) translateY(-40px)`; mixerContainer.appendChild(c);
         }
         setTimeout(() => { mixerContainer.style.transition = 'transform 2s ease-in-out'; mixerContainer.style.transform = `rotate(${dir * 720}deg)`; }, 100);
         setTimeout(() => { mixerContainer.remove(); resolve(); }, 2200);
