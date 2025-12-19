@@ -2,8 +2,11 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v7.7 (Smart Bot & Optimization)</title>
+    <title>Son Tabak Online - v7.9 (Font & Optimizasyon)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Google Fonts: Patrick Hand (Comic Sans alternatifi) -->
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -17,6 +20,8 @@
             --bg-color: #2c3e50;
             --primary: #e67e22;
             --accent: #f1c40f;
+            /* Font Güncellemesi */
+            --main-font: 'Patrick Hand', cursive; 
         }
 
         /* SCROLL FIX */
@@ -48,7 +53,7 @@
             100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; } 
         }
 
-        .brand-corner { position: absolute; top: 20px; left: 20px; font-size: 1.5em; font-weight: 900; color: var(--primary); z-index: 10; display: flex; align-items: center; gap: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .brand-corner { position: absolute; top: 20px; left: 20px; font-size: 1.5em; font-weight: 900; color: var(--primary); z-index: 10; display: flex; align-items: center; gap: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); font-family: var(--main-font); }
         .production-corner { position: absolute; bottom: 10px; left: 20px; font-size: 0.7em; color: rgba(255,255,255,0.4); z-index: 10; letter-spacing: 1px; }
         .rules-corner { position: absolute; top: 20px; right: 20px; z-index: 9000; }
         .icon-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; width: 40px; height: 40px; font-size: 1.5em; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
@@ -59,14 +64,14 @@
         .plate-anim { font-size: 6em; animation: plateWobble 3s infinite ease-in-out; display: block; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3)); }
         @keyframes plateWobble { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
         
-        .game-title-login { font-size: 3em; font-weight: 900; margin-top: -10px; color: white; text-shadow: 0 4px 0 #000; letter-spacing: -2px; line-height: 1; }
-        .online-stamp { position: absolute; top: 0; right: -30px; background: #c0392b; color: white; padding: 2px 8px; font-size: 0.4em; font-weight: bold; transform: rotate(30deg); border: 2px solid white; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); animation: stampPulse 2s infinite; }
+        .game-title-login { font-size: 3em; font-weight: 900; margin-top: -10px; color: white; text-shadow: 0 4px 0 #000; letter-spacing: -2px; line-height: 1; font-family: var(--main-font); }
+        .online-stamp { position: absolute; top: 0; right: -30px; background: #c0392b; color: white; padding: 2px 8px; font-size: 0.4em; font-weight: bold; transform: rotate(30deg); border: 2px solid white; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); animation: stampPulse 2s infinite; font-family: sans-serif; }
         @keyframes stampPulse { 0% { transform: rotate(30deg) scale(1); } 50% { transform: rotate(30deg) scale(1.1); } 100% { transform: rotate(30deg) scale(1); } }
 
         .login-input-group { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 15px; width: 300px; max-width: 90%; }
         .styled-input { background: rgba(0,0,0,0.3); border: none; padding: 15px; border-radius: 10px; color: white; font-size: 1.1em; text-align: center; outline: none; transition: 0.3s; border: 1px solid transparent; width: 100%; box-sizing: border-box; }
         .styled-input:focus { background: rgba(0,0,0,0.5); border-color: var(--primary); }
-        .login-btn-main { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.2em; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 0 #d35400; width: 100%; }
+        .login-btn-main { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.2em; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 0 #d35400; width: 100%; font-family: var(--main-font); }
         .login-btn-main:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #d35400; }
         .login-btn-main:active { transform: translateY(2px); box-shadow: 0 2px 0 #d35400; }
 
@@ -145,8 +150,8 @@
         }
 
         #brand-area { grid-area: logo; text-align: center; background: #fff; padding: 10px; border-radius: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: center; height: fit-content; }
-        .brand-title { font-size: 1.5em; font-weight: 900; color: #2c3e50; line-height: 1; }
-        .version { font-size: 0.4em; color: #95a5a6; margin-left: 5px; font-weight: normal; }
+        .brand-title { font-size: 1.5em; font-weight: 900; color: #2c3e50; line-height: 1; font-family: var(--main-font); }
+        .version { font-size: 0.4em; color: #95a5a6; margin-left: 5px; font-weight: normal; font-family: sans-serif; }
         .brand-sub { font-size: 0.7em; margin: 0; margin-left: auto; color: var(--primary); font-weight: 800; }
 
         .right-panel { grid-area: panel; display: flex; flex-direction: column; gap: 10px; height: 100%; overflow: hidden; }
@@ -183,7 +188,7 @@
         .mini-card-back { width: 60px; height: 90px; border: 3px solid #fff; border-radius: 8px; position: absolute; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); background-size: cover; background-position: center; box-sizing: border-box; display: flex; justify-content: center; align-items: center; overflow: hidden; transition: all 0.3s; background: var(--card-pattern) !important; }
         .card-back-style { background: var(--card-pattern) !important; background-size: cover; border: 3px solid #fff !important; }
         
-        /* Centered Text for Card Backs */
+        /* Centered Text for Card Backs - FONT FIX UYGULANDI */
         .mini-card-back::after, .card-back-style::after { 
             content: "SON\A TABAK"; 
             position: absolute; 
@@ -191,7 +196,7 @@
             left: 50%;
             transform: translate(-50%, -50%) rotate(-15deg);
             color: #3498db; 
-            font-family: 'Comic Sans MS', cursive; 
+            font-family: var(--main-font); 
             font-weight: 900; 
             font-size: 1.1em; 
             white-space: pre; 
@@ -252,7 +257,7 @@
         
         #bottom-area { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; margin-bottom: 10px; position: relative; z-index: 10; grid-row: 3; align-self: end; }
         #son-tabak-container { margin-bottom: 5px; z-index: 10; display:flex; gap:10px; }
-        #son-tabak-btn, #challenge-btn { padding: 12px 30px; border: none; border-radius: 30px; font-size: 1.2em; font-weight: bold; cursor: pointer; color: white; box-shadow: 0 5px 0 rgba(0,0,0,0.2); transition: 0.2s; }
+        #son-tabak-btn, #challenge-btn { padding: 12px 30px; border: none; border-radius: 30px; font-size: 1.2em; font-weight: bold; cursor: pointer; color: white; box-shadow: 0 5px 0 rgba(0,0,0,0.2); transition: 0.2s; font-family: var(--main-font); }
         #son-tabak-btn { background-color: #e67e22; } #challenge-btn { background-color: #f1c40f; color: #333; }
         #son-tabak-btn:disabled, #challenge-btn:disabled { background-color: #bdc3c7; box-shadow: none; cursor: not-allowed; opacity: 0.6; color:#fff; }
         #player-hand { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; align-items: center; gap: 8px; width: 90%; padding: 10px; height: auto; min-height: 160px; border: 2px dashed rgba(0,0,0,0.1); border-radius: 25px; overflow: visible; transition: all 0.3s; }
@@ -262,7 +267,7 @@
         .hand-super-packed .card { width: 60px; height: 90px; font-size: 0.6em; border-width: 2px; } .hand-super-packed .card-emoji { font-size: 1.8em; }
         
         .buttons-container { grid-area: game buttons; display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding: 5px; }
-        .game-btn { padding: 12px 20px; border: none; border-radius: 10px; font-size: 1em; font-weight: bold; cursor: pointer; color: white; width: 100%; margin-bottom: 0; transition: 0.2s; }
+        .game-btn { padding: 12px 20px; border: none; border-radius: 10px; font-size: 1em; font-weight: bold; cursor: pointer; color: white; width: 100%; margin-bottom: 0; transition: 0.2s; font-family: var(--main-font); }
         .game-btn:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
         .btn-red { background-color: #c0392b; } .btn-blue { background-color: #3498db; } .btn-dark { background-color: #34495e; } .btn-green { background-color: #27ae60; }
         
@@ -282,7 +287,7 @@
             white-space: pre; 
             text-align: center; 
             line-height:0.9; 
-            font-family: 'Comic Sans MS', cursive; 
+            font-family: var(--main-font); 
         }
         
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 9999; }
@@ -292,11 +297,11 @@
         .bg-red { background: #e74c3c; } .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-purple { background: #9b59b6; }
         .pattern-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
         .pattern-opt { width: 50px; height: 70px; border: 2px solid #ccc; cursor: pointer; background-size: cover; position: relative; }
-        .pattern-opt::after { content: "SON"; position: absolute; transform: rotate(-15deg) scale(0.5); color: #3498db; font-weight: 900; top: 35%; left: 5px; text-shadow: 1px 1px 0 white; }
-        #son-tabak-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #e67e22; color: white; padding: 30px 60px; font-size: 2.5em; font-weight: bold; border-radius: 25px; box-shadow: 0 0 50px rgba(0,0,0,0.8); border: 6px solid white; display: none; z-index: 6000; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; width: auto; max-width: 90%; }
+        .pattern-opt::after { content: "SON"; position: absolute; transform: rotate(-15deg) scale(0.5); color: #3498db; font-weight: 900; top: 35%; left: 5px; text-shadow: 1px 1px 0 white; font-family: var(--main-font); }
+        #son-tabak-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #e67e22; color: white; padding: 30px 60px; font-size: 2.5em; font-weight: bold; border-radius: 25px; box-shadow: 0 0 50px rgba(0,0,0,0.8); border: 6px solid white; display: none; z-index: 6000; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; width: auto; max-width: 90%; font-family: var(--main-font); }
         .popup-sub { font-size: 0.6em; display: block; margin-top: 10px; font-weight: normal; }
         @keyframes popIn { from { transform: translate(-50%, -50%) scale(0); } to { transform: translate(-50%, -50%) scale(1); } }
-        #challenge-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; padding: 25px 50px; font-size: 2em; font-weight: bold; border-radius: 20px; box-shadow: 0 0 40px rgba(0,0,0,0.7); border: 5px solid white; display: none; z-index: 6000; animation: popIn 0.3s ease-out; text-align: center; width: auto; max-width: 90%; }
+        #challenge-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; padding: 25px 50px; font-size: 2em; font-weight: bold; border-radius: 20px; box-shadow: 0 0 40px rgba(0,0,0,0.7); border: 5px solid white; display: none; z-index: 6000; animation: popIn 0.3s ease-out; text-align: center; width: auto; max-width: 90%; font-family: var(--main-font); }
         .challenge-valid { background-color: #27ae60; } .challenge-invalid { background-color: #c0392b; }
         .challenge-sub { font-size: 0.6em; display: block; margin-top: 5px; font-weight: normal; opacity: 0.9; }
         #leave-modal .modal-box { border: 4px solid #c0392b; }
@@ -579,7 +584,7 @@
 
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v7.7</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v7.9</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <div class="game-container">
@@ -642,17 +647,43 @@
 </div>
 
 <div id="rules-modal" class="modal">
-    <div class="modal-box" style="text-align:left; max-height:80vh; overflow-y:auto;">
-        <h3>📖 Nasıl Oynanır?</h3>
-        <p style="font-size:0.9em;">
-            1. Amaç elindeki kartları bitirmektir.<br>
-            2. <b>Sayı Kartı Zorunluluğu:</b> Elinde oynanabilir bir Sayı Kartı (0-9) varsa, onu oynamak zorundasın. Kart çekemezsin.<br>
-            3. <b>Saklama Kuralı:</b> Elinde sadece Joker veya Aksiyon kartı varsa, oynamayıp desteden çekebilirsin.<br>
-            4. <b>Çek-Oyna:</b> Kart çektiğinde, gelen kart oynanabilir bir Sayı Kartı ise <b>atmak zorundasın</b>. Değilse pas geçebilirsin.<br>
-            5. "SON TABAK" demeyi unutma!<br>
-            6. Bol şans! 🍅🥦
-        </p>
-        <button class="game-btn btn-blue" onclick="document.getElementById('rules-modal').style.display='none'">Anladım</button>
+    <div class="modal-box" style="text-align:left; max-height:85vh; overflow-y:auto; font-family: 'Patrick Hand', cursive;">
+        <h3 style="text-align:center; color:#e67e22; font-size: 2em;">📖 Mutfak Kuralları</h3>
+        
+        <h4 style="color:#d35400;">🥗 Temel Amaç</h4>
+        <p>Elindeki sebzeleri ve tabakları rakiplerinden önce bitir! Son karta geldiğinde <b>"SON TABAK"</b> diye bağırmayı (butona basmayı) unutma.</p>
+
+        <h4 style="color:#2980b9;">🎮 Nasıl Oynanır?</h4>
+        <ul style="font-size:0.9em; padding-left:20px;">
+            <li><b>Renk veya Sayı:</b> Ortadaki kartın rengiyle veya sayısıyla aynı olan bir kart atabilirsin.</li>
+            <li><b>Zorunlu Hamle:</b> Elinde oynanabilir bir <b>Sayı Kartı (0-9)</b> varsa, onu oynamak zorundasın! Saklayıp yerden kart çekemezsin (Sistem izin vermez).</li>
+            <li><b>Stratejik Bekleme:</b> Elinde sadece Joker veya Aksiyon kartları varsa, bunları oynamayıp yerden kart çekebilirsin.</li>
+            <li><b>Çek-Oyna Kuralı:</b> Yerden kart çektiğinde, gelen kart oynanabilir bir Sayı kartıysa sistem onu otomatik oynatabilir veya oynamanı ister.</li>
+        </ul>
+
+        <h4 style="color:#c0392b;">🔥 Özel Kartlar & Cezalar</h4>
+        <ul style="font-size:0.9em; padding-left:20px;">
+            <li><b>📦 +1 ve 📦📦 +2:</b> Sonraki oyuncuya ceza kartı çektirir. Ceza yiyen oyuncu pas geçer. (Eğer elinde +2 varsa üstüne atıp cezayı bir sonrakine katlayarak devredebilirsin!)</li>
+            <li><b>🔪 Bıçak (Blok):</b> Sıradaki oyuncuyu atlar, oynatmaz.</li>
+            <li><b>♻️ Geri Dönüşüm:</b> Oyunun yönünü (Saat/Ters) değiştirir.</li>
+            <li><b>🍲 Düdüklü Tencere (Wild Pot):</b> Desteden herkese (sırayla) birer kart dağıtır. Ortalık karışır!</li>
+            <li><b>🍽️ Sofra (Wild Table):</b> Herkesin elini toplar, karıştırır ve rastgele geri dağıtır. Tam bir kaos!</li>
+            <li><b>🌪️ Mikser (Wild Mixer):</b> Yön seçimine göre herkes elindeki kartları yanındakine verir (Eller yer değiştirir).</li>
+            <li><b>🍱 Meze (Wild Meze):</b> Senden önceki oyuncuya 1 kart çektirir. İntikam soğuk yenir!</li>
+            <li><b>🧻 Tuvalet Kağıdı (Anti-Draw):</b> Ortada biriken cezaları (+4, +6 vb.) sıfırlar ve seni kurtarır.</li>
+        </ul>
+
+        <h4 style="color:#f1c40f;">🚨 SON TABAK ve İTİRAZ</h4>
+        <ul style="font-size:0.9em; padding-left:20px;">
+            <li><b>Son Tabak:</b> Elinde 2 kart varken birini atıp TEK KART kalacaksan, kartı atmadan önce veya tam atarken <b>"SON TABAK"</b> butonuna basmalısın.</li>
+            <li><b>Unutursan:</b> Sen "Son Tabak" demeden tur diğer oyuncuya geçerse, biri sana <b>"✋ İTİRAZ ET"</b> butonuyla itiraz edebilir. Yakalanırsan ceza kartı yersin!</li>
+            <li><b>Haksız İtiraz:</b> Biri sana haksız yere (zamanında basmışsan veya kart sayın 1 değilse) itiraz ederse, cezayı o yer!</li>
+        </ul>
+
+        <br>
+        <div style="text-align:center;">
+            <button class="game-btn btn-blue" onclick="document.getElementById('rules-modal').style.display='none'">Anladım Şef! 👨‍🍳</button>
+        </div>
     </div>
 </div>
 
@@ -777,15 +808,15 @@ function toggleLobbyTab(element) {
 
 /* --- ANIMATION & CONFIG CONSTANTS --- */
 const ANIM_CONFIG = {
-    FLY_DURATION: 1000,        
-    FLY_BUFFER: 1100,         
-    DRAW_INTERVAL: 600,        
-    INITIAL_DEAL: 250,        
+    FLY_DURATION: 1000,         
+    FLY_BUFFER: 1100,          
+    DRAW_INTERVAL: 600,         
+    INITIAL_DEAL: 250,         
     TOAST: 2000,                
     POPUP: 3000,                
-    BOT_THINK: 300,              
-    HEARTBEAT_MS: 30000,        
-    BOT_WATCHDOG: 3000        
+    BOT_THINK: 300,                
+    HEARTBEAT_MS: 30000,         
+    BOT_WATCHDOG: 3000         
 };
 
 /* --- CARD NAMES MAPPING --- */
@@ -870,6 +901,7 @@ let localSaidSonTabak = false;
 let isDealing = false;
 let previousPlayersList = [];
 let myLobbyColor = '#333'; // Random color for lobby chat
+let botInterval = null; // Botları sürekli kontrol edecek zamanlayıcı
 
 /* --- LOGIC --- */
 auth.onAuthStateChanged((user) => { if (user) myUid = user.uid; });
@@ -956,7 +988,8 @@ function initLobbyFeatures() {
     }, ANIM_CONFIG.HEARTBEAT_MS); // 30 seconds
 
     // 2. Listen to Lobby Chat
-    lobbyChatUnsub = db.collection("lobby_chat").orderBy("ts", "asc").limit(50).onSnapshot(snapshot => {
+    // LIMIT CHANGE: 50 -> 10
+    lobbyChatUnsub = db.collection("lobby_chat").orderBy("ts", "asc").limit(10).onSnapshot(snapshot => {
         const div = document.getElementById('lobby-chat-msgs');
         div.innerHTML = "";
         snapshot.forEach(doc => {
@@ -1027,7 +1060,8 @@ function sendLobbyMessage() {
 
     // Check message count to cleanup old ones (Simple Client-Side Logic)
     db.collection("lobby_chat").get().then(snap => {
-        if(snap.size >= 100) {
+        // LIMIT CHANGE: 100 -> 10
+        if(snap.size >= 10) {
             // Find oldest and delete
             let oldestDoc = snap.docs[0];
             let minTs = oldestDoc.data().ts;
@@ -1047,8 +1081,12 @@ function sendLobbyMessage() {
 
 function listenRooms() {
     const list = document.getElementById('room-list'); 
-    // UPDATED: Filter active rooms for 10 minutes instead of 1 (matches Janitor)
+    // UPDATED: Filter active rooms for 10 minutes (Server Side Optimization)
+    // NOTE: This requires a Composite Index on Firestore (lastActive + lastActive).
+    const tenMinsAgo = Date.now() - 600000;
+    
     db.collection("rooms")
+      .where("lastActive", ">", tenMinsAgo) // OPTIMIZED: Don't fetch stale rooms
       .orderBy("lastActive", "desc")
       .limit(20)
       .onSnapshot((snapshot) => {
@@ -1057,7 +1095,7 @@ function listenRooms() {
         const now = Date.now();
         snapshot.forEach(docSnap => {
             const r = docSnap.data();
-            // Filter rooms older than 10 minutes (600000ms) - Visual Filter
+            // Double check (though where clause handles most)
             if (r.lastActive && now - r.lastActive > 600000) { return; } 
             
             let realHumans = r.players.filter(p => !p.isBot).length;
@@ -1099,7 +1137,7 @@ function listenRooms() {
         });
     }, (error) => {
         console.log("Lobby Error (Probably need index):", error);
-        list.innerHTML = "<div style='text-align:center;color:red;font-size:0.8em;'>Sorgu hatası. İndex bekleniyor...</div>";
+        list.innerHTML = "<div style='text-align:center;color:red;font-size:0.8em;'>Sorgu hatası. Veritabanı İndexi eksik olabilir.</div>";
     });
 }
 
@@ -1186,9 +1224,10 @@ function initGameChat(roomId) {
     const chatDiv = document.getElementById('chat-messages');
     chatDiv.innerHTML = "";
     
+    // LIMIT CHANGE: 30 -> 10
     gameChatUnsub = db.collection("rooms").doc(roomId).collection("messages")
         .orderBy("ts", "asc")
-        .limit(30)
+        .limit(10)
         .onSnapshot(snapshot => {
             snapshot.docChanges().forEach(change => {
                 if (change.type === "added") {
@@ -1224,6 +1263,10 @@ function enterWaitingRoom() {
     
     if(heartbeatInterval) clearInterval(heartbeatInterval);
     heartbeatInterval = setInterval(sendHeartbeat, ANIM_CONFIG.HEARTBEAT_MS);
+
+    // --- WATCHDOG SYSTEM ---
+    if(botInterval) clearInterval(botInterval);
+    botInterval = setInterval(runBotWatchdog, 1000); // Check bot every second
 
     // Initialize Chat Listener
     initGameChat(currentRoomId);
@@ -1379,11 +1422,6 @@ function syncGameLoop(roomData) {
         updateUI(); 
     }
     
-    if(isBotThinking && Date.now() - lastBotActionTime > ANIM_CONFIG.BOT_WATCHDOG) {
-        console.warn("Bot takıldı! Sıfırlanıyor...");
-        isBotThinking = false;
-    }
-
     // GAME END CHECK (Wait for Queue)
     if (gs.winnerIdx !== undefined && gs.winnerIdx !== -1 && gameActive === false) {
         if(actionQueue.length === 0 && !isProcessingQueue) { // Wait for animation
@@ -1412,6 +1450,24 @@ function attemptBotMove() {
             setTimeout(() => {
                 hostBotTurn().then(() => { isBotThinking = false; }).catch(e => { console.error("Bot Error", e); isBotThinking = false; });
             }, ANIM_CONFIG.BOT_THINK);
+        }
+    }
+}
+
+function runBotWatchdog() {
+    if(!isHost || !gameActive || !currentRoomId) return;
+    if(isProcessingQueue && actionQueue.length > 0) return;
+    const currentPObj = gamePlayers[currentPlayer];
+    if(currentPObj && currentPObj.isBot) {
+        // If stuck thinking for too long
+        if(isBotThinking && (Date.now() - lastBotActionTime > ANIM_CONFIG.BOT_WATCHDOG)) {
+            console.warn("🚨 Bot Watchdog: Bot takıldı, zorla oynatılıyor...");
+            isBotThinking = false;
+            attemptBotMove();
+        }
+        // If turn is bot's but not thinking (Deadlock)
+        else if (!isBotThinking && !isProcessingQueue) {
+            attemptBotMove();
         }
     }
 }
@@ -1645,8 +1701,20 @@ function playerSendMessage() {
     let input = document.getElementById('player-input'); 
     let msg = input.value.trim(); 
     if(msg) { 
-        db.collection("rooms").doc(currentRoomId).collection("messages").add({ sender: myName, msg: msg, ts: Date.now(), isSystem: false })
-          .catch(err => console.error("Message send failed:", err)); // Added error handling
+        const messagesRef = db.collection("rooms").doc(currentRoomId).collection("messages");
+        
+        // LIMIT CHECK AND DELETE
+        messagesRef.get().then(snap => {
+            if(snap.size >= 10) {
+                // Find oldest and delete it
+                let oldest = snap.docs.sort((a,b) => a.data().ts - b.data().ts)[0];
+                oldest.ref.delete();
+            }
+            // Add new message
+            messagesRef.add({ sender: myName, msg: msg, ts: Date.now(), isSystem: false })
+            .catch(err => console.error("Message send failed:", err)); 
+        });
+
         db.collection("rooms").doc(currentRoomId).update({ "lastActive": Date.now() }); 
         input.value = ''; 
     } 
@@ -2230,10 +2298,10 @@ function leaveGame() { document.getElementById('leave-modal').style.display = 'f
 function confirmLeaveGame() {
     if(!currentRoomId) return; 
     
-    // Stop listeners and heartbeat
     if(roomUnsubscribe) roomUnsubscribe();
     if(gameChatUnsub) gameChatUnsub(); // Unsubscribe Chat
     if(heartbeatInterval) clearInterval(heartbeatInterval);
+    if(botInterval) clearInterval(botInterval); // Clean up watchdog
     
     updateGlobalStatus('lobby'); // Reset Status to Lobby
 
@@ -2325,7 +2393,10 @@ function closePatternModal() { document.getElementById('pattern-modal').style.di
 function handleChatKey(e) { if(e.key === 'Enter') playerSendMessage(); }
 function toggleReadyState() { if(!currentRoomId) return; amIReady = !amIReady; let btn = document.getElementById('end-continue-btn'); btn.innerText = amIReady ? "Bekleniyor..." : "Devam Et ⏳"; btn.classList.toggle('btn-blue'); btn.classList.toggle('btn-dark'); let ps = [...gamePlayers]; let meIdx = ps.findIndex(p => p.uid === myUid); if(meIdx !== -1) { ps[meIdx].isReady = amIReady; db.collection("rooms").doc(currentRoomId).update({ players: ps, lastActive: Date.now() }); } }
 
-const cleanupRoom = async () => { if(heartbeatInterval) clearInterval(heartbeatInterval); };
+const cleanupRoom = async () => { 
+    if(heartbeatInterval) clearInterval(heartbeatInterval); 
+    if(botInterval) clearInterval(botInterval);
+};
 
 function shuffleDeck(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
 function createFullDeck() { let d = []; ['red','green','yellow','purple'].forEach(c => { d.push({color:c,val:'0',type:'num',name:'0'}); for(let i=1; i<=9; i++) d.push({color:c,val:i.toString(),type:'num',name:i}); ['+1','Reverse','Block'].forEach(v=>d.push({color:c,val:v,type:'action',name:v})); }); for(let i=0;i<2;i++) { d.push({color:'wild',val:'Wild',type:'wild',name:'Güveç'}); d.push({color:'wild',val:'+2',type:'wild',name:'+2'}); d.push({color:'wild',val:'Wild Anti-Draw',type:'wild',name:'Tuvalet Kağıdı'}); d.push({color:'wild',val:'Wild Pot',type:'wild',name:'Düdüklü Tencere'}); d.push({color:'wild',val:'Wild Meze',type:'wild',name:'Meze'}); } d.push({color:'wild',val:'Wild Table',type:'wild',name:'Sofra'}); d.push({color:'wild',val:'Wild Mixer',type:'wild',name:'Mikser'}); return shuffleDeck(d); }
@@ -2345,8 +2416,8 @@ function addChatLog(name, msg, color) {
     msgDiv.innerHTML = `<span class="chat-name" style="color:${color}; font-weight:bold;">${name}:</span><span class="chat-text">${msg}</span>`; 
     chatDiv.appendChild(msgDiv); 
     
-    // FIX: Limit DOM elements to prevent lag
-    while(chatDiv.childElementCount > 50) chatDiv.removeChild(chatDiv.firstChild);
+    // LIMIT CHANGE: 50 -> 10
+    while(chatDiv.childElementCount > 10) chatDiv.removeChild(chatDiv.firstChild);
     
     chatDiv.scrollTop = chatDiv.scrollHeight; 
 }
