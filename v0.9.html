@@ -646,7 +646,7 @@
 </div>
 
 <div id="rules-modal" class="modal">
-    <div class="modal-box" style="text-align:left; max-height:85vh; overflow-y:auto; font-family: 'Patrick Hand', cursive; padding: 20px;">
+    <div class="modal-box" style="text-align:left; max-height:85vh; overflow-y:auto; font-family: 'Patrick Hand', cursive; padding: 20px; display: block;">
         
         <h3 style="text-align:center; color:#e67e22; font-size: 2em; margin-top: 0;">📖 Mutfak Kuralları</h3>
         
@@ -662,7 +662,7 @@
         </ul>
 
         <h4 style="color:#c0392b;">🔥 Özellikli Kartlar</h4>
-               <ul style="font-size:0.9em; padding-left:20px;">
+                <ul style="font-size:0.9em; padding-left:20px;">
             <li><b>♻️ Geri dönüşüm:</b> Oyunun yönünü değiştirir.</li>
             <li><b>🔪 Bıçak:</b> Bir sonrası oyuncunun sırasını geçer.</li>
             <li><b>📦 +1:</b> Sonraki oyuncuya 1 kart çektirir. Kart cezası kümülatif olarak birikir.</li>
@@ -810,15 +810,15 @@ function toggleLobbyTab(element) {
 
 /* --- ANIMATION & CONFIG CONSTANTS --- */
 const ANIM_CONFIG = {
-    FLY_DURATION: 1000,         
-    FLY_BUFFER: 1100,          
-    DRAW_INTERVAL: 600,         
-    INITIAL_DEAL: 250,         
-    TOAST: 2000,                
-    POPUP: 3000,                
-    BOT_THINK: 300,                
-    HEARTBEAT_MS: 30000,         
-    BOT_WATCHDOG: 3000         
+    FLY_DURATION: 1000,           
+    FLY_BUFFER: 1100,            
+    DRAW_INTERVAL: 600,           
+    INITIAL_DEAL: 250,           
+    TOAST: 2000,                  
+    POPUP: 3000,                  
+    BOT_THINK: 300,                 
+    HEARTBEAT_MS: 30000,           
+    BOT_WATCHDOG: 3000           
 };
 
 /* --- CARD NAMES MAPPING --- */
@@ -918,30 +918,71 @@ function getRandomColor() {
     return color;
 }
 
-// --- NEW FUNCTION: JANITOR CLEANUP ---
-function performJanitorCleanup() {
+// --- YENİ SİLME FONKSİYONU: Alt koleksiyonları da temizler ---
+async function deleteFullRoom(roomId) {
+    if (!roomId) return;
+    const roomRef = db.collection("rooms").doc(roomId);
+    
+    // Firestore'da batch (toplu işlem)
+    const batch = db.batch();
+
+    try {
+        // 1. Mesajları Bul ve Silme Listesine Ekle
+        const msgsSnap = await roomRef.collection("messages").get();
+        msgsSnap.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        // 2. Presence (Online Durumu) Verilerini Bul ve Silme Listesine Ekle
+        const presenceSnap = await roomRef.collection("presence").get();
+        presenceSnap.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        // 3. Ana Odayı Silme Listesine Ekle
+        batch.delete(roomRef);
+
+        // 4. Hepsini Tek Seferde Uygula
+        await batch.commit();
+        console.log(`🧹 Oda (${roomId}) ve tüm içerikleri tamamen silindi.`);
+    } catch (error) {
+        console.error("Oda silinirken hata:", error);
+    }
+}
+
+// --- UPDATED JANITOR CLEANUP ---
+async function performJanitorCleanup() {
     const TEN_MIN_MS = 10 * 60 * 1000;
     const cutoff = Date.now() - TEN_MIN_MS;
-    const batch = db.batch();
-    let opsCount = 0;
+    
+    // Sadece odaları temizleyelim, oyuncuları ayrı temizleriz.
+    try {
+        const snap = await db.collection("rooms")
+            .where("lastActive", "<", cutoff)
+            .limit(5) 
+            .get();
 
-    db.collection("rooms").where("lastActive", "<", cutoff).get().then(snap => {
-        snap.forEach(doc => {
-            batch.delete(doc.ref);
+        if (snap.empty) return;
+
+        // Her bulunan eski oda için tam temizlik fonksiyonunu çağır
+        const deletePromises = snap.docs.map(doc => deleteFullRoom(doc.id));
+        
+        await Promise.all(deletePromises);
+        console.log(`🧹 Temizlikçi: ${snap.size} adet eski oda ve içerikleri temizlendi.`);
+
+        // Global Players temizliği (Batch ile basitçe yapılabilir çünkü alt koleksiyonu yok)
+        const batch = db.batch();
+        let opsCount = 0;
+        const pSnap = await db.collection("global_players").where("lastSeen", "<", cutoff).get();
+        pSnap.forEach(pDoc => {
+            batch.delete(pDoc.ref);
             opsCount++;
         });
+        if (opsCount > 0) await batch.commit();
 
-        db.collection("global_players").where("lastSeen", "<", cutoff).get().then(pSnap => {
-            pSnap.forEach(pDoc => {
-                batch.delete(pDoc.ref);
-                opsCount++;
-            });
-
-            if(opsCount > 0) {
-                batch.commit().then(() => console.log(`🧹 Temizlikçi: ${opsCount} öğe silindi.`)).catch(e => console.log("Temizlik hatası:", e));
-            }
-        });
-    }).catch(err => console.log("Janitor Error:", err));
+    } catch (err) {
+        console.log("Janitor Error:", err);
+    }
 }
 
 document.getElementById('login-btn').addEventListener('click', () => {
@@ -2472,7 +2513,7 @@ function confirmLeaveGame() {
         let isPlaying = rData.status === 'playing';
 
         if(ps.length <= 1) {
-            db.collection("rooms").doc(currentRoomId).delete()
+            deleteFullRoom(currentRoomId)
                 .catch(e => console.log("Room delete error", e))
                 .finally(() => { currentRoomId = null; isHost = false; });
         } else {
@@ -2565,7 +2606,7 @@ function addChatLog(name, msg, color) {
     chatDiv.appendChild(msgDiv); 
     
     // LIMIT CHANGE: 50 -> 10
-    while(chatDiv.childElementCount > 10) chatDiv.removeChild(chatDiv.firstChild);
+    while(chatDiv.childElementCount > 10) chatDiv.removeChild(chatDiv.firstChild); 
     
     chatDiv.scrollTop = chatDiv.scrollHeight; 
 }
@@ -2592,19 +2633,19 @@ function showEndGame(winnerIdx, finalPlayers) {
         `Vay vay vay! ${winnerName} resmen masayı süpürdü!`,
         `İnanılmaz bir final! ${winnerName} rakiplerine nefes aldırmadı.`,
         `Sebzeler havada uçuştu ama ${winnerName} tabağını bitiren ilk isim oldu!`,
-        `Bu ne hız ${winnerName}? Düdüklü tencere gibi basınç yaptın rakiplere!`,
-        `Tarihi bir an! ${winnerName} kazanan oldu.`,
+        `Bu ne hız ${winnerName}? Rakiplerin masaya daha yeni oturdu!`,
+        `Tarihi bir an! Kazanan ${winnerName} oldu.`,
         `${winnerName} mutfağın efendisi olduğunu kanıtladı!`,
-        `Şefin tavsiyesi: ${winnerName} gibi oynayın!`
+        `Şefin tavsiyesi: ${winnerName}!`
     ];
     
     let roasts = [
-        `${worstRoundPlayerName} ise bu elin günah keçisi oldu, bir elde ${maxRoundScore} puan aldı!`,
+        `${worstRoundPlayerName} ise bu elin oburu oldu ve bir elde ${maxRoundScore} puan yedi!`,
         `${worstRoundPlayerName}, bu el market alışverişine çıkmış gibisin, ${maxRoundScore} puan ne?!`,
         `Sanırım ${worstRoundPlayerName} oyunu yanlış anladı, amaç kart toplamak değil atmaktı!`,
         `${worstRoundPlayerName} için bir dakikalık saygı duruşu... Bu el çok canı yandı.`,
         `${worstRoundPlayerName} bu gidişle bulaşıkları yıkayacak gibi duruyor.`,
-        `${worstRoundPlayerName} elindeki kartlarla kule yapabilir artık.`
+        `${worstRoundPlayerName} elindeki kartlarla artık kule yapabilir.`
     ];
 
     let randomComment = comments[Math.floor(Math.random() * comments.length)];
