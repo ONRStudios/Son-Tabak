@@ -646,37 +646,44 @@
 </div>
 
 <div id="rules-modal" class="modal">
-    <div class="modal-box" style="text-align:left; max-height:85vh; overflow-y:auto; font-family: 'Patrick Hand', cursive;">
-        <h3 style="text-align:center; color:#e67e22; font-size: 2em;">📖 Mutfak Kuralları</h3>
+    <div class="modal-box" style="text-align:left; max-height:85vh; overflow-y:auto; font-family: 'Patrick Hand', cursive; padding: 20px;">
+        
+        <h3 style="text-align:center; color:#e67e22; font-size: 2em; margin-top: 0;">📖 Mutfak Kuralları</h3>
         
         <h4 style="color:#d35400;">🥗 Temel Amaç</h4>
-        <p>Elindeki sebzeleri ve tabakları rakiplerinden önce bitir! Son karta geldiğinde <b>"SON TABAK"</b> diye bağırmayı (butona basmayı) unutma.</p>
+        <p>Elindeki tabakları rakiplerinden önce bitir! Son karta geldiğinde <b>"SON TABAK"</b> diye bağırmayı unutma.</p>
 
         <h4 style="color:#2980b9;">🎮 Nasıl Oynanır?</h4>
         <ul style="font-size:0.9em; padding-left:20px;">
-            <li><b>Renk veya Sayı:</b> Ortadaki kartın rengiyle veya sayısıyla aynı olan bir kart atabilirsin.</li>
-            <li><b>Zorunlu Hamle:</b> Elinde oynanabilir bir <b>Sayı Kartı (0-9)</b> varsa, onu oynamak zorundasın! Saklayıp yerden kart çekemezsin (Sistem izin vermez).</li>
-            <li><b>Stratejik Bekleme:</b> Elinde sadece Joker veya Aksiyon kartları varsa, bunları oynamayıp yerden kart çekebilirsin.</li>
+            <li><b>Sebze veya Sayı:</b> Ortadaki kartın sebzesi veya sayısıyla aynı olan bir kart atabilirsin. Yoksa desteden kart çekersin.</li>
+            <li><b>Zorunlu Hamle:</b> Elinde oynanabilir bir <b>Sebze Kartı (0-9)</b> varsa, onu oynamak zorundasın! Saklayıp yerden kart çekemezsin (Etik değil).</li>
+            <li><b>Saklama:</b> Elinde özellikli kartlar varsa, bunları oynamayıp yerden kart çekebilirsin.</li>
+            <li><b>Pas Geçme:</b> Kart çektikten sonra elinde uygun sebze kartı yoksa veya özel kartlarını saklamak istiyorsan desteye tekrar basarak pas geçebilirsin.</li>
         </ul>
 
-        <h4 style="color:#c0392b;">🔥 Oyun Sonu Kuralları (ÖNEMLİ!)</h4>
-        <p style="font-size:0.9em;">Son kartınızı attığınızda eğer o kartın bir özelliği varsa (ör: +2, Mikser, Sofra), önce özellik uygulanır, herkes kartını çeker veya eller değişir, <b>SONRA</b> oyun biter ve puanlar o anki ellere göre hesaplanır!</p>
-        <ul style="font-size:0.9em; padding-left:20px;">
-            <li><b>+1 / +2 / Kümülatif Ceza:</b> Son kart olarak atarsanız, sıradaki oyuncu cezayı çeker, oyun öyle biter.</li>
-            <li><b>🍱 Meze:</b> Son kart olarak atılırsa, önceki oyuncu cezasını çeker ve oyun öyle biter.</li>
-            <li><b>🍽️ Sofra:</b> Son kart olarak atarsanız, sizin eliniz biter ve kenara çekilirsiniz. Sadece <b>KAYBEDENLERİN</b> elleri toplanır, karıştırılır ve yeniden dağıtılır.</li>
-            <li><b>🌪️ Mikser:</b> Son kart olarak atarsanız, siz kenara çekilirsiniz. Sadece <b>KAYBEDENLERİN</b> elleri seçtiğiniz yöne göre döner.</li>
-            <li><b>🚫 Düdüklü Tencere (Wild Pot) İle BİTİLEMEZ!</b> Eğer son kart olarak Düdüklü atarsanız, özellik çalışır (herkes çeker), sonra <b>SİZ DE 1 KART ÇEKMEK ZORUNDA KALIRSINIZ</b> ve oyun devam eder.</li>
+        <h4 style="color:#c0392b;">🔥 Özellikli Kartlar</h4>
+               <ul style="font-size:0.9em; padding-left:20px;">
+            <li><b>♻️ Geri dönüşüm:</b> Oyunun yönünü değiştirir.</li>
+            <li><b>🔪 Bıçak:</b> Bir sonrası oyuncunun sırasını geçer.</li>
+            <li><b>📦 +1:</b> Sonraki oyuncuya 1 kart çektirir. Kart cezası kümülatif olarak birikir.</li>
+            <li><b>📦📦 +2:</b> Sonraki oyuncuya 2 kart çektirir. Kart cezası kümülatif olarak birikir.</li>
+            <li><b>🍱 Meze:</b> Bir önceki oyuncuya ve bir sonraki oyuncuya 1 kart çektirir. Kart cezası kümülatif olarak birikir.</li>
+            <li><b>🍽️ Sofra:</b> Herkesin elindeki kartlar karıştırıp eski sayısında geri verir.</li>
+            <li><b>🌪️ Mikser:</b> Oyuncuların ellerin istenilen yönde (Saat yönü veya Tersi) değiştirir.</li>
+            <li><b>🍲 Düdüklü Tencere:</b> Herkese 1 kartçektirir. <b>ATAN DAHİL</b>.</li>
+            <li><b>🍅🥦🥔🍆 Güveç:</b> Rengi (Sebzeyi) değiştirir.</li>
+            <li><b>🧻 Tuvalet Kağıdı:</b> Kart çektirme cezasını <b>siler</b>.</li>
         </ul>
+         <p style="font-size:0.9em;">Son kartınızı attığınızda eğer o kartın bir özelliği varsa, önce özellik uygulanır, <b>SONRA</b> oyun biter ve puanlar hesaplanır!</p>
 
         <h4 style="color:#f1c40f;">🚨 SON TABAK ve İTİRAZ</h4>
         <ul style="font-size:0.9em; padding-left:20px;">
-            <li><b>Son Tabak:</b> Elinde 2 kart varken birini atıp TEK KART kalacaksan, kartı atmadan önce veya tam atarken <b>"SON TABAK"</b> butonuna basmalısın.</li>
+            <li><b>Son Tabak:</b> Elinde 2 kart varken birini atıp TEK KART kalacaksan, <b>kartı atmadan önce</b> "SON TABAK" diye bağırmalısın.</li>
             <li><b>Unutursan:</b> Sen "Son Tabak" demeden tur diğer oyuncuya geçerse, biri sana <b>"✋ İTİRAZ ET"</b> butonuyla itiraz edebilir. Yakalanırsan ceza kartı yersin!</li>
         </ul>
 
         <br>
-        <div style="text-align:center;">
+        <div style="text-align:center; padding-bottom: 20px;">
             <button class="game-btn btn-blue" onclick="document.getElementById('rules-modal').style.display='none'">Anladım Şef! 👨‍🍳</button>
         </div>
     </div>
@@ -2634,3 +2641,4 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
