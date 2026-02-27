@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v0.9 (Open Beta)</title>
+    <title>Son Tabak Online - v0.91 (Open Beta)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Google Fonts: Patrick Hand (Comic Sans alternatifi) -->
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
@@ -583,7 +583,7 @@
 
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.9 (Open Beta)</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.91 (Open Beta)</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <div class="game-container">
@@ -901,6 +901,7 @@ let localPlayers = []; let lastGameState = null; let lastChatTs = 0; let amIRead
 let actionQueue = []; let isProcessingQueue = false;
 let localSaidSonTabak = false; 
 let isDealing = false;
+let isTurnLocked = false;
 let previousPlayersList = [];
 let myLobbyColor = '#333'; // Random color for lobby chat
 let botInterval = null; // Botları sürekli kontrol edecek zamanlayıcı
@@ -1373,7 +1374,7 @@ function sendHeartbeat() {
 document.getElementById('start-game-btn').addEventListener('click', () => {
     if(localPlayers.length < 2) return alert("En az 2 oyuncu!");
     let finalPlayers = [...localPlayers];
-    const botNames = ["🤖 Rifu", "🤖 Utku", "🤖 Kübra"];
+    const botNames = shuffleDeck(["🤖 Rifu", "🤖 Utku", "🤖 Kübra"])
     let botIdx = 0;
     while(finalPlayers.length < 4) {
         finalPlayers.push({ uid: 'bot_' + Date.now() + '_' + botIdx, name: botNames[botIdx % botNames.length], isBot: true, score: 0, hand: [], isReady: true, saidSonTabak: false, challengeUsed: false, lastSeen: Date.now() });
@@ -1429,7 +1430,10 @@ function syncGameLoop(roomData) {
     gameActive = gs.gameActive; vulnerablePlayerIdx = gs.vulnerablePlayerIdx; playerColors = gs.playerColors;
     hasDrawn = gs.hasDrawn || false;
 
-    if(currentPlayer !== myPlayerIdx) localSaidSonTabak = false;
+    if(currentPlayer !== myPlayerIdx) {
+        localSaidSonTabak = false;
+        isTurnLocked = false; // Sıra başkasına geçince veya ceza bitince kilidi aç
+    }
 
     if(lastGameState && lastGameState.lastAction.timestamp !== gs.lastAction.timestamp) {
         // Deserialize card in action if present
@@ -1625,6 +1629,7 @@ function canPlay(card) {
 
 function playerDrawCard() {
     if(currentPlayer !== myPlayerIdx) return;
+    if(isDealing || isProcessingQueue || isTurnLocked) return; // Animasyon varken veya kilitliyken basılamaz!
     
     // NEW RULE: Check if player has playable NUMBER cards
     const hand = gameHands[myPlayerIdx];
@@ -1656,6 +1661,10 @@ function playerDrawCard() {
     let count = drawStack > 0 ? drawStack : 1;
     let isPenalty = drawStack > 0;
     
+    if (isPenalty || count > 1) {
+        isTurnLocked = true; // Ceza animasyonu başlıyor, oyuncunun elini tamamen kilitle!
+    }
+
     serverDrawCard(myPlayerIdx, count, isPenalty);
     if(isPenalty || count > 1) { 
         setTimeout(() => serverPassTurn(myPlayerIdx), 1500 + (count*600)); 
@@ -1664,6 +1673,8 @@ function playerDrawCard() {
 
 function playerPlayCard(idx) {
     if(currentPlayer !== myPlayerIdx) return;
+    if(isDealing || isProcessingQueue || isTurnLocked) return; // Kilitliyken veya animasyon varken kart atılamaz!
+    
     let card = gameHands[myPlayerIdx][idx];
     if(canPlay(card)) {
         if(card.color === 'wild') {
@@ -1723,14 +1734,13 @@ function challengePreviousPlayer() {
         return;
     }
     
-    if(vulnerablePlayerIdx !== -1) { 
-        serverPunishVulnerable(vulnerablePlayerIdx); 
-        // NO SYSTEM LOG
-    }
-    else { 
-        serverPunishChallenger(myPlayerIdx); 
-        // NO SYSTEM LOG
-    }
+    // Eğer hedefte biri varsa VE hala gerçekten sadece 1 kartı kalmışsa cezalandır
+     if(vulnerablePlayerIdx !== -1 && gameHands[vulnerablePlayerIdx].length === 1) { 
+            serverPunishVulnerable(vulnerablePlayerIdx); 
+        }
+     else { 
+            serverPunishChallenger(myPlayerIdx); // Hedef yoksa veya kurtulduysa itiraz eden ceza yer
+        }
 }
 function playerSendMessage() { 
     let input = document.getElementById('player-input'); 
@@ -1994,8 +2004,18 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
         }
     }
 
-    let newVulnerable = (newHands[pIdx].length === 1 && !isSafe) ? pIdx : -1; 
-    if(nextP === newVulnerable) newVulnerable = -1;
+    // Eski unutkan kişiyi varsayılan olarak hafızada tutmaya devam et
+    let newVulnerable = vulnerablePlayerIdx; 
+
+    // Oynayan kişi tek karta düştüyse ve butona basmadıysa YENİ hedef o olur
+    if (newHands[pIdx].length === 1 && !isSafe) {
+        newVulnerable = pIdx;
+    } 
+    
+    // Eğer hedefteki kişinin kart sayısı artık 1 değilse (mesela kart çektiyse veya oyunu bitirirse) onu hedeften çıkar
+    if (newVulnerable !== -1 && newHands[newVulnerable].length !== 1) {
+        newVulnerable = -1;
+    }
     
     let updates = { 
         "players": playerUpdates, 
@@ -2013,7 +2033,7 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
     if(newWinner !== -1) { 
         updates["gameState.gameActive"] = false; 
         updates["gameState.winnerIdx"] = newWinner; 
-        let roundScores = newHands.map(h => h.reduce((sum, c) => sum + (c.type==='num'?parseInt(c.val):20), 0)); 
+        let roundScores = newHands.map(h => h.reduce((sum, c) => sum + (c.type === 'num' ? parseInt(c.val) : (c.type === 'wild' ? 30 : 20)), 0));
         updates["players"] = playerUpdates.map((p, i) => ({ ...p, score: p.score + roundScores[i], lastRoundScore: roundScores[i] })); 
     }
     await db.collection("rooms").doc(currentRoomId).update(updates);
@@ -2058,7 +2078,7 @@ async function hostBotTurn() {
         const currentPObj = gamePlayers[currentPlayer];
         if(!currentPObj || !currentPObj.isBot) return; 
 
-        // TIMING BUG FIX: If bot just drew a penalty, stop! Wait for auto-pass.
+        // TIMING BUG FIX: Ceza çektiyse sıranın otomatik geçmesini bekle
         if (lastGameState && lastGameState.lastAction && 
             lastGameState.lastAction.type === 'draw' && 
             lastGameState.lastAction.pIdx === currentPlayer && 
@@ -2066,7 +2086,7 @@ async function hostBotTurn() {
             return; 
         }
 
-        // 1. Challenge Check (Punish vulnerable)
+        // 1. Challenge Check (İtiraz Mantığı)
         if(vulnerablePlayerIdx !== -1 && vulnerablePlayerIdx !== currentPlayer) {
             if(Math.random() < 0.95) { 
                 await serverPunishVulnerable(vulnerablePlayerIdx);
@@ -2075,156 +2095,134 @@ async function hostBotTurn() {
         }
 
         const hand = gameHands[currentPlayer];
-        let willSaySonTabak = false;
+        let willSaySonTabak = (hand.length === 2 && Math.random() > 0.1);
 
-        // BOT NEW LOGIC: Must play Number card if available
         let playableNums = hand.filter(c => c.type === 'num' && canPlay(c));
         let playableSpecials = hand.filter(c => c.type !== 'num' && canPlay(c));
+        
+        // --- RAKİP ANALİZİ (PANİK MODU TESPİTİ) ---
+        let minOpponentHand = 100;
+        for(let i=0; i<4; i++) { if(i !== currentPlayer) minOpponentHand = Math.min(minOpponentHand, gameHands[i].length); }
+        let isPanicMode = minOpponentHand <= 2; // Bir rakip bitmek üzere mi?
 
-        if(playableNums.length > 0) {
-            // Must play a number
-            let cardToPlay = playableNums[Math.floor(Math.random() * playableNums.length)];
-            let cardIdx = hand.indexOf(cardToPlay);
-            
-            if(hand.length === 2) { // 2 cards before play means 1 card left after
-                 if(Math.random() > 0.1) { await serverBotSaySonTabak(currentPlayer); willSaySonTabak = true; }
-            }
-            
-            await serverPlayCard(currentPlayer, cardIdx, cardToPlay, 1, willSaySonTabak);
-            return;
-        }
+        // Düşmana saldırı/ceza kartları (Öncelikli silahlar)
+        let attackCards = playableSpecials.filter(c => ['+2', '+1', 'Wild Pot', 'Wild Meze'].includes(c.val));
 
-        // If no numbers, handle special cases (Draw Stack)
+        let cardToPlay = null;
+        let cardIdx = -1;
+        let mixDir = 1;
+
+        // --- CEZA (Draw Stack) DURUMU ---
         if (drawStack > 0) {
-            // If has specials like +2 or Wild Meze (Already filtered into playableSpecials)
             if(playableSpecials.length > 0) {
-                 let cardToPlay = playableSpecials[Math.floor(Math.random() * playableSpecials.length)];
-                 let cardIdx = hand.indexOf(cardToPlay);
-                 
-                 // Handle Color Choice (Smart Choice)
-                 if(cardToPlay.color === 'wild') {
-                     if(cardToPlay.val === 'Wild Anti-Draw') {
-                         let top = gameDiscard[gameDiscard.length-1];
-                         cardToPlay.chosenColor = top.chosenColor || top.color;
-                         if(cardToPlay.chosenColor === 'wild') cardToPlay.chosenColor = 'red';
-                     } else {
-                         // Pick most frequent color in hand
-                         let counts = {red:0, green:0, yellow:0, purple:0};
-                         hand.forEach(c => { if(c.color !== 'wild') counts[c.color]++; });
-                         cardToPlay.chosenColor = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
-                     }
-                 }
-                 
-                 await serverPlayCard(currentPlayer, cardIdx, cardToPlay, 1, willSaySonTabak);
+                cardToPlay = playableSpecials[Math.floor(Math.random() * playableSpecials.length)];
             } else {
-                 await serverDrawCard(currentPlayer, drawStack, true); 
-                 setTimeout(() => serverPassTurn(currentPlayer), 1500 + (drawStack*600)); 
+                await serverDrawCard(currentPlayer, drawStack, true); 
+                setTimeout(() => serverPassTurn(currentPlayer), 1500 + (drawStack*600)); 
+                return;
             }
-            return;
+        } 
+        // --- NORMAL DURUM ---
+        else {
+            // PANİK MODU (Acımasız Bot Mantığı)
+            if (isPanicMode) {
+                if (attackCards.length > 0) {
+                    // 1. ÖNCELİK: Rakibi durdurmak için saldırı kartı at!
+                    cardToPlay = attackCards[0]; 
+                } else {
+                    // 2. ÖNCELİK: Saldırı kartı yoksa, elde 30 puan patlamasın diye en pahalı Jokerleri at.
+                    let highValueDumps = playableSpecials.filter(c => c.color === 'wild');
+                    if (highValueDumps.length > 0) cardToPlay = highValueDumps[0];
+                }
+            }
+
+            // PANİK YOKSA VEYA PANİK KARTI BULUNAMADIYSA
+            if (!cardToPlay) {
+                if (playableNums.length > 0) {
+                    // Sayı oynarken, KENDİ elinde en çok olan renkteki sayıyı seçmeye öncelik ver
+                    let colorCounts = {red:0, green:0, yellow:0, purple:0};
+                    hand.forEach(c => { if(c.color !== 'wild') colorCounts[c.color]++; });
+                    playableNums.sort((a,b) => colorCounts[b.color] - colorCounts[a.color]);
+                    
+                    cardToPlay = playableNums[0];
+                } 
+                else if (playableSpecials.length > 0) {
+                    // GEREKSİZ KART ÇEKMEYİ ENGELLEYEN YENİ HOARD MANTIĞI
+                    // Eli zaten kalabalıksa (5 ve üstü) sadece %5 ihtimalle saklasın. Değilse %20 ihtimalle saklasın.
+                    let hoardProb = hand.length < 5 ? 0.2 : 0.05; 
+                    if (isPanicMode) hoardProb = 0; // Biri bitmek üzereyse ASLA kart saklama!
+                    
+                    if (Math.random() > hoardProb) {
+                        cardToPlay = playableSpecials[Math.floor(Math.random() * playableSpecials.length)];
+                    }
+                }
+            }
         }
 
-        // No numbers, normal turn. Decide to play special or Draw (Hoarding)
-        // If has Drawn, check the drawn card
-        if (hasDrawn) {
-            // Check last card in hand
-            if(hand.length > 0) {
-                let lastCard = hand[hand.length - 1];
-                if(lastCard.type === 'num' && canPlay(lastCard)) {
-                    // Must play drawn number
-                    let cardIdx = hand.length - 1;
-                    if(hand.length === 2 && Math.random() > 0.1) { await serverBotSaySonTabak(currentPlayer); willSaySonTabak = true; }
-                    await serverPlayCard(currentPlayer, cardIdx, lastCard, 1, willSaySonTabak);
+        // --- KART OYNAMA İŞLEMİ VE ÖZEL MEKANİKLER ---
+        if (cardToPlay) {
+            cardIdx = hand.indexOf(cardToPlay);
+
+            if (cardToPlay.color === 'wild') {
+                if (cardToPlay.val === 'Wild Anti-Draw') {
+                    let top = gameDiscard[gameDiscard.length-1];
+                    cardToPlay.chosenColor = top.chosenColor || top.color;
+                    if(cardToPlay.chosenColor === 'wild') cardToPlay.chosenColor = 'red';
+                } 
+                else if (cardToPlay.val === 'Wild Mixer') {
+                    // 1) MİKSER YÖN SEÇİMİ: En az kartı olan oyuncuyu hedefler!
+                    let leftIdx = (currentPlayer + 3) % 4;
+                    let rightIdx = (currentPlayer + 1) % 4;
+                    let leftCount = gameHands[leftIdx].length;
+                    let rightCount = gameHands[rightIdx].length;
+                    
+                    if (rightCount < leftCount && rightCount < hand.length) {
+                        mixDir = -1; // Sağdakinin elini al
+                    } else if (leftCount < hand.length) {
+                        mixDir = 1; // Soldakinin elini al
+                    } else {
+                        mixDir = 1; // İkisi de botun elinden büyükse fark etmez (Zaten puan eritmek için atıyor)
+                    }
+
+                    // 2) MİKSER TUZAK RENGİ: 
+                    // Sıradaki oyuncuya kendi elini vereceği için, kendi elinde EN AZ OLAN (veya hiç olmayan) rengi seçer. 
+                    // Böylece sıradaki oyuncu oynamak için kesinlikle kart çeker!
+                    let counts = {red:0, green:0, yellow:0, purple:0};
+                    hand.forEach(c => { if(c.color !== 'wild') counts[c.color]++; });
+                    cardToPlay.chosenColor = Object.keys(counts).reduce((a, b) => counts[a] < counts[b] ? a : b);
+                } 
+                else {
+                    // NORMAL RENK SEÇİMİ (Rakiplere Tersten Tuzak):
+                    // Kendi elinde EN ÇOK olan rengi seçer. 
+                    // Botun elinde bir renk çoksa, rakiplerde o rengin olma ihtimali istatistiksel olarak düşüktür.
+                    let counts = {red:0, green:0, yellow:0, purple:0};
+                    hand.forEach(c => { if(c.color !== 'wild') counts[c.color]++; });
+                    cardToPlay.chosenColor = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+                }
+            }
+
+            if(willSaySonTabak) await serverBotSaySonTabak(currentPlayer);
+            await serverPlayCard(currentPlayer, cardIdx, cardToPlay, mixDir, willSaySonTabak);
+        } 
+        else {
+            // OYNAYACAK KART YOK VEYA SAKLAMAYA (Hoard) KARAR VERDİ
+            if (hasDrawn) {
+                if (hand.length > 0) {
+                    let lastCard = hand[hand.length - 1];
+                    if (lastCard.type === 'num' && canPlay(lastCard)) {
+                        // Çektiği sayıysa mecburen atacak (Hile yok)
+                        let lIdx = hand.length - 1;
+                        if(willSaySonTabak) await serverBotSaySonTabak(currentPlayer);
+                        await serverPlayCard(currentPlayer, lIdx, lastCard, 1, willSaySonTabak);
+                    } else {
+                        await serverPassTurn(currentPlayer);
+                    }
                 } else {
-                    // Pass turn (Keep special or unplayable card)
                     await serverPassTurn(currentPlayer);
                 }
             } else {
-                await serverPassTurn(currentPlayer);
-            }
-            return;
-        }
-
-        // Has not drawn yet. No numbers.
-        if (playableSpecials.length > 0) {
-            // SMART BOT: Check opponents' hand sizes
-            let minOpponentHand = 100;
-            for(let i=0; i<4; i++) { if(i !== currentPlayer) minOpponentHand = Math.min(minOpponentHand, gameHands[i].length); }
-
-            let hoardProb = 0.6; 
-            // If opponents are about to win (<= 2 cards), DUMP Wilds (20pts) to reduce penalty
-            if(minOpponentHand <= 2) hoardProb = 0.1; 
-
-            // 60% chance to play special normally, 40% chance to hoard/draw
-            if(Math.random() > hoardProb || minOpponentHand <= 2) {
-                // Prioritize MIXER or TABLE or Wilds (High Points) if losing
-                let priorityCard = null;
-                
-                if(minOpponentHand <= 2) {
-                    // Dump high value wilds
-                    priorityCard = playableSpecials.find(c => c.color === 'wild');
-                }
-                
-                let cardToPlay = priorityCard || playableSpecials[Math.floor(Math.random() * playableSpecials.length)];
-                let cardIdx = hand.indexOf(cardToPlay);
-                let mixDir = 1;
-
-                // Handle Wild Logic
-                if(cardToPlay.color === 'wild') {
-                     if(cardToPlay.val === 'Wild Anti-Draw') {
-                         let top = gameDiscard[gameDiscard.length-1];
-                         cardToPlay.chosenColor = top.chosenColor || top.color;
-                         if(cardToPlay.chosenColor === 'wild') cardToPlay.chosenColor = 'red';
-                     } else {
-                         // Smart Color Pick
-                         let counts = {red:0, green:0, yellow:0, purple:0};
-                         hand.forEach(c => { if(c.color !== 'wild') counts[c.color]++; });
-                         cardToPlay.chosenColor = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
-                     }
-
-                     // Smart Mixer Logic (Comparison)
-                     if(cardToPlay.val === 'Wild Mixer') {
-                         let leftIdx = (currentPlayer + 3) % 4;
-                         let rightIdx = (currentPlayer + 1) % 4;
-                         let leftCount = gameHands[leftIdx].length;
-                         let rightCount = gameHands[rightIdx].length;
-                         let myCount = hand.length;
-                         
-                         // Determine targets
-                         // Default Right (1). Right player gives hand to me? No, Swap logic in Mixer:
-                         // if dir=1: P1 takes P0 (Right neighbor takes Me). Wait.
-                         // Let's look at logic: if(newDir === 1) { let temp = newHands[3]; ... newHands[1] = newHands[0]; }
-                         // P1 gets P0's hand. (Right neighbor gets My hand).
-                         // So I (P0) get P3's hand (Left neighbor).
-                         
-                         // So: Dir 1 (Right) => I take Left Neighbor's hand.
-                         // Dir -1 (Left) => I take Right Neighbor's hand.
-
-                         let targetCountRight = rightCount; // if dir -1
-                         let targetCountLeft = leftCount; // if dir 1
-
-                         if(targetCountRight < myCount && targetCountRight < targetCountLeft) {
-                             mixDir = -1; // Take Right hand
-                         } else if (targetCountLeft < myCount) {
-                             mixDir = 1; // Take Left hand
-                         } else {
-                             // Both have more cards than me? 
-                             // If I'm forced to play Mixer (only card), keep default. 
-                             // If I had a choice, I wouldn't be here (hoard logic).
-                             // But if minOpponentHand <= 2, I am dumping points.
-                             mixDir = 1;
-                         }
-                     }
-                }
-
-                if(hand.length === 2 && Math.random() > 0.1) { await serverBotSaySonTabak(currentPlayer); willSaySonTabak = true; }
-                await serverPlayCard(currentPlayer, cardIdx, cardToPlay, mixDir, willSaySonTabak);
-            } else {
                 await serverDrawCard(currentPlayer, 1);
-                // Next tick will handle the drawn card logic above
             }
-        } else {
-            // Nothing playable
-            await serverDrawCard(currentPlayer, 1);
         }
 
     } catch(e) {
@@ -2682,3 +2680,4 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
