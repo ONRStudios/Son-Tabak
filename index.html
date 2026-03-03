@@ -1374,7 +1374,6 @@ function sendHeartbeat() {
 }
 
 document.getElementById('start-game-btn').addEventListener('click', () => {
-    if(localPlayers.length < 2) return alert("En az 2 oyuncu!");
     let finalPlayers = [...localPlayers];
     let botNames = ["🤖 Rifu", "🤖 Utku", "🤖 Kübra", "🤖 Onur", "🤖 Furkan", "🤖 Aysi", "🤖 Bilge"];
     botNames = shuffleDeck(botNames);
@@ -2700,6 +2699,7 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
 
 
