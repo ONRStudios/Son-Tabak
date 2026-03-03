@@ -2103,7 +2103,6 @@ async function hostBotTurn() {
         const currentPObj = gamePlayers[currentPlayer];
         if(!currentPObj || !currentPObj.isBot) return; 
 
-        // Zamanlama Hatası Çözümü (Ceza Çekerken)
         if (lastGameState && lastGameState.lastAction && 
             lastGameState.lastAction.type === 'draw' && 
             lastGameState.lastAction.pIdx === currentPlayer && 
@@ -2111,37 +2110,43 @@ async function hostBotTurn() {
             return; 
         }
 
-        // İtiraz (Challenge) Kontrolü
-        if(vulnerablePlayerIdx !== -1 && vulnerablePlayerIdx !== currentPlayer) {
+        // DİNAMİK İTİRAZ (Challenge) KONTROLÜ
+        let guiltyIdx = -1;
+        for(let i=0; i<4; i++) {
+            if(i !== currentPlayer && gameHands[i].length === 1 && !gamePlayers[i].saidSonTabak) {
+                guiltyIdx = i; break; 
+            }
+        }
+        if(guiltyIdx !== -1 && drawStack === 0) {
             if(Math.random() < 0.95) { 
-                await serverPunishVulnerable(vulnerablePlayerIdx);
-                await wait(1500); 
+                await serverPunishVulnerable(guiltyIdx);
+                await wait(1500); return; 
             }
         }
 
         const hand = gameHands[currentPlayer];
-        let willSaySonTabak = false;
-        // Botların %95 ihtimalle SON TABAK demesini sağlıyoruz
-        if(hand.length === 2 && Math.random() > 0.05) willSaySonTabak = true;
+        let willSaySonTabak = (hand.length === 2 && Math.random() > 0.05);
 
-        // --- TEHDİT ANALİZİ (THREAT ASSESSMENT) ---
+        // --- TEHDİT VE DURUM ANALİZİ ---
         let minOpponentHand = 100;
         let nextPIdx = (currentPlayer + direction + 4) % 4;
+        let prevPIdx = (currentPlayer - direction + 4) % 4;
         let nextPlayerHandCount = gameHands[nextPIdx].length;
+        let prevPlayerHandCount = gameHands[prevPIdx].length;
 
         for(let i=0; i<4; i++) { 
             if(i !== currentPlayer) minOpponentHand = Math.min(minOpponentHand, gameHands[i].length); 
         }
 
-        // Biri bitirmek üzereyse PANİK MODU aktifleşir
         let isPanic = minOpponentHand <= 2;
         let playableCards = hand.filter(c => canPlay(c));
 
-        // Ceza Durumunda (Mecburi Hamleler)
+        // Mecburi Hamleler (Ceza Çekme vb.)
         if (drawStack > 0) {
             if (playableCards.length > 0) {
                 let cardToPlay = playableCards[Math.floor(Math.random() * playableCards.length)];
                 let cardIdx = hand.indexOf(cardToPlay);
+                if (willSaySonTabak) { await serverBotSaySonTabak(currentPlayer); await wait(100); }
                 await playBotCardSmart(cardToPlay, cardIdx, willSaySonTabak);
             } else {
                 await serverDrawCard(currentPlayer, drawStack, true); 
@@ -2150,9 +2155,9 @@ async function hostBotTurn() {
             return;
         }
 
-        // Zaten kart çekmişse, mecburi oynama veya pas geçme
         if (hasDrawn) {
             if(hand.length > 0 && canPlay(hand[hand.length - 1])) {
+                if (willSaySonTabak) { await serverBotSaySonTabak(currentPlayer); await wait(100); }
                 await playBotCardSmart(hand[hand.length - 1], hand.length - 1, willSaySonTabak);
             } else {
                 await serverPassTurn(currentPlayer);
@@ -2160,42 +2165,75 @@ async function hostBotTurn() {
             return;
         }
 
-        // Oynanacak hiçbir kart yoksa kart çek
         if (playableCards.length === 0) {
             await serverDrawCard(currentPlayer, 1);
             return;
         }
 
-        // --- AKILLI KART SEÇİMİ ---
+        // --- AKILLI KART SEÇİMİ (YENİ STRATEJİ) ---
         let cardToPlay = null;
 
-        // 1. PANİK MODU: 30 Puanlık kartlardan kurtul!
-        if (isPanic) {
-            let highPointCards = playableCards.filter(c => ['Wild Mixer', 'Wild Meze', '+2', 'Wild', 'Wild Table', 'Wild Anti-Draw', 'Wild Pot'].includes(c.val));
-            if (highPointCards.length > 0) {
-                cardToPlay = highPointCards[Math.floor(Math.random() * highPointCards.length)];
+        // Güvenlik: Eğer panik yoksa (kimse bitmiyorsa) özel kartları SAKLA
+        let safePlayableCards = [...playableCards];
+        if (!isPanic) {
+            // Tuvalet Kağıdını olası bir ceza yığınına karşı sakla
+            safePlayableCards = safePlayableCards.filter(c => c.val !== 'Wild Anti-Draw');
+            
+            // Eğer bot iyi gidiyorsa (eli en az olanlardan biriyse) Mikser ve Sofrayı sakla ki kendi oyununu bozmasın
+            if (hand.length <= minOpponentHand) {
+                safePlayableCards = safePlayableCards.filter(c => c.val !== 'Wild Mixer' && c.val !== 'Wild Table');
             }
         }
 
-        // 2. SAVUNMA MODU: Sonraki oyuncu bitiriyorsa onu engelle (+2, Block, Reverse)
-        if (!cardToPlay && nextPlayerHandCount <= 2) {
-            let attackCards = playableCards.filter(c => ['Block', 'Reverse', '+2', '+1', 'Wild Meze'].includes(c.val));
+        // Eğer saklama kuralları yüzünden oynayacak kart kalmadıysa mecburen orijinal listeye dön
+        if (safePlayableCards.length === 0) safePlayableCards = [...playableCards];
+
+        // 1. ÖNCELİK: SONRAKİ OYUNCU BİTİRİYORSA ONU ENGELLE VEYA CEZA KİTLE
+        if (nextPlayerHandCount <= 2) {
+            let attackCards = safePlayableCards.filter(c => ['Block', 'Reverse', '+2', '+1', 'Wild Meze'].includes(c.val));
             if (attackCards.length > 0) {
-                cardToPlay = attackCards[0]; 
+                cardToPlay = attackCards[Math.floor(Math.random() * attackCards.length)];
             }
         }
 
-        // 3. NORMAL OYNAYIŞ: Varsa normal sayı at, yoksa diğerlerini at
+        // 2. ÖNCELİK: ÖNCEKİ OYUNCU BİTİRİYORSA SIRA ONA DÖNMESİN DİYE REVERSE ATMA!
+        if (!cardToPlay && prevPlayerHandCount <= 2) {
+            safePlayableCards = safePlayableCards.filter(c => c.val !== 'Reverse');
+            if (safePlayableCards.length === 0) safePlayableCards = [...playableCards];
+        }
+
+        // 3. ÖNCELİK: PANİK MODU (PUANLARDAN VE KÖTÜ KARTLARDAN KURTUL)
+        if (!cardToPlay && isPanic) {
+            // Masayı karıştırmak veya eli değiştirmek en iyisi (Sofra, Mikser)
+            let gameChangers = safePlayableCards.filter(c => c.val === 'Wild Table' || c.val === 'Wild Mixer');
+            if (gameChangers.length > 0) {
+                cardToPlay = gameChangers[Math.floor(Math.random() * gameChangers.length)];
+            } else {
+                // Yoksa 30 ve 20 puanlık yüksek cezalı kartları elden çıkart
+                let highPointCards = safePlayableCards.filter(c => ['Wild Anti-Draw', 'Wild', 'Wild Pot', 'Wild Meze', '+2'].includes(c.val));
+                if (highPointCards.length > 0) {
+                    cardToPlay = highPointCards[Math.floor(Math.random() * highPointCards.length)];
+                }
+            }
+        }
+
+        // 4. NORMAL OYNAYIŞ: Acil durum yoksa normal sayılardan at
         if (!cardToPlay) {
-            let nums = playableCards.filter(c => c.type === 'num');
+            let nums = safePlayableCards.filter(c => c.type === 'num');
             if (nums.length > 0) {
                 cardToPlay = nums[Math.floor(Math.random() * nums.length)];
             } else {
-                cardToPlay = playableCards[Math.floor(Math.random() * playableCards.length)];
+                cardToPlay = safePlayableCards[Math.floor(Math.random() * safePlayableCards.length)];
             }
         }
 
         let cardIdx = hand.indexOf(cardToPlay);
+        
+        if (willSaySonTabak) {
+            await serverBotSaySonTabak(currentPlayer);
+            await wait(100); 
+        }
+
         await playBotCardSmart(cardToPlay, cardIdx, willSaySonTabak);
 
     } catch(e) {
@@ -2704,6 +2742,7 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
 
 
