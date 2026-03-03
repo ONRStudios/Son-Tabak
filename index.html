@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v0.9 (Open Beta)</title>
+    <title>Son Tabak Online - v0.91 (Open Beta)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Google Fonts: Patrick Hand (Comic Sans alternatifi) -->
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
@@ -583,7 +583,7 @@
 
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.9 (Open Beta)</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.91 (Open Beta)</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <div class="game-container">
@@ -1741,8 +1741,19 @@ function challengePreviousPlayer() {
         return;
     }
     
-    if(vulnerablePlayerIdx !== -1) { 
-        serverPunishVulnerable(vulnerablePlayerIdx); 
+    // DİNAMİK SUÇLU KONTROLÜ: Masada 1 kartı olup "Son Tabak" dememiş kişiyi anında tespit et
+    let guiltyIdx = -1;
+    for(let i=0; i<4; i++) {
+        // Kendimiz hariç, elinde 1 kart olan ve güvenliği olmayan ilk oyuncuyu bul
+        if(i !== myPlayerIdx && gameHands[i].length === 1 && !gamePlayers[i].saidSonTabak) {
+            guiltyIdx = i;
+            break; 
+        }
+    }
+    
+    // Eğer suçlu bulunduysa cezayı ona kes, bulunamadıysa itiraz eden cezayı yer
+    if(guiltyIdx !== -1) { 
+        serverPunishVulnerable(guiltyIdx); 
         // NO SYSTEM LOG
     }
     else { 
@@ -2000,20 +2011,27 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
     }
 
     // SERIALIZE HANDS
-    playerUpdates = playerUpdates.map((p, i) => ({...p, hand: newHands[i].map(serializeCard)}));
-    
-    let isSafe = gamePlayers[pIdx].saidSonTabak || declaredSonTabak;
+        playerUpdates = playerUpdates.map((p, i) => ({...p, hand: newHands[i].map(serializeCard)}));
+        
+        let isSafe = gamePlayers[pIdx].saidSonTabak || declaredSonTabak;
 
-    // FIX: AUTO SAFE IF MIXER/TABLE SWAPPED TO 1 CARD
-    if(newHands[pIdx].length === 1 && !isSafe) {
-        if(card.val === 'Wild Mixer' || card.val === 'Wild Table') {
-            isSafe = true;
-            playerUpdates[pIdx].saidSonTabak = true; // Flag for next state
+        // YENİ: Hamleyi yapan kişi 1 karta düştüyse ve Son Tabak dediyse güvendedir
+        if (newHands[pIdx].length === 1 && isSafe) {
+            playerUpdates[pIdx].saidSonTabak = true;
+        } else {
+            playerUpdates[pIdx].saidSonTabak = false;
         }
-    }
 
-    let newVulnerable = (newHands[pIdx].length === 1 && !isSafe) ? pIdx : -1; 
-    if(nextP === newVulnerable) newVulnerable = -1;
+        // YENİ: Mikser veya Sofra oynandığında şans eseri 1 karta düşen herkes otomatik güvenceye alınır (Haksız itirazı önlemek için)
+        if(card.val === 'Wild Mixer' || card.val === 'Wild Table') {
+            for(let i=0; i<4; i++) {
+                if(newHands[i].length === 1) {
+                    playerUpdates[i].saidSonTabak = true;
+                }
+            }
+        }
+
+        let newVulnerable = -1; // Eski takip sistemi iptal, artık butona basıldığında dinamik bulacağız
     
     let updates = { 
         "players": playerUpdates, 
@@ -2680,4 +2698,5 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
