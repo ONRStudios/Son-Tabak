@@ -955,7 +955,7 @@ async function deleteFullRoom(roomId) {
 
 // --- UPDATED JANITOR CLEANUP ---
 async function performJanitorCleanup() {
-    const TEN_MIN_MS = 10 * 60 * 1000;
+    const TEN_MIN_MS = 5 * 60 * 1000;
     const cutoff = Date.now() - TEN_MIN_MS;
     
     // Sadece odaları temizleyelim, oyuncuları ayrı temizleriz.
@@ -1112,7 +1112,7 @@ function sendLobbyMessage() {
 
 function listenRooms() {
     const list = document.getElementById('room-list'); 
-    const tenMinsAgo = Date.now() - 600000;
+    const tenMinsAgo = Date.now() - 300000;
     
     db.collection("rooms")
       .where("lastActive", ">", tenMinsAgo)
@@ -1124,7 +1124,7 @@ function listenRooms() {
         const now = Date.now();
         snapshot.forEach(docSnap => {
             const r = docSnap.data();
-            if (r.lastActive && now - r.lastActive > 600000) { return; } 
+            if (r.lastActive && now - r.lastActive > 300000) { return; } 
             
             let realHumans = r.players.filter(p => !p.isBot).length;
             let totalBots = r.players.filter(p => p.isBot).length;
@@ -1207,7 +1207,7 @@ function proceedJoin(roomId) {
         let targetIndex = -1;
         
         // 1. Try to find a bot with my exact name (Rejoining logic)
-        const sameNameBotIdx = players.findIndex(p => p.isBot && p.name.includes(myName));
+        const sameNameBotIdx = players.findIndex(p => p.isBot && p.name === '🤖 ' + myName);
         if (sameNameBotIdx !== -1) {
             targetIndex = sameNameBotIdx;
         } else {
@@ -1412,7 +1412,7 @@ function syncGameLoop(roomData) {
     const gs = roomData.gameState;
     
     // --- 10 MINUTE AUTO-DELETE CHECK (HOST ONLY) ---
-    if(isHost && roomData.lastActive && (Date.now() - roomData.lastActive > 600000)) {
+    if(isHost && roomData.lastActive && (Date.now() - roomData.lastActive > 300000)) {
         console.log("Room inactive for 10 mins. Closing...");
         confirmLeaveGame(); // This will trigger delete as host leaves
         return;
@@ -2247,6 +2247,11 @@ async function playBotCardSmart(cardToPlay, cardIdx, willSaySonTabak) {
         }
     }
 
+   if (willSaySonTabak) {
+        await serverBotSaySonTabak(currentPlayer);
+        await wait(100); // Sistemde aksiyonların çakışmaması için milisaniyelik bir nefes payı
+    }
+
     await serverPlayCard(currentPlayer, cardIdx, cardToPlay, mixDir, willSaySonTabak);
 }
 
@@ -2699,6 +2704,7 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
 
 
