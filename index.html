@@ -220,7 +220,9 @@
         #play-area { display: flex; align-items: center; justify-content: center; gap: 80px; width: 100%; min-height: 180px; position: relative; transition: transform 0.3s; z-index: 5; grid-row: 2; align-self: center; }
         .card { width: 105px; height: 155px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; cursor: pointer; border: 3px solid #555; box-shadow: 5px 5px 15px rgba(0,0,0,0.2); background-color: white; position: relative; user-select: none; transition: transform 0.2s; box-sizing: border-box; flex-shrink: 0; }
         #draw-pile.card:hover { transform: none; }
-        .playable:hover { transform: translateY(-30px) scale(1.1); z-index: 100; }
+       @media (hover: hover) and (pointer: fine) {
+         .playable:hover { transform: translateY(-30px) scale(1.1); z-index: 100; }
+        }
         .playable { border-color: #333; } 
         .card-corner { position: absolute; font-size: 1.2em; margin: 5px; }
         .top-left { top: 2px; left: 2px; } .bottom-right { bottom: 2px; right: 2px; transform: rotate(180deg); }
@@ -260,7 +262,7 @@
         #son-tabak-btn { background-color: #e67e22; } #challenge-btn { background-color: #f1c40f; color: #333; }
         #son-tabak-btn:disabled, #challenge-btn:disabled { background-color: #bdc3c7; box-shadow: none; cursor: not-allowed; opacity: 0.6; color:#fff; }
         #player-hand { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; align-items: center; gap: 8px; width: 90%; padding: 10px; height: auto; min-height: 160px; border: 2px dashed rgba(0,0,0,0.1); border-radius: 25px; overflow: visible; transition: all 0.3s; }
-        .current-player-area { border: 4px dashed #3498db !important; background: rgba(255, 255, 255, 0.4) !important; box-shadow: 0 0 20px rgba(52, 152, 219, 0.5); }
+       .current-player-area { border: 2px dashed #3498db !important; background: rgba(255, 255, 255, 0.4) !important; box-shadow: 0 0 20px rgba(52, 152, 219, 0.5); }
         .hand-normal .card { width: 105px; height: 155px; }
         .hand-packed .card { width: 80px; height: 120px; font-size: 0.8em; border-width: 2px; } .hand-packed .card-emoji { font-size: 2.5em; }
         .hand-super-packed .card { width: 60px; height: 90px; font-size: 0.6em; border-width: 2px; } .hand-super-packed .card-emoji { font-size: 1.8em; }
@@ -2698,5 +2700,6 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
 
