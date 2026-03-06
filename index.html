@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v0.91 (Open Beta)</title>
+    <title>Son Tabak Online - v0.92 (Open Beta)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Google Fonts: Patrick Hand (Comic Sans alternatifi) -->
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
@@ -585,7 +585,7 @@
 
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.91 (Open Beta)</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.92 (Open Beta)</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <div class="game-container">
@@ -914,12 +914,12 @@ auth.onAuthStateChanged((user) => { if (user) myUid = user.uid; });
 
 // GENERATE RANDOM HEX COLOR FOR LOBBY
 function getRandomColor() {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
+    // HSL kullanarak parlaklığı (Lightness) maksimum %50 ile sınırlandırıyoruz
+    const h = Math.floor(Math.random() * 360); // 0-360 derece arası tüm renk yelpazesi
+    const s = Math.floor(Math.random() * 50) + 50; // %50 - %100 arası doygunluk (renkler soluk olmasın diye)
+    const l = Math.floor(Math.random() * 30) + 20; // %20 - %50 arası parlaklık (asla çok açık veya bembeyaz olmaz)
+    
+    return `hsl(${h}, ${s}%, ${l}%)`;
 }
 
 // --- YENİ SİLME FONKSİYONU: Alt koleksiyonları da temizler ---
@@ -2763,6 +2763,7 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
 
 
