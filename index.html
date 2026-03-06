@@ -708,6 +708,7 @@
             <div class="color-opt bg-yellow" onclick="resolveColor('yellow')"></div>
             <div class="color-opt bg-purple" onclick="resolveColor('purple')"></div>
         </div>
+        <button class="game-btn btn-red" style="margin-top: 15px; width: 100%;" onclick="cancelColor()">Vazgeçtim</button>
     </div>
 </div>
 
@@ -1720,6 +1721,16 @@ function resolveColor(c) {
             pendingWild = null; 
         } 
     } 
+}
+function cancelColor() {
+    // Modali gizle
+    document.getElementById('color-modal').style.display = 'none';
+    
+    // Hafızada bekleyen "atılacak kart" işlemini temizle
+    pendingWild = null; 
+    
+    // Oyuncunun kilitlenen tıklama hakkını geri ver (önceki adımda eklediğimiz kilit)
+    isActionLocked = false; 
 }
 function resolveDirection(d) { document.getElementById('dir-modal').style.display = 'none'; if(pendingWild) { serverPlayCard(myPlayerIdx, pendingWild.idx, pendingWild.card, d, localSaidSonTabak); pendingWild = null; } }
 
@@ -2749,6 +2760,7 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
 
 
