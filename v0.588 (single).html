@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Son Tabak - v0.588 (Singleplayer Mod)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Harici Konfeti Kütüphanesi -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        /* --- GENEL AYARLAR --- */
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: #2c3e50; 
+            color: #333; 
+            margin: 0; 
+            height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            overflow: hidden; 
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* CONFETTI CANVAS */
+        #confetti-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999;
+        }
+
+        /* GRID LAYOUT */
+        .main-wrapper { 
+            display: grid; 
+            width: 98%; 
+            max-width: 1400px; 
+            height: 98vh; 
+            gap: 10px; 
+            padding: 5px; 
+            box-sizing: border-box;
+            grid-template-columns: 1fr 300px; 
+            grid-template-rows: auto 1fr; 
+            grid-template-areas: 
+                "game logo"
+                "game panel";
+        }
+
+        /* --- LOGO --- */
+        #brand-area { 
+            grid-area: logo;
+            text-align: center; background: #fff; padding: 10px; border-radius: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            display: flex; flex-direction: column; justify-content: center; height: fit-content;
+        }
+        .brand-title { font-size: 1.5em; font-weight: 900; color: #2c3e50; line-height: 1; }
+        .version { font-size: 0.4em; color: #95a5a6; margin-left: 5px; font-weight: normal; }
+        .brand-sub { font-size: 1.2em; font-weight: bold; color: #e67e22; margin-top: 5px; letter-spacing: -1px; }
+
+        /* --- SAĞ PANEL --- */
+        .right-panel { 
+            grid-area: panel;
+            display: flex; flex-direction: column; gap: 10px; height: 100%; overflow: hidden;
+        }
+
+        /* Flip Container */
+        .flip-container {
+            background-color: transparent;
+            width: 100%;
+            height: 200px; 
+            perspective: 1000px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .flip-inner {
+            position: relative; width: 100%; height: 100%; text-align: center;
+            transition: transform 0.6s; transform-style: preserve-3d;
+            border-radius: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        .flip-container.flipped .flip-inner { transform: rotateY(180deg); }
+        .flip-front, .flip-back {
+            position: absolute; width: 100%; height: 100%;
+            -webkit-backface-visibility: hidden; backface-visibility: hidden;
+            background: #fff; border-radius: 15px; overflow: hidden; display: flex; flex-direction: column;
+        }
+        .flip-back { transform: rotateY(180deg); background: #fdfdfd; }
+        
+        .panel-header { font-weight: bold; color: #fff; background: #34495e; padding: 5px; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center; padding-left: 10px; padding-right: 10px;}
+        .panel-hint { font-size: 0.7em; opacity: 0.7; font-weight: normal; }
+        
+        #score-table { width: 100%; font-size: 0.85em; border-collapse: collapse; margin-top: 5px; }
+        #score-table td { padding: 6px 10px; border-bottom: 1px solid #eee; text-align: left; }
+        .score-row-human { font-weight: bold; background: #fef9e7; border-left: 4px solid #f39c12; }
+        
+        #system-log { overflow-y: auto; flex-grow: 1; font-size: 0.75em; text-align: left; padding: 5px; list-style: none; margin: 0; }
+        #system-log li { padding: 3px 0; border-bottom: 1px dashed #eee; color: #555; }
+
+        /* Chat Container */
+        .chat-container {
+            background: #fff; border-radius: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;
+        }
+        #chat-messages {
+            flex-grow: 1; overflow-y: auto; padding: 10px; font-size: 0.85em;
+            display: flex; flex-direction: column; gap: 4px; background: #fcfcfc;
+        }
+        .chat-line { line-height: 1.4; }
+        .chat-name { font-weight: bold; margin-right: 5px; }
+        
+        /* Chat Input Area - Flex Fixes */
+        .chat-input-area { display: flex; padding: 5px; border-top: 1px solid #eee; box-sizing: border-box; width: 100%; }
+        #player-input { flex-grow: 1; border: 1px solid #ccc; border-radius: 20px; padding: 5px 10px; font-size: 0.8em; outline: none; min-width: 0; /* Prevents overflow */ }
+        #send-btn { background: #3498db; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; margin-left: 5px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.2em; flex-shrink: 0; }
+
+        /* --- OYUN ALANI --- */
+        .game-container { 
+            grid-area: game;
+            background: #ecf0f1; border-radius: 20px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7); 
+            display: grid;
+            grid-template-rows: auto 1fr auto; 
+            align-items: center; justify-items: center;
+            position: relative; overflow: hidden; padding: 10px 0;
+            background-color: #fdfbf7; 
+            background-image: repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(231, 76, 60, 0.10) 50px, rgba(231, 76, 60, 0.10) 100px), repeating-linear-gradient(0deg, transparent, transparent 50px, rgba(231, 76, 60, 0.10) 50px, rgba(231, 76, 60, 0.10) 100px);
+            transition: box-shadow 0.5s; border: 4px solid transparent; 
+        }
+
+        /* AMBIENT LIGHT */
+        .ambient-red { box-shadow: inset 0 0 60px rgba(231, 76, 60, 0.4) !important; border-color: #c0392b !important; }
+        .ambient-green { box-shadow: inset 0 0 60px rgba(46, 204, 113, 0.4) !important; border-color: #27ae60 !important; }
+        .ambient-yellow { box-shadow: inset 0 0 60px rgba(241, 196, 15, 0.4) !important; border-color: #f39c12 !important; }
+        .ambient-purple { box-shadow: inset 0 0 60px rgba(142, 68, 173, 0.4) !important; border-color: #8e44ad !important; }
+
+        /* --- BOT ALANI --- */
+        #top-area { 
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto 1fr; 
+            align-items: center; 
+            justify-items: center;
+            width: 95%; 
+            padding-top: 10px; 
+            min-height: 140px; 
+            position: relative; 
+            z-index: 5;
+            grid-row: 1;
+            align-self: start;
+        }
+        .bot-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; width: 100px; position: relative; transition: 0.3s; }
+        
+        .bot-name { 
+            background: white; 
+            padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.8em; z-index: 5; margin-bottom: 5px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s; white-space: nowrap; border: 1px solid #ddd;
+        }
+        .bot-personality { display: none; } 
+        .current-player .bot-name { background: #3498db; color: white; box-shadow: 0 0 10px #3498db; transform: scale(1.1); border-color: #2980b9; }
+
+        /* Chat Bubble */
+        .chat-bubble {
+            position: absolute; 
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #fff; border: 2px solid #333; padding: 5px 8px; border-radius: 8px;
+            font-size: 0.7em; font-weight: bold; white-space: normal; width: 120px; text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4); z-index: 300; opacity: 0; pointer-events: none;
+            line-height: 1.1; display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.3s;
+        }
+        .chat-bubble.visible { opacity: 1; }
+        
+        .bot-stack-visual { 
+            position: relative; 
+            height: 90px; 
+            margin-top: 5px;
+            /* YENİ: Genişlik artık JS ile dinamik olarak ayarlanacak */
+            transition: width 0.3s; 
+        }
+        .mini-card-back { 
+            width: 60px; height: 90px; border: 3px solid #fff; border-radius: 8px; position: absolute; 
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3); background-size: cover; background-position: center;
+            box-sizing: border-box; display: flex; justify-content: center; align-items: center; overflow: hidden;
+        }
+        .mini-card-back::after, .card-back-style::after {
+            content: "SON\A TABAK"; position: absolute; transform: rotate(-15deg); color: #3498db; 
+            font-family: 'Comic Sans MS', cursive; font-weight: 900; font-size: 1.1em; white-space: pre; 
+            text-align: center; line-height: 0.9; pointer-events: none; -webkit-font-smoothing: antialiased;
+            text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+        }
+        .mini-card-back::after { font-size: 0.75em; transform: rotate(-15deg) scale(0.8); }
+
+        /* YÖN OKLARI */
+        .arrow-icon { font-size: 3em; color: #bdc3c7; font-weight: 900; transition: all 0.5s; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); }
+        .arrow-icon.active { transform: translateY(-50%) scale(1.2); }
+        .glow-red { color: #c0392b !important; text-shadow: 0 0 15px #c0392b; }
+        .glow-green { color: #27ae60 !important; text-shadow: 0 0 15px #27ae60; }
+        .glow-yellow { color: #f1c40f !important; text-shadow: 0 0 15px #f1c40f; }
+        .glow-purple { color: #9b59b6 !important; text-shadow: 0 0 15px #9b59b6; }
+        .glow-neutral { color: #3498db !important; text-shadow: 0 0 15px #3498db; }
+        
+        #arrow-left { left: 25px; }
+        #arrow-right { right: 25px; }
+        #arrow-top-1, #arrow-top-2 { position: static; transform: none; font-size: 2.5em; margin: 0 10px; }
+        .arrow-icon.active-static { transform: scale(1.3) !important; }
+
+        /* --- ORTA ALAN --- */
+        #play-area { 
+            display: flex; align-items: center; justify-content: center; gap: 80px; 
+            width: 100%; min-height: 180px; 
+            position: relative; transition: transform 0.3s; z-index: 5; 
+            grid-row: 2; align-self: center;
+        }
+
+        /* KARTLAR */
+        .card { 
+            width: 105px; height: 155px; border-radius: 12px; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; font-weight: bold; cursor: pointer; 
+            border: 3px solid #555; box-shadow: 5px 5px 15px rgba(0,0,0,0.2); background-color: white; 
+            position: relative; user-select: none; transition: transform 0.2s; box-sizing: border-box; flex-shrink: 0;
+        }
+        #draw-pile.card:hover { transform: none; }
+        .playable:hover { transform: translateY(-30px) scale(1.1); z-index: 100; }
+        .playable { border-color: #333; } 
+        .card-corner { position: absolute; font-size: 1.2em; margin: 5px; }
+        .top-left { top: 2px; left: 2px; }
+        .bottom-right { bottom: 2px; right: 2px; transform: rotate(180deg); }
+        .card-emoji { font-size: 4.5em; display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
+        .card[data-val="+2"] .card-emoji { font-size: 2.2em !important; letter-spacing: -5px !important; line-height: 1; padding: 0; }
+
+        .guvec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; font-size: 0.45em; line-height: 1; }
+        .red { background-color: #ffcdd2; color: #c0392b; border-color: #c0392b; }
+        .green { background-color: #c8e6c9; color: #27ae60; border-color: #27ae60; }
+        .yellow { background-color: #fff9c4; color: #f39c12; border-color: #f39c12; }
+        .purple { background-color: #e1bee7; color: #8e44ad; border-color: #8e44ad; }
+        .wild-bg { background: conic-gradient(from 45deg, #e74c3c, #f1c40f, #2ecc71, #9b59b6, #e74c3c); border: 3px solid #fff; color: #fff; }
+        .card-back-style { background-size: cover; background-position: center; border: 3px solid #fff; display: flex; justify-content: center; align-items: center; }
+
+        /* Göstergeler */
+        #penalty-badge {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-weight: 900; font-size: 1.2em; color: white; width: 40px; height: 40px;
+            border-radius: 50%; border: 3px solid white; display: none;
+            justify-content: center; align-items: center; z-index: 70;
+            transition: all 0.3s; animation: pulseBadge 1s infinite;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+        }
+        #penalty-badge.p-1 { background: #2ecc71; box-shadow: 0 0 10px #2ecc71; } 
+        #penalty-badge.p-2 { background: #f1c40f; box-shadow: 0 0 10px #f1c40f; } 
+        #penalty-badge.p-3 { background: #e67e22; box-shadow: 0 0 15px #e67e22; } 
+        #penalty-badge.p-4 { background: #e74c3c; box-shadow: 0 0 20px #e74c3c; transform: scale(1.1); } 
+        #penalty-badge.p-5 { background: #9b59b6; box-shadow: 0 0 25px #9b59b6; transform: scale(1.2); } 
+        #penalty-badge.p-6 { background: #2c3e50; box-shadow: 0 0 30px #000; border-color: #c0392b; transform: scale(1.3); } 
+        @keyframes pulseBadge { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.15); } 100% { transform: translate(-50%, -50%) scale(1); } }
+
+        /* Draw counter GİZLENDİ */
+        #draw-counter { display: none; }
+
+        /* --- OYUNCU ELİ --- */
+        #bottom-area { 
+            width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; 
+            margin-bottom: 10px; position: relative; z-index: 10; grid-row: 3; align-self: end;
+        }
+        #son-tabak-container { margin-bottom: 5px; z-index: 10; display:flex; gap:10px; }
+        
+        #son-tabak-btn { 
+            padding: 12px 30px; border: none; border-radius: 30px; font-size: 1.2em; font-weight: bold; cursor: pointer; color: white; background-color: #e67e22; box-shadow: 0 5px 0 #d35400; transition: 0.2s; opacity: 1;
+        }
+        #son-tabak-btn:active { transform: translateY(4px); box-shadow: none; }
+        #son-tabak-btn:disabled { background-color: #bdc3c7; box-shadow: none; cursor: not-allowed; opacity: 0.6; transform: none; }
+
+        #challenge-btn {
+            padding: 12px 20px; border: none; border-radius: 30px; font-size: 1.2em; font-weight: bold; cursor: pointer; color: #2c3e50; background-color: #f1c40f; box-shadow: 0 5px 0 #f39c12; transition: 0.2s; opacity: 1;
+        }
+        #challenge-btn:active { transform: translateY(4px); box-shadow: none; }
+        #challenge-btn:disabled { background-color: #bdc3c7; box-shadow: none; cursor: not-allowed; opacity: 0.6; color: #fff; transform: none; }
+
+        #player-hand { 
+            display: flex; flex-wrap: wrap; justify-content: center; align-content: center; align-items: center; gap: 8px; 
+            width: 90%; padding: 10px; height: auto; min-height: 160px;
+            border: 2px dashed rgba(0,0,0,0.1); border-radius: 25px; overflow: visible; transition: all 0.3s;
+        }
+        .current-player-area { border: 4px dashed #3498db !important; background: rgba(255, 255, 255, 0.4) !important; box-shadow: 0 0 20px rgba(52, 152, 219, 0.5); }
+        
+        .hand-normal .card { width: 105px; height: 155px; }
+        .hand-packed .card { width: 80px; height: 120px; font-size: 0.8em; border-width: 2px; }
+        .hand-packed .card-emoji { font-size: 2.5em; }
+        .hand-super-packed .card { width: 60px; height: 90px; font-size: 0.6em; border-width: 2px; }
+        .hand-super-packed .card-emoji { font-size: 1.8em; }
+        .hand-packed .card[data-val="+2"] .card-emoji, .hand-super-packed .card[data-val="+2"] .card-emoji { font-size: 1.6em !important; letter-spacing: -2px !important; padding-top: 0; }
+
+        /* --- BUTONLAR --- */
+        .buttons-container { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+        .game-btn { padding: 12px 20px; border: none; border-radius: 10px; font-size: 1em; font-weight: bold; cursor: pointer; color: white; width: 100%; margin-bottom: 0; }
+        .btn-red { background-color: #c0392b; } .btn-blue { background-color: #3498db; } .btn-dark { background-color: #34495e; }
+
+        /* --- ANİMASYONLAR --- */
+        .flying-card { position: fixed; z-index: 3000; pointer-events: none; transition: all 1.0s ease-in-out; }
+        
+        .blocked-anim { position: absolute; font-size: 4em; color: #c0392b; z-index: 300; text-shadow: 0 0 20px #fff; animation: fadeUp 2s forwards; pointer-events: none; }
+        @keyframes fadeUp { 0% { opacity: 0; transform: scale(0.5); } 20% { opacity: 1; transform: scale(1.2); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-50px); } }
+        
+        .arrow-spin { animation: spinArrow 1s ease-in-out; }
+        @keyframes spinArrow { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.5); color: #2ecc71; } 100% { transform: rotate(360deg) scale(1); } }
+
+        .mixer-container { position: absolute; top: 50%; left: 50%; width: 0; height: 0; z-index: 4000; pointer-events: none; }
+        .mixer-card { position: absolute; width: 70px; height: 100px; border: 3px solid #fff; border-radius: 8px; background-size: cover; background-position: center; box-shadow: 0 0 10px rgba(0,0,0,0.5); transform-origin: center 250px; top: -300px; left: -35px; }
+        .mixer-card::after { content: "SON\A TABAK"; position: absolute; transform: rotate(-15deg) scale(0.8); color: #3498db; font-weight: 900; font-size: 0.75em; white-space: pre; text-align: center; line-height:0.9; top: 35%; left: 5px; font-family: 'Comic Sans MS', cursive; text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
+        
+        .anim-temp-card { position: fixed; width: 70px; height: 100px; border: 3px solid #fff; border-radius: 8px; background-size: cover; background-position: center; z-index: 4000; box-shadow: 0 0 10px rgba(0,0,0,0.5); pointer-events: none; }
+        .anim-temp-card::after { content: "SON\A TABAK"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); color: #3498db; font-weight: 900; font-size: 0.9em; white-space: pre; text-align: center; line-height: 0.9; font-family: 'Comic Sans MS', cursive; text-shadow: 1px 1px 0 #fff; width: 100%; }
+
+        /* --- POPUPLAR --- */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 4000; }
+        .modal-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 80%; max-width: 320px; height: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .input-field { padding: 10px; width: 80%; margin: 5px; border: 1px solid #ccc; border-radius: 5px; }
+        .color-picker { display: flex; justify-content: center; gap: 15px; margin-top: 15px; flex-wrap: wrap; }
+        .color-opt { width: 50px; height: 50px; border-radius: 50%; border: 4px solid #333; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+        .bg-red { background: #e74c3c; } .bg-green { background: #2ecc71; } .bg-yellow { background: #f1c40f; } .bg-purple { background: #9b59b6; }
+        
+        .pattern-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px; }
+        .pattern-opt { width: 50px; height: 70px; border: 2px solid #ccc; cursor: pointer; background-size: cover; position: relative; }
+        .pattern-opt::after { content: "SON"; position: absolute; transform: rotate(-15deg) scale(0.5); color: #3498db; font-weight: 900; top: 35%; left: 5px; text-shadow: 1px 1px 0 white; }
+
+        #son-tabak-popup {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background-color: #e67e22; color: white; padding: 30px 60px;
+            font-size: 2.5em; font-weight: bold; border-radius: 25px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8); border: 6px solid white;
+            display: none; z-index: 6000; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center; width: auto; max-width: 90%;
+        }
+        .popup-sub { font-size: 0.6em; display: block; margin-top: 10px; font-weight: normal; }
+        @keyframes popIn { from { transform: translate(-50%, -50%) scale(0); } to { transform: translate(-50%, -50%) scale(1); } }
+
+        /* YENİ CHALLENGE POPUP */
+        #challenge-popup {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; padding: 25px 50px;
+            font-size: 2em; font-weight: bold; border-radius: 20px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.7); border: 5px solid white;
+            display: none; z-index: 6000; animation: popIn 0.3s ease-out;
+            text-align: center; width: auto; max-width: 90%;
+        }
+        .challenge-valid { background-color: #27ae60; }
+        .challenge-invalid { background-color: #c0392b; }
+        .challenge-sub { font-size: 0.6em; display: block; margin-top: 5px; font-weight: normal; opacity: 0.9; }
+
+        /* MOBİL UYUMLULUK */
+        @media screen and (max-width: 900px) {
+            body { height: 100%; overflow-y: auto; display: block; background: #2c3e50; }
+            .main-wrapper { display: flex; flex-direction: column; height: auto; min-height: 100vh; padding: 5px; gap: 10px; }
+            #brand-area { padding: 5px 10px; flex-direction: row; align-items: center; gap: 5px; order: 1; }
+            .brand-title { font-size: 1.1em; display: flex; gap: 5px; }
+            .version { font-size: 0.6em; margin: 0; align-self: center; }
+            .brand-sub { font-size: 0.7em; margin: 0; margin-left: auto; }
+            
+            .game-container { 
+                display: grid; grid-template-rows: auto 1fr auto; 
+                order: 2; height: 60vh; min-height: 420px; align-items: center; justify-items: center;
+            }
+            
+            #top-area { grid-row: 1; align-self: start; height: 90px; padding-top: 5px; width: 100%; justify-content: space-around; min-height: auto; grid-template-columns: 1fr auto 1fr auto 1fr; }
+            #play-area { grid-row: 2; align-self: center; gap: 20px; height: 140px; transform: scale(0.8); margin-top: 0; }
+            #bottom-area { grid-row: 3; align-self: end; }
+            
+            .bot-wrapper { transform: scale(0.7); margin: 0; } 
+            
+            .arrow-icon { font-size: 1.5em; position: absolute; top: 50%; transform: translateY(-50%); z-index: 15; }
+            #arrow-left { left: 5px; }
+            #arrow-right { right: 5px; }
+            #arrow-top-1, #arrow-top-2 { font-size: 1.5em; margin: 0; }
+            
+            .flying-card { transform: scale(0.8); transform-origin: top left; }
+            .card[data-val="+2"] .card-emoji { font-size: 2.5em !important; letter-spacing: -1px !important; }
+            
+            #player-hand { 
+                height: auto; min-height: 100px; padding: 8px; gap: 4px; border-width: 2px; 
+                justify-content: center; align-items: center; align-content: center;
+            }
+            .hand-normal .card, .hand-packed .card, .hand-super-packed .card { width: 45px; height: 70px; font-size: 0.5em; border-width: 1px; }
+            .hand-normal .card-emoji, .hand-packed .card-emoji, .hand-super-packed .card-emoji { font-size: 1.8em; }
+            .hand-normal .card[data-val="+2"] .card-emoji, .hand-packed .card[data-val="+2"] .card-emoji { font-size: 1.2em !important; letter-spacing: -2px !important; }
+            
+            #son-tabak-btn, #challenge-btn { padding: 8px 15px; font-size: 0.8em; margin-bottom: 5px; }
+            
+            /* Mobil için popupları tekrar fixed yapıyoruz */
+            #son-tabak-popup, #challenge-popup { position: fixed !important; }
+
+            .right-panel { order: 3; height: auto; flex-direction: row; gap: 5px; flex-wrap: wrap; }
+            .flip-container { height: 160px; flex: 1; min-width: 45%; }
+            .chat-container { height: 160px; flex: 1; min-width: 45%; }
+            .buttons-container { width: 100%; flex-direction: row; gap: 5px; }
+            .game-btn { font-size: 0.8em; padding: 8px; }
+
+            /* MOBİL CHAT DÜZENLEMESİ */
+            #chat-messages { font-size: 0.75em !important; padding: 5px !important; gap: 2px !important; }
+            .chat-line { line-height: 1.2 !important; margin-bottom: 3px !important; }
+        }
+    </style>
+</head>
+<body>
+<!-- Confetti Canvas -->
+<canvas id="confetti-canvas"></canvas>
+
+<div class="main-wrapper">
+    <!-- LOGO -->
+    <div id="brand-area">
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.588 ✨</span></div>
+        <div class="brand-sub">🔥Kalority</div>
+    </div>
+    <!-- OYUN ALANI -->
+    <div class="game-container">
+        <!-- Oklar -->
+        <div id="arrow-left" class="arrow-icon">⬆️</div>
+        <div id="arrow-right" class="arrow-icon">⬇️</div>
+        <div id="top-area">
+            <div class="bot-wrapper" id="bot1-wrapper">
+                <div class="bot-name" id="bot1-name">Utku<span class="bot-personality" id="bot1-p"></span></div>
+                <div class="bot-stack-visual" id="bot1-stack"></div>
+                <div class="chat-bubble" id="bot1-chat"></div>
+            </div>
+            <div id="arrow-top-1" class="arrow-icon" style="position:static; transform:none;">➡️</div>
+            <div class="bot-wrapper" id="bot2-wrapper">
+                <div class="bot-name" id="bot2-name">Kübra<span class="bot-personality" id="bot2-p"></span></div>
+                <div class="bot-stack-visual" id="bot2-stack"></div>
+                <div class="chat-bubble" id="bot2-chat"></div>
+            </div>
+            <div id="arrow-top-2" class="arrow-icon" style="position:static; transform:none;">➡️</div>
+            <div class="bot-wrapper" id="bot3-wrapper">
+                <div class="bot-name" id="bot3-name">Rifu<span class="bot-personality" id="bot3-p"></span></div>
+                <div class="bot-stack-visual" id="bot3-stack"></div>
+                <div class="chat-bubble" id="bot3-chat"></div>
+            </div>
+        </div>
+        <div id="play-area">
+            <div id="draw-pile" class="card card-back-style" onclick="playerDrawCard()">
+                <div id="draw-counter">+1</div>
+                <div id="penalty-badge">+0</div> 
+                <div id="deck-count" style="position:absolute; bottom:10px; color:white; font-size:1.5em; text-shadow:1px 1px 2px #000;">0</div>
+            </div>
+            <div id="discard-pile"></div>
+            <div id="son-tabak-popup">
+                SON TABAK!
+                <span id="son-tabak-who" class="popup-sub"></span>
+            </div>
+            <div id="challenge-popup">
+                <span id="challenge-who"></span>
+                <span id="challenge-result" class="challenge-sub"></span>
+            </div>
+        </div>
+        <div id="bottom-area">
+            <div id="son-tabak-container">
+                <button id="son-tabak-btn" onclick="playerSaySonTabak()">SON TABAK!</button>
+                <button id="challenge-btn" onclick="challengePreviousPlayer()" disabled>✋ İTİRAZ ET!</button>
+            </div>
+            <div id="player-hand" class="hand-normal"></div>
+        </div>
+    </div>
+    <!-- SAĞ PANEL -->
+    <div class="right-panel">
+        <div class="flip-container" onclick="toggleInfoView(this)">
+            <div class="flip-inner">
+                <div class="flip-front">
+                    <div class="panel-header">
+                        <span>🏆 Puan</span>
+                        <span class="panel-hint">🖱️ Log</span>
+                    </div>
+                    <table id="score-table"><tbody></tbody></table>
+                </div>
+                <div class="flip-back">
+                    <div class="panel-header" style="background:#7f8c8d;">
+                        <span>📝 Log</span>
+                        <span class="panel-hint">🖱️ Puan</span>
+                    </div>
+                    <ul id="system-log"></ul>
+                </div>
+            </div>
+        </div>
+        <div class="chat-container">
+            <div id="chat-messages"></div>
+            <div class="chat-input-area">
+                <input type="text" id="player-input" placeholder="Yaz..." onkeypress="handleChatKey(event)">
+                <button id="send-btn" onclick="playerSendMessage()">➤</button>
+            </div>
+        </div>
+        <div class="buttons-container">
+            <button class="game-btn btn-blue" onclick="openSetup()">Yeni Oyun</button>
+            <button class="game-btn btn-dark" onclick="openPatternModal()">Kart Deseni</button>
+            <button class="game-btn btn-red" onclick="openSettings()">Ayarlar</button>
+        </div>
+    </div>
+</div>
+
+<div id="setup-modal" class="modal" style="display: flex;">
+    <div class="modal-box">
+        <h2>🎮 Hoşgeldiniz</h2>
+        <p>Botlara isim verin:</p>
+        <input type="text" id="bot1-in" class="input-field" value="Utku">
+        <input type="text" id="bot2-in" class="input-field" value="Kübra">
+        <input type="text" id="bot3-in" class="input-field" value="Rifu">
+        <br><br>
+        <button class="game-btn btn-blue" onclick="startGame()">BAŞLAT 🚀</button>
+    </div>
+</div>
+
+<div id="pattern-modal" class="modal">
+    <div class="modal-box">
+        <h3>Kart Deseni</h3>
+        <div class="pattern-grid" id="pattern-grid"></div>
+        <br><button class="game-btn btn-blue" onclick="closePatternModal()">Tamam</button>
+    </div>
+</div>
+
+<div id="color-modal" class="modal">
+    <div class="modal-box">
+        <h3>Renk Seç</h3>
+        <div class="color-picker">
+            <div class="color-opt bg-red" onclick="resolveColor('red')"></div>
+            <div class="color-opt bg-green" onclick="resolveColor('green')"></div>
+            <div class="color-opt bg-yellow" onclick="resolveColor('yellow')"></div>
+            <div class="color-opt bg-purple" onclick="resolveColor('purple')"></div>
+        </div>
+    </div>
+</div>
+
+<div id="dir-modal" class="modal">
+    <div class="modal-box">
+        <h3>Yön Seç (Mikser)</h3>
+        <p id="dir-info-1" style="font-size:0.8em; margin:5px 0;">Saat Yönünde: X'den alacaksın.</p>
+        <p id="dir-info-2" style="font-size:0.8em; margin:5px 0;">Ters Yönde: Y'den alacaksın.</p>
+        <div class="color-picker">
+            <button class="game-btn btn-blue" onclick="resolveDirection(1)">➡️ Saat</button>
+            <button class="game-btn btn-blue" onclick="resolveDirection(-1)">⬅️ Ters</button>
+        </div>
+    </div>
+</div>
+
+<div id="end-modal" class="modal">
+    <div class="modal-box">
+        <h2 id="winner-text"></h2>
+        <div id="ai-summary" style="font-style:italic; font-size:0.9em; margin:15px 0; color:#555; border-top:1px solid #eee; border-bottom:1px solid #eee; padding:10px;"></div>
+        <div id="final-scores"></div>
+        <br>
+        <div style="display:flex; gap:15px; width:100%;">
+            <button class="game-btn btn-blue" style="flex:1;" onclick="nextRound()">Devam Et</button>
+            <button class="game-btn btn-red" style="flex:1;" onclick="openSetup()">Çıkış</button>
+        </div>
+    </div>
+</div>
+
+<div id="exit-modal" class="modal">
+    <div class="modal-box">
+        <h3>Çıkış?</h3>
+        <p>Emin misiniz?</p>
+        <button class="game-btn btn-red" onclick="performExit()">Evet</button>
+        <button class="game-btn btn-blue" onclick="document.getElementById('exit-modal').style.display='none'">Hayır</button>
+    </div>
+</div>
+
+<div id="toast" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:10px 20px; border-radius:20px; display:none; z-index:5000;"></div>
+
+<script>
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioContext();
+
+const SoundFX = {
+    playTone: (freq, type, duration, rampTo = 0.001) => {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(rampTo, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    },
+    playCardSnap: () => SoundFX.playTone(800, 'sine', 0.1),
+    playDraw: () => SoundFX.playTone(400, 'triangle', 0.15),
+    playBlock: () => { SoundFX.playTone(1500, 'sawtooth', 0.1); setTimeout(() => SoundFX.playTone(2000, 'sine', 0.3), 50); },
+    playReverse: () => {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    },
+    playWild: () => { [300, 400, 500, 600, 800].forEach((f, i) => setTimeout(() => SoundFX.playTone(f, 'sine', 0.2), i*50)); },
+    playBad: () => { SoundFX.playTone(150, 'sawtooth', 0.2); setTimeout(() => SoundFX.playTone(120, 'sawtooth', 0.4), 100); },
+    playError: () => { SoundFX.playTone(100, 'square', 0.2); },
+    playFanfare: () => { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => SoundFX.playTone(f, 'square', 0.4), i * 150)); },
+    playUno: () => SoundFX.playTone(1200, 'sine', 0.5)
+};
+
+/* --- GELİŞMİŞ SEBZE YAĞMURU --- */
+function startVegetableRain() {
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const emojis = ['🥦', '🍅', '🥔', '🍆'];
+    let drops = [];
+    let spawning = true;
+    
+    // 4 saniye sonra yeni spawn durur, eskiler düşmeye devam eder
+    setTimeout(() => { spawning = false; }, 4000);
+
+    function createDrop() {
+        return {
+            x: Math.random() * canvas.width,
+            y: -50,
+            vy: Math.random() * 3 + 2, // Düşme hızı
+            vx: Math.random() * 2 - 1, // Sağa sola savrulma
+            rot: Math.random() * 360,
+            rotSpeed: (Math.random() - 0.5) * 5,
+            emoji: emojis[Math.floor(Math.random() * emojis.length)],
+            size: Math.random() * 20 + 20
+        };
+    }
+
+    // Başlangıç seti
+    for(let i=0; i<30; i++) drops.push({ ...createDrop(), y: Math.random() * canvas.height - canvas.height });
+
+    let animationId;
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        if(spawning && drops.length < 150 && Math.random() < 0.3) {
+            drops.push(createDrop());
+        }
+
+        for (let i = 0; i < drops.length; i++) {
+            let d = drops[i];
+            
+            ctx.save();
+            ctx.translate(d.x, d.y);
+            ctx.rotate(d.rot * Math.PI / 180);
+            ctx.font = `${d.size}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(d.emoji, 0, 0);
+            ctx.restore();
+
+            d.y += d.vy;
+            d.x += d.vx + Math.sin(d.y / 50) * 0.5;
+            d.rot += d.rotSpeed;
+
+            if (d.y > canvas.height + 50) {
+                if (spawning) {
+                    let newD = createDrop();
+                    drops[i] = newD;
+                } else {
+                    drops.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        if (drops.length > 0 || spawning) {
+            animationId = requestAnimationFrame(animate);
+        } else {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    }
+    animate();
+}
+
+/* --- YARDIMCI FONKSİYONLAR --- */
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+function shuffleDeck(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+function toggleInfoView(el) { el.classList.toggle('flipped'); }
+
+function openSettings() {
+    showToast("Ayarlar yakında eklenecek!");
+}
+
+/* --- DEVASA CHAT HAVUZU --- */
+const CHAT_POOL = {
+    "Agresif": {
+        "start_good": ["Bu el benim, dağılın!", "Ağlamaya hazır olun.", "Kartlar ateş ediyor!"],
+        "start_bad": ["Bu ne biçim el?", "Şansıma tüküreyim.", "Zorlayacağız artık."],
+        "block": ["Geç!", "Sıranı bekle aslanım.", "Bıçaklarım affetmem!", "Sen bi dur."],
+        "reverse": ["Hop geri!", "Zaaa...", "Geri vites!", "Döndür Allah."],
+        "plus2": ["Al bakalım hediyeni!", "Çek çek.", "Saadet zinciri hadi.", "+2 benden sana!"],
+        "wild": ["Rengi ben belirlerim.", "Değişsin yeter.", "Renkler değişti!", "Kırmızı olsun, kan olsun!"],
+        "draw_1": ["İstediğim bu değil.", "Of ya.", "Sabrım taşıyor.", "Hadi ama!"],
+        "draw_2": ["Yine mi ceza?", "Şaka gibi...", "Ver iki tane."],
+        "draw_many": ["Dükkanı satın aldım resmen!", "Bu ne be?!", "Kart koleksiyonu yapıyorum sanki!", "Lanet olsun!"],
+        "wild_mixer": ["Ben alıyım onları.", "Ver bakalım o güzel elini!", "Senin elin benim elim!"],
+        "wild_table": ["Herkesin planı çöp.", "Yeni bir başlangıç.", "Alıyım herkesin kartlarını!"],
+        "wild_pot": ["Herkes çeksin!", "Yanacağız hepimiz!", "Toplu ceza, en sevdiğim."],
+        "wild_meze": ["Meze, afiyet olsun.", "Yemeğin yanında iyi gider.", "Al bunu da sus."],
+        "wild_antidraw": ["Keh keh!", "Yemezler aslanım.", "Bana sökmez!"],
+        "uno": ["Son Tabak!", "Bitiyor bekleyin!", "Kazanıyorum!", "Hadi!"],
+        "win": ["Söylemiştim!", "Ezdim geçtim!", "Ders verdim size!", "Kral benim!", "Çok kolaydı."],
+        "fail": ["Hayır ya!", "Nasıl unuttum!", "Olamaz!", "Kahretsin!"]
+    },
+    "Stratejik": {
+        "start_good": ["İyi gibi.", "Plan hazır.", "Güzel güzel."],
+        "start_bad": ["Zorlu.", "Çevrilir ya.", "Riskli."],
+        "block": ["Sıradaki.", "Al bakalım.", "Geç abicim.", "Bıçak."],
+        "reverse": ["Dönsün.", "Ters yön.", "Dönmesini bekle.", "Yön değişimi."],
+        "plus2": ["Biraz daha çek sen.", "Yazık.", "Yüklen.", "+2 reyis"],
+        "wild": ["Ne olsun?", "Moring.", "Biraz da bundan devam.", "Yeter hep bu renk."],
+        "draw_1": ["Bunu planlamamıştım.", "Uh.", "Çekiyim.", "Eyvallah."],
+        "draw_2": ["Ver bakalım.", "Çekelim bari.", "İki mi?"],
+        "draw_many": ["Elime sığmıyor yeter!", "Bana mı kaldı?", "El yönetilmiyor.", "Bu hesapta yoktu."],
+        "wild_mixer": ["Ben seninkini alıyım.", "Hadi elden ele.", "Senin elin daha iyi duruyor."],
+        "wild_table": ["Yeniden dağıtalım.", "Bir resetleyelim.", "Kartları sevmedim."],
+        "wild_pot": ["Toplu dağıtım.", "Düdüklü tencere!", "Herkese kart!"],
+        "wild_meze": ["Çekmeyi unutma.", "Afiyetler.", "Bu sadece başlangıç."],
+        "wild_antidraw": ["İptal!", "Çekmem!", "NAH!"],
+        "uno": ["Oyun sonu yaklaşıyor.", "Son kart!", "Checkmate.", "Hadi hızlı!"],
+        "win": ["Planlandığım gibi.", "Zeka kazandı.", "Belliydi.", "Beklenen sonuç."],
+        "fail": ["Konsantre olamadım.", "İlginç.", "Gözümden kaçmış.", "Tuhaf."]
+    },
+    "Panik Atak": {
+        "start_good": ["Ay elim titriyor!", "Çok heyecanlıyım!", "Nefes al..."],
+        "start_bad": ["Bittim ben!", "Çok kötü geldi!", "Ağlamak istiyorum!", "İmdat!"],
+        "block": ["Özür dilerim.", "Kızma n'olur!", "Mecburdum!", "Ay çok pardon!"],
+        "reverse": ["Dönsün!", "Ne tarafa döndü?", "Terse!", "Geri!"],
+        "plus2": ["İstemeyerek attım!", "Çok özür dilerim!", "Ay sana mı geldi?", "Kızmadın di mi?"],
+        "wild": ["Ay hangi rengi seçsem?", "Kararsız kaldım.", "Değişsin!", "Sıkıldım bu renkten!"],
+        "draw_1": ["Yine mi kart?", "Gelmedi ya!", "Gerildim.", "Çekelim bakalım."],
+        "draw_2": ["İki tane mi?", "Nereye koyacağım bunları?", "Ay bayılazam!"],
+        "draw_many": ["Boğuluyorum!", "Nereye koyacağım bunları!", "Elime sığmıyor!", "Aaaa çok fazla!"],
+        "wild_mixer": ["Senin elini alabilir miyim?", "Kafam karıştı, eller değişsin!", "Bu eli sen al yeter!"],
+        "wild_table": ["Her şey birbirine girsin!", "Ay kimde ne var bilmiyorum!", "Masa karışsın belki düzelir!"],
+        "wild_pot": ["Düdüklü patlasın!", "Hepimiz yanacağız!", "Herkese çektiriyorum!"],
+        "wild_meze": ["Sadece tadımlık!", "Çok bir şey değil valla.", "Kızma n'olur."],
+        "wild_antidraw": ["Kurtuldum mu?", "Çok şükür!", "Oh be!"],
+        "uno": ["Ay bitiyor mu?", "Son Tabak!", "Değiştirmeyin!", "Tutmayın beni!"],
+        "win": ["İnanamıyorum!", "Ben mi kazandım?", "Elim ayağım titredi!", "Yaşa!"],
+        "fail": ["Ayy unuttum!", "Görmedim!", "Üstüme gelmeyin!", "Kafam karıştı!"]
+    },
+    "Rahat": {
+        "start_good": ["Akarı var.", "Hallederiz.", "Keyifli olacak.", "Yaslan arkana."],
+        "start_bad": ["Sıkıntı yok, döner.", "Kartları kim karıştırdı?", "El dozer 🚜.", "Bakacağız."],
+        "block": ["Bi soluklan.", "Yavaş gel.", "Acelen ne?", "Dinlen biraz şampiyon."],
+        "reverse": ["Dönelim bakalım.", "Dönder!", "Sen bekle biraz daha.", "U dönüşü."],
+        "plus2": ["Al dursun.", "Lazım olur.", "Hadi saadet zinciri.", "Yorma kendini."],
+        "wild": ["Renk katalım.", "Değişiklik iyidir.", "Hangi renk olsun?", "Canım sıkıldı, renk değişsin."],
+        "draw_1": ["Çekeriz sorun yok.", "Yolla.", "Acelesi yok.", "Nasip."],
+        "draw_2": ["İki tane de olur.", "Zararı yok.", "Ver iki tane."],
+        "draw_many": ["Ooo bana girdi.", "Doldur bakalım.", "Haşırt the Blackboard.", "Sıçtık."],
+        "wild_mixer": ["Ver elini!", "Senin elin daha güzel duruyor.", "Hadi bi kurtuluyum."],
+        "wild_table": ["Elleri alıyım.", "Herkes nasiplensin.", "Karıştıramlım bakalım."],
+        "wild_pot": ["Ortaya karışık.", "Herkese selamlar.", "Beraber batalım."],
+        "wild_meze": ["Çerez niyetine.", "Çekin bakalım.", "Çekmeyi unutma."],
+        "wild_antidraw": ["Buna gerek yok şimdi.", "Pas geçelim.", "Temiz iş."],
+        "uno": ["Ben ufaktan biter.", "Son Tabak gençler.", "Bitiyor sanki.", "..."],
+        "win": ["Keyifliydi.", "Zorlanmadım.", "Tertemiz.", "Hadi hadi puanları toplayın!", "Kolaydı."],
+        "fail": ["Farketmedim ya.", "Dalmışım pardon.", "Kolpaya geldik.", "Yine girdi."]
+    },
+    "Gıcık": {
+        "start_good": ["Hah, ezikler sizi.", "Çok çabuk bitecek.", "Sizi ağlatacağım."],
+        "start_bad": ["Hile mi yaptınız?", "Kİm dağıttı?", "Karışmamış."],
+        "block": ["Kes sesini!", "Otur yerine!", "Zırla!", "Zaa!", "Bekleme yapma!"],
+        "reverse": ["Yemedi mi?", "Ters köşe!", "Kudur!", "Ağlama!", "Hadi yallah!"],
+        "plus2": ["Al bunları da sus.", "Beter ol!", "Çek bakalım köle!", "Hahahaha!"],
+        "wild": ["Bak bakalım rnek neymiş.", "Rengini belli et.", "Biat edin!", "Ben ne dersem o."],
+        "draw_1": ["Hile var!", "Bu kartlar bozuk.", "Sıkıcı...", "Of pof!"],
+        "draw_2": ["Sırf gıcıklığına veriyorsunuz di mi?", "İğrençsiniz.", "Hıh."],
+        "draw_many": ["Hilecisiniz hepiniz!", "Bu ne be?!", "Sizin yüzünüzden!", "Yapacağınız işe..."],
+        "wild_mixer": ["O elini alırım.", "Benim çöplükten bir kurtulalım.", "Elini ver!"],
+        "wild_table": ["Planlarınız bozuldu mu? Zaa.", "Hepinizi batıracağım.", "Kaos benim işim."],
+        "wild_pot": ["Hepiniz çekin, beter olun!", "Tek başıma yanmam!", "Sürünün!"],
+        "wild_meze": ["Al bunu!", "Haydi çekin bakalım.", "Sana özel."],
+        "wild_antidraw": ["Sizin kurallarınız bana sökmez.", "Yemezler canım.", "Zaa iptal!"],
+        "uno": ["Bitti bile ezikler!", "Ağlamayın!", "Son Tabak!", "Yolun sonu."],
+        "win": ["Ezdim geçtim!", "Çok kolaysınız!", "Sıkıldım kazanmaktan.", "Easy.", "Hadi tekrar."],
+        "fail": ["Ya bırak yaa.", "Şanslısınız.", "Önemli değil.", "Bilerek yaptım."]
+    },
+    "Dengeli": { 
+        "start_good": ["Güzel el.", "Şanslıyım.", "Başlayalım."], 
+        "start_bad": ["Biraz zor.", "Bakalım.", "Şanssızlık."],
+        "block": ["Bıçaklandın.", "Sırayı geç.", "Geç bakalım."], 
+        "reverse": ["Yön değişsin.", "Tersine."], 
+        "plus2": ["+2 çek.", "Biraz daha çek sen.", "Hadi saadet zinciri."], 
+        "wild": ["Renk değişsin.", "Ne olsun?", "Moring.", "Biraz da bundan devam."],
+        "draw_1": ["Gelmedi.", "Bir tane daha.", "Çekelim bakalım."], 
+        "draw_2": ["İki kart daha.", "Şanssızlık.", "Hadi devam."],
+        "draw_many": ["Bayağı çektim.", "Deste bitti.", "Yeter da!"],
+        "wild_mixer": ["Elleri değişelim.", "Strateji gereği.", "Hadi elden ele."],
+        "wild_table": ["Kartları karışsın.", "Yeniden dağıtalım.", "Eşitlik olsun."],
+        "wild_pot": ["Herkes bir tane çekiyor.", "Düdüklü tencere.", "Toplu çekelim."],
+        "wild_meze": ["Bir kart çek.", "Meze.", "Sıradaki."],
+        "wild_antidraw": ["Çekmem.", "Tuvalet kağıdı.", "Kurtulduk."],
+        "uno": ["Son Tabak!", "Çok şükür.", "Tek kart."], 
+        "win": ["Kazandım!", "Güzel oyun.", "Tebrikler."], 
+        "fail": ["Unuttum.", "Tüh.", "Dikkat etmedim."]
+    }
+};
+
+/* --- OYUNCU RENKLERİ --- */
+const FIXED_COLORS = ['#c0392b', '#f1c40f', '#8e44ad', '#27ae60']; // Kırmızı, Sarı, Mor, Yeşil
+let playerColors = [];
+
+function assignPlayerColors() {
+    let shuffled = shuffleDeck([...FIXED_COLORS]);
+    playerColors = [shuffled[0], shuffled[1], shuffled[2], shuffled[3]];
+}
+
+/* --- BOT PROFİLLERİ --- */
+let botLogicTypes = {}; 
+let botChatTypes = {};
+const PERSONALITY_TYPES = ['Dengeli', 'Agresif', 'Stratejik', 'Panik Atak', 'Rahat', 'Gıcık'];
+
+function triggerBotChat(botIdx, category) {
+    if(Math.random() > 0.85 && category !== 'start_good' && category !== 'start_bad') return; 
+
+    const botName = players[botIdx];
+    const chatType = botChatTypes[botIdx] || 'Dengeli';
+    const pool = CHAT_POOL[chatType] || CHAT_POOL['Dengeli'];
+    const sentences = pool[category] || pool['draw_1'];
+    let text = sentences[Math.floor(Math.random() * sentences.length)];
+    
+    showChatBubble(botIdx, text); 
+    addLogToChat(botName, text, 'bot', botIdx);
+}
+
+function showChatBubble(botIdx, text) {
+    let bubble = document.getElementById(`bot${botIdx}-chat`);
+    if(bubble) {
+        bubble.innerText = text;
+        bubble.classList.add('visible');
+        setTimeout(() => bubble.classList.remove('visible'), 3000);
+    }
+}
+
+function playerSendMessage() {
+    let input = document.getElementById('player-input');
+    let msg = input.value.trim();
+    if(msg) {
+        addLogToChat("Siz", msg, 'player', 0);
+        input.value = '';
+    }
+}
+function handleChatKey(e) { if(e.key === 'Enter') playerSendMessage(); }
+
+function addLogToChat(name, text, type, botIdx) {
+    const chatDiv = document.getElementById('chat-messages');
+    
+    // Mesaj limiti kontrolü (250 satır)
+    while (chatDiv.children.length > 250) {
+        chatDiv.removeChild(chatDiv.firstChild);
+    }
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `chat-line`;
+    let color = playerColors[botIdx];
+    msgDiv.innerHTML = `<span class="chat-name" style="color:${color}">${name}:</span><span class="chat-text">${text}</span>`;
+    chatDiv.appendChild(msgDiv);
+    chatDiv.scrollTop = chatDiv.scrollHeight;
+}
+
+function addSystemLog(text) {
+    const logList = document.getElementById('system-log');
+    const li = document.createElement('li');
+    li.innerHTML = text;
+    logList.prepend(li);
+}
+
+/* --- JS KODLARI --- */
+const COLORS = ['red', 'green', 'yellow', 'purple'];
+const VEGETABLES = { red: '🍅', green: '🥦', yellow: '🥔', purple: '🍆' };
+const SPECIALS = {
+    '+1': '📦', '+2': '📦📦', 
+    'Reverse': '♻️', 'Block': '🔪', 
+    'Wild': 'GUVEC', 
+    'Wild Anti-Draw': '🧻',
+    'Wild Table': '🍽️', 'Wild Mixer': '🌪️', 'Wild Pot': '🥘', 'Wild Meze': '🍱'
+};
+const PATTERNS = [
+    'linear-gradient(135deg, #e67e22 0%, #d35400 100%)', 
+    'linear-gradient(135deg, #1c1c1c 25%, #2c3e50 25%, #2c3e50 50%, #1c1c1c 50%, #1c1c1c 75%, #2c3e50 75%, #2c3e50 100%)',
+    'repeating-linear-gradient(45deg, #34495e, #34495e 10px, #2c3e50 10px, #2c3e50 20px)',
+    'conic-gradient(from 0deg, #d35400, #e67e22, #d35400)',
+    'linear-gradient(to bottom right, #232526, #414345)',
+    'repeating-radial-gradient(circle, #555, #555 5px, #333 5px, #333 10px)',
+    'linear-gradient(60deg, #29323c 0%, #485563 100%)',
+    'radial-gradient(circle at center, #444, #000)'
+];
+
+let currentPattern = PATTERNS[0];
+let players = ['Siz', 'Utku', 'Kübra', 'Rifu'];
+let deck = [], discardPile = [], hands = [[], [], [], []];
+let scores = [0, 0, 0, 0];
+let currentPlayer = 0, direction = 1, drawStack = 0;
+let gameActive = false;
+let pendingWild = null, pendingAction = null;
+let isProcessing = false;
+let lastWinner = 0;
+let canChallenge = false;
+let wrongChallengeUsed = false;
+let hasDrawnThisTurn = false;
+let vulnerablePlayerIdx = -1; // YENİ: İtiraza açık oyuncu indeksi
+const ANIM_SPEED = 1000;
+
+function showToast(msg) {
+    let t = document.getElementById('toast');
+    t.innerText = msg;
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2000);
+}
+
+function openPatternModal() {
+    const grid = document.getElementById('pattern-grid');
+    grid.innerHTML = '';
+    PATTERNS.forEach(p => {
+        let d = document.createElement('div');
+        d.className = 'pattern-opt'; d.style.background = p;
+        d.onclick = () => { currentPattern = p; updateCardBacks(); };
+        grid.appendChild(d);
+    });
+    document.getElementById('pattern-modal').style.display = 'flex';
+}
+
+function closePatternModal() { document.getElementById('pattern-modal').style.display = 'none'; }
+
+function updateCardBacks() {
+    let style = document.getElementById('dynamic-pattern');
+    if(!style) { style = document.createElement('style'); style.id = 'dynamic-pattern'; document.head.appendChild(style); }
+    style.innerHTML = `.card-back-style, .mini-card-back, .anim-temp-card, .mixer-card { background: ${currentPattern} !important; background-size: cover !important; }`;
+}
+
+function confirmReset() { document.getElementById('reset-confirm-modal').style.display = 'flex'; }
+function confirmExit() { document.getElementById('exit-modal').style.display = 'flex'; }
+function performExit() { 
+    document.body.innerHTML = '<div style="background:#2c3e50; width:100%; height:100vh; display:flex; justify-content:center; align-items:center; color:white; font-family:sans-serif; font-size:2em;">Oyun Kapatıldı.</div>';
+}
+
+function openSetup() {
+    gameActive = false;
+    document.getElementById('end-modal').style.display = 'none';
+    if(document.getElementById('reset-confirm-modal')) document.getElementById('reset-confirm-modal').style.display = 'none';
+    document.getElementById('setup-modal').style.display = 'flex';
+}
+
+function startGame() {
+    // AUDIO KİLİDİNİ AÇMA (SESSİZ BİR TON ÇALARAK)
+    if(audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => {
+             SoundFX.playTone(0, 'sine', 0.01);
+        });
+    } else {
+         SoundFX.playTone(0, 'sine', 0.01);
+    }
+    
+    SoundFX.playFanfare();
+    players[1] = document.getElementById('bot1-in').value || 'Bot 1';
+    players[2] = document.getElementById('bot2-in').value || 'Bot 2';
+    players[3] = document.getElementById('bot3-in').value || 'Bot 3';
+    scores = [0, 0, 0, 0];
+    assignPlayerColors(); 
+    document.getElementById('system-log').innerHTML = ''; 
+    document.getElementById('chat-messages').innerHTML = ''; 
+    document.getElementById('setup-modal').style.display = 'none';
+    isProcessing = false;
+    updateCardBacks();
+    let randomStart = Math.floor(Math.random() * 4);
+    initRound(randomStart);
+}
+
+function nextRound() {
+    document.getElementById('end-modal').style.display = 'none';
+    document.getElementById('system-log').innerHTML = ''; 
+    initRound(lastWinner);
+}
+
+async function initRound(startPlayerIdx = 0) {
+    deck = [];
+    COLORS.forEach(c => {
+        for(let i=0; i<=9; i++) deck.push({ color: c, val: i.toString(), type: 'num', name: i });
+        ['+1', 'Reverse', 'Block'].forEach(v => deck.push({ color: c, val: v, type: 'action', name: v === 'Reverse' ? 'Geri Dönüşüm' : 'Bıçak' }));
+    });
+    for(let i=0; i<2; i++) {
+        deck.push({ color: 'wild', val: 'Wild', type: 'wild', name:'Güveç' });
+        deck.push({ color: 'wild', val: '+2', type: 'wild', name:'+2' });
+        deck.push({ color: 'wild', val: 'Wild Anti-Draw', type: 'wild', name:'Tuvalet Kağıdı' });
+        deck.push({ color: 'wild', val: 'Wild Pot', type: 'wild', name:'Düdüklü Tencere' });
+        deck.push({ color: 'wild', val: 'Wild Meze', type: 'wild', name:'Meze' }); 
+    }
+    deck.push({ color: 'wild', val: 'Wild Table', type: 'wild', name:'Sofra' });
+    deck.push({ color: 'wild', val: 'Wild Mixer', type: 'wild', name:'Mikser' });
+    
+    deck = shuffleDeck(deck); 
+    hands = [[], [], [], []];
+    
+    // Bot Kişiliklerini Her El Rastgele Ata
+    for(let i=1; i<=3; i++) {
+        botLogicTypes[i] = PERSONALITY_TYPES[Math.floor(Math.random() * PERSONALITY_TYPES.length)];
+        botChatTypes[i] = PERSONALITY_TYPES[Math.floor(Math.random() * PERSONALITY_TYPES.length)];
+    }
+    
+    let first = deck.pop();
+    while(first.color === 'wild' || first.type === 'action') { deck.unshift(first); first = deck.pop(); }
+    discardPile = [first];
+    
+    currentPlayer = startPlayerIdx; direction = 1; drawStack = 0;
+    hands.forEach(h => h.saidUno = false);
+    isProcessing = true;
+    canChallenge = false;
+    wrongChallengeUsed = false;
+    hasDrawnThisTurn = false;
+    vulnerablePlayerIdx = -1; // Reset vulnerability
+    
+    document.getElementById('son-tabak-btn').disabled = true; 
+    document.getElementById('challenge-btn').disabled = true;
+    updateUI();
+    
+    await dealHandsAnimation(7);
+    
+    gameActive = true; isProcessing = false; 
+    updateUI();
+    addSystemLog(`El Başladı. İlk Sıra: ${players[currentPlayer]}`);
+    
+    triggerHandReviewChat();
+
+    if(currentPlayer !== 0) {
+        await wait(1500);
+        await botAI();
+    } else {
+        checkChallengeOpportunity();
+    }
+}
+
+function triggerHandReviewChat() {
+    for(let i=1; i<=3; i++) {
+        setTimeout(() => {
+            let h = hands[i];
+            let score = h.reduce((acc, c) => acc + (c.color==='wild'||c.type==='action'?2:0), 0);
+            let type = (score >= 4) ? "start_good" : "start_bad";
+            triggerBotChat(i, type);
+        }, i * 800 + Math.random()*500);
+    }
+}
+
+async function dealHandsAnimation(cardsPerPlayer) {
+    let totalCards = cardsPerPlayer * 4;
+    for(let i = 0; i < totalCards; i++) {
+        let pIdx = i % 4; 
+        let card = deck.pop();
+        hands[pIdx].push(card);
+        
+        document.getElementById('deck-count').innerText = deck.length;
+        let source = document.getElementById('draw-pile');
+        let target = (pIdx === 0) ? document.getElementById('player-hand') : document.getElementById(`bot${pIdx}-wrapper`);
+        
+        SoundFX.playDraw();
+
+        if (target) {
+            let f = source.getBoundingClientRect(); let t = target.getBoundingClientRect();
+            let el = document.createElement('div');
+            el.className = 'card card-back-style flying-card';
+            el.style.left = f.left + 'px'; el.style.top = f.top + 'px';
+            document.body.appendChild(el);
+            
+            // Force Reflow
+            void el.offsetWidth;
+
+            let destL = t.left + (t.width/2) - 35; let destT = t.top + (t.height/2) - 50;
+            
+            // Transition Logic
+            const onEnd = () => {
+                el.remove();
+                if (pIdx === 0) {
+                    let handDiv = document.getElementById('player-hand');
+                    // FIX: Use the local 'card' variable instead of fetching the last card from the array.
+                    // This prevents visual duplicates when multiple animations finish out of order.
+                    let c = card; 
+                    let div = document.createElement('div'); 
+                    div.innerHTML = createCardHTML(c); 
+                    let cardEl = div.firstElementChild;
+                    cardEl.style.opacity = 0.6;
+                    handDiv.appendChild(cardEl);
+                    handDiv.className = ''; 
+                    if(hands[0].length > 15) handDiv.classList.add('hand-super-packed');
+                    else if(hands[0].length > 8) handDiv.classList.add('hand-packed');
+                    else handDiv.classList.add('hand-normal');
+                } else {
+                    let stack = document.getElementById(`bot${pIdx}-stack`);
+                    if(hands[pIdx].length <= 6) { 
+                        let mc = document.createElement('div'); mc.className = 'mini-card-back'; 
+                        mc.style.top = ((hands[pIdx].length-1)*4) + 'px'; 
+                        mc.style.left = ((hands[pIdx].length-1)*8) + 'px'; 
+                        stack.appendChild(mc);
+                    }
+                    document.getElementById(`bot${pIdx}-name`).innerHTML = `<span style="color:${playerColors[pIdx]}">${players[pIdx]}</span> (${hands[pIdx].length}) <span class="bot-personality"></span>`;
+                }
+            };
+
+            el.addEventListener('transitionend', function handler(e) {
+                if(e.propertyName !== 'left' && e.propertyName !== 'top') return;
+                el.removeEventListener('transitionend', handler);
+                onEnd();
+            });
+            
+            // Güvenlik timeout'u (Transition fire etmezse diye)
+            setTimeout(() => { if(document.body.contains(el)) { el.remove(); onEnd(); } }, 1100);
+
+            el.style.left = destL + 'px'; el.style.top = destT + 'px';
+        }
+        await wait(100);
+    }
+    // FIX: Wait for the last few cards to land before starting the game logic
+    // This prevents updateUI() from running while cards are still being appended via onEnd
+    await wait(1200);
+}
+
+async function nextTurn() {
+    if(!gameActive) return;
+    
+    // EKSTRA GÜVENLİK: Eğer yerdeki son kart Sofra veya Mikser ise cezayı zorla sıfırla
+    let top = discardPile[discardPile.length-1];
+    if(top && (top.val === 'Wild Table' || top.val === 'Wild Mixer')) {
+        drawStack = 0;
+    }
+    
+    let loops = 0;
+    do { currentPlayer = (currentPlayer + direction + 4) % 4; loops++; } while(hands[currentPlayer].length === 0 && loops < 5);
+    
+    // YENİ: Sıra 'savunmasız' oyuncuya geri döndüyse, artık güvendedir.
+    if(currentPlayer === vulnerablePlayerIdx) {
+        vulnerablePlayerIdx = -1;
+        addSystemLog(`${players[currentPlayer]} yakalanmadan sırasını savdı!`);
+    }
+
+    hasDrawnThisTurn = false; 
+    updateUI();
+    
+    if(currentPlayer !== 0) {
+        document.getElementById('challenge-btn').disabled = true; 
+        await wait(1200);
+        await botAI();
+    } else { 
+        checkChallengeOpportunity();
+    }
+}
+
+function checkChallengeOpportunity() {
+    if (wrongChallengeUsed || drawStack > 0) { 
+        document.getElementById('challenge-btn').disabled = true;
+        return;
+    }
+    
+    // YENİ İTİRAZ MANTIĞI: Sadece bir öncekine değil, vulnerablePlayerIdx'e bak
+    if (vulnerablePlayerIdx !== -1 && vulnerablePlayerIdx !== 0) {
+        canChallenge = true;
+        document.getElementById('challenge-btn').disabled = false;
+    } else {
+        canChallenge = true; // Hatalı itiraza da izin var
+        document.getElementById('challenge-btn').disabled = false;
+    }
+}
+
+function showChallengePopup(who, isValid) {
+    let p = document.getElementById('challenge-popup');
+    document.getElementById('challenge-who').innerText = `İTİRAZ! ${who} dedi`;
+    let resEl = document.getElementById('challenge-result');
+    resEl.innerText = isValid ? "Geçerli! ✅" : "Geçersiz! ❌";
+    
+    p.className = isValid ? 'challenge-valid' : 'challenge-invalid';
+    p.style.display = 'block'; 
+    setTimeout(() => p.style.display = 'none', 1500);
+}
+
+async function challengePreviousPlayer() {
+    if(!canChallenge) return;
+    
+    // Geçerliyse butonu disable etme (wrongChallengeUsed değişmez)
+    document.getElementById('challenge-btn').disabled = true;
+
+    // YENİ: İtiraz artık global vulnerable oyuncuya yapılıyor
+    if (vulnerablePlayerIdx !== -1) {
+        let culprit = vulnerablePlayerIdx;
+        SoundFX.playFanfare();
+        showChallengePopup(players[0], true);
+        addSystemLog(`📢 İTİRAZ BAŞARILI! ${players[culprit]} Son Tabak demeyi unuttu.`);
+        triggerBotChat(culprit, "fail");
+        showToast("Yakalandı! +1 Ceza");
+        await drawCardsInternal(culprit, 1);
+        
+        vulnerablePlayerIdx = -1; // Cezayı çekti, artık savunmasız değil
+        canChallenge = false;
+    } else {
+        SoundFX.playError();
+        showChallengePopup(players[0], false);
+        wrongChallengeUsed = true; // Ceza olarak hak gitti
+        addSystemLog(`🚫 YANLIŞ ALARM! Kimse unutmamış.`);
+        showToast("Hatalı İtiraz! +1 Ceza ve Sıra Geçer");
+        await drawCardsInternal(0, 1);
+        canChallenge = false;
+        await nextTurn();
+    }
+}
+
+async function botAI() {
+    if(!gameActive) return;
+    let hand = hands[currentPlayer];
+    
+    // YENİ BOT İTİRAZ MANTIĞI: Global vulnerable oyuncuya bak
+    if (vulnerablePlayerIdx !== -1 && vulnerablePlayerIdx !== currentPlayer) {
+        // İnsan (Siz) unutmuşsa veya başka bir bot
+        if (vulnerablePlayerIdx === 0) {
+             if (Math.random() < 0.95) { // %95 fark eder
+                SoundFX.playFanfare(); 
+                showChallengePopup(players[currentPlayer], true);
+                addSystemLog(`📢 <b>${players[currentPlayer]}</b>: "İTİRAZ! Son Tabak demedin!"`);
+                triggerBotChat(currentPlayer, "gıcık"); 
+                showToast(`${players[currentPlayer]} yakaladı! +1 Ceza`);
+                await wait(1000);
+                await drawCardsInternal(0, 1);
+                vulnerablePlayerIdx = -1;
+            } else {
+                addSystemLog(`👀 ${players[currentPlayer]} unuttuğunuzu fark etmedi...`);
+            }
+        } else {
+            // Bot bota itiraz ediyor (%80 ihtimal)
+            if (Math.random() < 0.80) {
+                addSystemLog(`📢 ${players[currentPlayer]}, ${players[vulnerablePlayerIdx]}'e itiraz etti!`);
+                await drawCardsInternal(vulnerablePlayerIdx, 1);
+                vulnerablePlayerIdx = -1;
+            }
+        }
+    }
+
+    if(hand.length === 2 && hand.some(c => canPlay(c))) {
+        if(Math.random() > 0.05) { 
+            SoundFX.playUno();
+            showSonTabakPopup(players[currentPlayer]);
+            hands[currentPlayer].saidUno = true;
+            addSystemLog(`<b>${players[currentPlayer]}</b>: SON TABAK!`);
+            triggerBotChat(currentPlayer, "uno");
+            await wait(1000);
+        } else {
+             // Unuttu
+        }
+    }
+    await botMove();
+}
+
+async function botMove() {
+    let hand = hands[currentPlayer];
+    let personality = botLogicTypes[currentPlayer] || 'Dengeli'; // Oyun Stili
+    
+    if(drawStack > 0) {
+        let possibleSaviorIndices = [];
+        hand.forEach((c, i) => { if(canPlay(c)) possibleSaviorIndices.push(i); });
+        
+        if(possibleSaviorIndices.length > 0) {
+            let bestIdx = possibleSaviorIndices.find(i => ['+2','+1','Wild Meze'].includes(hand[i].val));
+            if(bestIdx === undefined) bestIdx = possibleSaviorIndices[0]; 
+            let c = hand[bestIdx];
+            if(c.val === '+2') triggerBotChat(currentPlayer, "plus2");
+            playCardInternal(currentPlayer, bestIdx);
+        } else {
+            addSystemLog(`${players[currentPlayer]} Cezayı (${drawStack}) çekiyor.`);
+            
+            if(drawStack >= 3) triggerBotChat(currentPlayer, "draw_many");
+            else if(drawStack === 2) triggerBotChat(currentPlayer, "draw_2");
+            
+            await drawCardsSequence(currentPlayer, drawStack);
+            drawStack=0; 
+            await nextTurn();
+        }
+        return;
+    }
+    
+    let playableIndices = [];
+    hand.forEach((c, i) => { if(canPlay(c)) playableIndices.push(i); });
+    
+    if(playableIndices.length > 0) {
+        let bestIdx = -1, maxScore = -9999;
+        let nextP = (currentPlayer + direction + 4) % 4;
+        let isNextNearWin = hands[nextP].length <= 3; 
+        let colorCounts = { red:0, green:0, yellow:0, purple:0 };
+        hand.forEach(c => { if(c.color !== 'wild') colorCounts[c.color]++; });
+        
+        playableIndices.forEach(idx => {
+            let c = hand[idx];
+            let score = 10; 
+            if(c.color !== 'wild') score += colorCounts[c.color] * 10;
+            if (personality === 'Agresif') {
+                if(c.val === '+2' || c.val === 'Wild Pot') score += 100; 
+                if(c.val === 'Block') score += 80;
+            } else if (personality === 'Stratejik') {
+                if(c.color === 'wild') score -= 50; 
+                if(isNextNearWin && (c.val === '+2' || c.val === 'Block')) score += 200; 
+            }
+            // SOFRA AKILLI KULLANIM: Elimiz 5'ten fazlaysa VEYA rakip bitiyorsa (<=3) kullan
+            if(c.val === 'Wild Table') { 
+                if(hand.length >= 5 || isNextNearWin) score += 500; 
+                else score -= 200; 
+            }
+            // MİKSER STRATEJİSİ: Elimiz kötüyse (çok kart) tercih et
+            if(c.val === 'Wild Mixer') { 
+                if(hand.length >= 5) score += 300; 
+                else score -= 50; 
+            }
+            if(score > maxScore) { maxScore = score; bestIdx = idx; }
+        });
+        
+        let chosen = hand[bestIdx];
+        if(chosen.val === 'Block') triggerBotChat(currentPlayer, "block");
+        if(chosen.val === '+2') triggerBotChat(currentPlayer, "plus2");
+        if(chosen.val === 'Reverse') triggerBotChat(currentPlayer, "reverse");
+        if(chosen.color === 'wild') {
+            // Wild card özel chat trigger
+            if(chosen.val === 'Wild Mixer') triggerBotChat(currentPlayer, "wild_mixer");
+            else if(chosen.val === 'Wild Table') triggerBotChat(currentPlayer, "wild_table");
+            else if(chosen.val === 'Wild Pot') triggerBotChat(currentPlayer, "wild_pot");
+            else if(chosen.val === 'Wild Meze') triggerBotChat(currentPlayer, "wild_meze");
+            else if(chosen.val === 'Wild Anti-Draw') triggerBotChat(currentPlayer, "wild_antidraw");
+            else triggerBotChat(currentPlayer, "wild");
+        }
+        
+        playCardInternal(currentPlayer, bestIdx);
+    } else {
+        await drawCardsSequence(currentPlayer, 1);
+        let newCardIdx = hands[currentPlayer].length - 1;
+        if(canPlay(hands[currentPlayer][newCardIdx])) {
+            addSystemLog(`${players[currentPlayer]} çektiğini oynuyor.`);
+            await wait(500);
+            playCardInternal(currentPlayer, newCardIdx);
+        } else {
+            addSystemLog(`${players[currentPlayer]} pas geçti.`);
+            triggerBotChat(currentPlayer, "draw_1");
+            await wait(500);
+            await nextTurn();
+        }
+    }
+}
+
+async function playerDrawCard() {
+    if(currentPlayer !== 0 || !gameActive || isProcessing) return;
+    if(hasDrawnThisTurn && drawStack === 0) {
+        showToast("Zaten kart çektin! Pas geçiliyor...");
+        return;
+    }
+    if(drawStack > 0) {
+        addSystemLog(`Cezayı (${drawStack}) çekiyorsunuz.`);
+        await drawCardsSequence(0, drawStack);
+        drawStack=0; 
+        await nextTurn();
+        return;
+    }
+    if(hands[0].some(c => canPlay(c))) { 
+        showToast("Atılacak kartın varken çekemezsin!"); 
+        SoundFX.playError();
+        return; 
+    }
+    await drawCardsSequence(0, 1);
+    hasDrawnThisTurn = true; 
+    let newCard = hands[0][hands[0].length - 1];
+    if(canPlay(newCard)) { 
+        showToast("Çektiğin oynanabilir! Oynamak zorundasın."); 
+        updateUI(); 
+    } else { 
+        addSystemLog("Uygun kart gelmedi, Pas."); 
+        await wait(800);
+        await nextTurn(); 
+    }
+}
+
+function playerSaySonTabak() {
+    if(hands[0].length > 2) return;
+    hands[0].saidUno = true;
+    SoundFX.playUno();
+    showSonTabakPopup(players[0]);
+    addSystemLog(`<b>${players[0]}</b>: SON TABAK!`);
+    document.getElementById('son-tabak-btn').disabled = true;
+}
+
+function playerPlayCard(idx) {
+    if(currentPlayer !== 0 || !gameActive || isProcessing) return;
+    if(canPlay(hands[0][idx])) playCardInternal(0, idx); 
+    else {
+        SoundFX.playError();
+        showToast("Oynanamaz!");
+    }
+}
+
+function canPlay(card) {
+    let top = discardPile[discardPile.length-1];
+    let topColor = top.chosenColor || top.color;
+    if(card.val === 'Wild Anti-Draw') return true;
+    if(drawStack > 0) {
+        if(card.val === '+2' || card.val === 'Wild Meze') return true;
+        if(card.val === '+1') {
+            if(top.val === '+2' || top.val === 'Wild Meze') return card.color === topColor;
+            if(top.val === '+1') return true;
+        }
+        return false;
+    }
+    if(card.color === 'wild') return true;
+    return (card.color === topColor || card.val === top.val);
+}
+
+function playCardInternal(pIdx, cIdx) {
+    isProcessing = true;
+    let card = hands[pIdx][cIdx];
+    let cardName = card.name || card.val;
+    let source = (pIdx === 0) ? document.getElementById('player-hand').children[cIdx] : document.getElementById(`bot${pIdx}-wrapper`);
+    let target = document.getElementById('discard-pile');
+
+    if(card.val === 'Block') { animateBlock(currentPlayer, direction); SoundFX.playBlock(); }
+    else if(card.val === 'Reverse') { animateReverse(); SoundFX.playReverse(); }
+    else if(card.color === 'wild') { SoundFX.playWild(); }
+    else if(card.val === '+2' || card.val === '+1') { SoundFX.playBad(); }
+
+    animateFly(source, target, createCardHTML(card), async () => {
+        SoundFX.playCardSnap();
+        hands[pIdx].splice(cIdx, 1);
+        discardPile.push(card);
+        card.chosenColor = card.color;
+        
+        // YENİ: Kart oynandıktan sonra el sayısı kontrolü (VULNERABILITY CHECK)
+        // Eğer oyuncu tek karta düştüyse ve 'saidUno' flag'i false ise savunmasızdır.
+        if (hands[pIdx].length === 1 && !hands[pIdx].saidUno) {
+            vulnerablePlayerIdx = pIdx;
+            // REMOVE THIS LINE: addSystemLog(`${players[pIdx]} tek karta düştü ve demedi!`);
+        } else if (hands[pIdx].length === 0) {
+            vulnerablePlayerIdx = -1; // Kazandı, savunmasızlık biter.
+        } else {
+            // Eğer eli 1'den büyükse ve daha önce savunmasızsa (örneğin kart çekip 2 yapıp sonra tekrar oynadıysa)
+            // Bu durumda vulnerablePlayerIdx resetlenmeli mi? 
+            // Hayır, playCardInternal sonrası el 1 ise ve demediyse vulnerable olur. 
+            // Eğer el 2 ise vulnerable değildir.
+            if (vulnerablePlayerIdx === pIdx) vulnerablePlayerIdx = -1;
+        }
+
+        if(card.color === 'wild' && card.val !== 'Wild Anti-Draw') {
+            if(pIdx === 0) {
+                pendingWild = card;
+                pendingAction = (card.val === 'Wild Mixer') ? 'mixer' : (card.val === 'Wild Table') ? 'table' : (card.val === 'Wild Pot') ? 'pot' : (card.val === 'Wild Meze') ? 'meze' : 'normal';
+                document.getElementById('color-modal').style.display = 'flex';
+                return;
+            } else {
+                let counts = { red:0, green:0, yellow:0, purple:0 };
+                hands[pIdx].forEach(c => { if(c.color!=='wild') counts[c.color]++; });
+                let bestColor = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+                if(counts[bestColor] === 0) bestColor = COLORS[Math.floor(Math.random()*4)];
+                
+                card.chosenColor = bestColor;
+                addSystemLog(`${players[pIdx]} ${cardName} attı. Renk: ${VEGETABLES[bestColor]}`);
+                
+                if(card.val === 'Wild Mixer') {
+                    // AKILLI MİKSER
+                    let leftNeighborIdx = (pIdx + 1 + 4) % 4; 
+                    let rightNeighborIdx = (pIdx - 1 + 4) % 4; 
+                    let countLeft = hands[leftNeighborIdx].length;
+                    let countRight = hands[rightNeighborIdx].length;
+                    let bestDir = (countRight < countLeft) ? 1 : -1;
+                    
+                    // Eğer oyun bittiyse (kazananın eli 0), standart mikser çağrılmaz.
+                    // finishPlay içinde özel handleEndGameEffects çalışacak.
+                    if (hands[pIdx].length > 0) executeMixer(bestDir);
+                    else {
+                        // Oyun bitti, finishPlay çağıracak ama burada bir şey yapmıyoruz.
+                        // Yönü kaydedip bitirebiliriz ama finishPlay'e bırakalım.
+                        applyEffect(card); finishPlay(pIdx);
+                    }
+                }
+                else if(card.val === 'Wild Table') {
+                    if (hands[pIdx].length > 0) executeTable();
+                    else { applyEffect(card); finishPlay(pIdx); }
+                }
+                else if(card.val === 'Wild Pot') await executePot();
+                else if(card.val === 'Wild Meze') executeMeze(pIdx);
+                else { applyEffect(card); finishPlay(pIdx); }
+            }
+        } else {
+            let logMsg = cardName;
+            if(card.type === 'num') logMsg = `${card.val} ${VEGETABLES[card.color]}`;
+            addSystemLog(`${players[pIdx]} ${logMsg} attı.`);
+            if(card.val === 'Wild Anti-Draw') {
+                drawStack = 0;
+                let prev = discardPile[discardPile.length-2];
+                card.chosenColor = prev.chosenColor || prev.color;
+                addSystemLog("Tuvalet Kağıdı! Ceza Silindi.");
+                finishPlay(pIdx);
+            } else {
+                applyEffect(card);
+                finishPlay(pIdx);
+            }
+        }
+    });
+}
+
+function applyEffect(card) {
+    if(card.val === '+1') drawStack += 1;
+    if(card.val === '+2') drawStack += 2;
+    if(card.val === 'Reverse') direction *= -1;
+    if(card.val === 'Block') {
+        let nextP = (currentPlayer + direction + 4) % 4;
+        addSystemLog(`${players[nextP]} Bıçaklandı!`);
+        currentPlayer = nextP; 
+    }
+}
+
+// OYUN SONU EFEKTLERİNİ YÖNETEN YENİ FONKSİYON
+async function handleEndGameEffects(winnerIdx) {
+    let lastCard = discardPile[discardPile.length - 1];
+    
+    // 1. CEZA KARTI / BİRİKMİŞ CEZA VARSA
+    if (drawStack > 0) {
+        let victimIdx = (winnerIdx + direction + 4) % 4;
+        addSystemLog(`🏁 Oyun Bitti! ${players[victimIdx]} son cezayı (${drawStack}) çekiyor.`);
+        await drawCardsSequence(victimIdx, drawStack);
+        drawStack = 0;
+    }
+
+    // 2. SOFRA (KAZANAN HARİÇ YENİDEN DAĞITIM)
+    if (lastCard.val === 'Wild Table') {
+         addSystemLog("🏁 Sofra! Kalanlar için kartlar yeniden dağıtılıyor.");
+         await new Promise(r => animateTableEffect(r));
+         
+         let pool = [];
+         // Kazananın eli 0 olduğu için havuza kart eklemez, geri de almaz.
+         let counts = hands.map(h => h.length);
+         hands.forEach(h => { pool.push(...h); h.length = 0; });
+         pool = shuffleDeck(pool);
+         for(let i=0; i<4; i++) { 
+             for(let j=0; j<counts[i]; j++) hands[i].push(pool.pop()); 
+         }
+         updateUI();
+         await wait(1000);
+    }
+
+    // 3. MİKSER (KAZANAN HARİÇ DÖNDÜRME)
+    if (lastCard.val === 'Wild Mixer') {
+         addSystemLog("🏁 Mikser! Kaybedenler ellerini değişiyor.");
+         // Yönü kazanan belirler (Bot ise otomatik, Oyuncu ise modal zaten seçmişti)
+         // Ancak burada animasyon için bir yön varsayalım veya mevcut direction'ı kullanalım.
+         let dir = direction; 
+         let isMobile = window.innerWidth < 900;
+         
+         await new Promise(r => animateMixerEffect(dir, isMobile, r));
+
+         // Sadece kaybedenler (winnerIdx hariç) arasında döndür
+         // Basit bir yöntem: Winner'ı listeden çıkar, kalanları döndür, geri koy.
+         // Ama indeksleri korumak lazım.
+         
+         // Kaybedenlerin indekslerini sırayla al (yöne göre)
+         let losers = [];
+         // Saat yönü
+         for(let i=1; i<=3; i++) {
+             losers.push((winnerIdx + i*dir + 4) % 4);
+         }
+         
+         // Elleri kaydır: A->B, B->C, C->A
+         let tempHand = [...hands[losers[0]]]; // İlk kaybedenin elini sakla
+         hands[losers[0]] = [...hands[losers[1]]];
+         hands[losers[1]] = [...hands[losers[2]]];
+         hands[losers[2]] = tempHand;
+         
+         updateUI();
+         await wait(1000);
+    }
+}
+
+async function finishPlay(pIdx) {
+    isProcessing = false;
+    if(hands[pIdx].length === 0) {
+        await handleEndGameEffects(pIdx); // Önce efektler
+        endGame(pIdx);                    // Sonra skor tablosu
+    }
+    else await nextTurn();
+}
+
+function resolveColor(c) {
+    document.getElementById('color-modal').style.display = 'none';
+    pendingWild.chosenColor = c;
+    addSystemLog(`Renk: ${VEGETABLES[c]}`);
+    if(pendingAction === 'mixer') {
+        let rifuCount = hands[3].length;
+        let utkuCount = hands[1].length;
+        document.getElementById('dir-info-1').innerText = `Saat Yönünde: Rifu'dan (${rifuCount} kart) alacaksın.`;
+        document.getElementById('dir-info-2').innerText = `Ters Yönde: Utku'dan (${utkuCount} kart) alacaksın.`;
+        document.getElementById('dir-modal').style.display = 'flex';
+    }
+    else if(pendingAction === 'table') {
+        if(hands[0].length === 0) { applyEffect(pendingWild); finishPlay(0); } // Bitti
+        else executeTable();
+    }
+    else if(pendingAction === 'pot') executePot();
+    else if(pendingAction === 'meze') executeMeze(0);
+    else { applyEffect(pendingWild); finishPlay(0); }
+}
+
+function resolveDirection(d) {
+    document.getElementById('dir-modal').style.display = 'none';
+    if (hands[0].length === 0) {
+        // Oyun bitti, yön d olarak ayarlandı, finishPlay çağır
+        direction = d;
+        applyEffect(pendingWild); 
+        finishPlay(0);
+    } else {
+        executeMixer(d);
+    }
+}
+
+function executeTable() {
+    addSystemLog("Sofra! Kartlar karışıyor.");
+    animateTableEffect(() => {
+        let pool = [];
+        let counts = hands.map(h => h.length);
+        hands.forEach(h => { pool.push(...h); h.length = 0; });
+        pool = shuffleDeck(pool); 
+        for(let i=0; i<4; i++) { for(let j=0; j<counts[i]; j++) hands[i].push(pool.pop()); }
+        
+        // BUG FIX: applyEffect fonksiyonundan sonra drawStack'i zorla sıfırlıyoruz.
+        // Eğer applyEffect yanlışlıkla +2 eklerse, bu satır onu ezer.
+        applyEffect(pendingWild || discardPile[discardPile.length-1]);
+        drawStack = 0; 
+        
+        updateUI();
+        setTimeout(() => finishPlay(currentPlayer), 500);
+    });
+}
+
+function executeMixer(dir) {
+    addSystemLog(`Mikser! Eller değişti.`);
+    let isMobile = window.innerWidth < 900;
+    animateMixerEffect(dir, isMobile, () => {
+        if(dir === 1) { let temp = hands[3]; hands[3] = hands[2]; hands[2] = hands[1]; hands[1] = hands[0]; hands[0] = temp; }
+        else { let temp = hands[0]; hands[0] = hands[1]; hands[1] = hands[2]; hands[2] = hands[3]; hands[3] = temp; }
+        direction = dir;
+        
+        // BUG FIX: applyEffect fonksiyonundan sonra drawStack'i zorla sıfırlıyoruz.
+        applyEffect(pendingWild || discardPile[discardPile.length-1]);
+        drawStack = 0; 
+        
+        updateUI();
+        setTimeout(() => finishPlay(currentPlayer), 500);
+    });
+}
+
+async function executePot() {
+    addSystemLog("Düdüklü Tencere! Herkes çekiyor.");
+    let startP = currentPlayer;
+    for(let i=0; i<4; i++) {
+        let target = (startP + (i * direction) + 4) % 4;
+        await drawCardsInternal(target, 1);
+        await wait(600);
+    }
+    finishPlay(currentPlayer);
+}
+
+function executeMeze(pIdx) {
+    let prevP = (pIdx - direction + 4) % 4;
+    addSystemLog(`Meze! ${players[prevP]} 1 kart çekiyor.`);
+    drawCardsInternal(prevP, 1);
+    drawStack += 1;
+    addSystemLog(`Sonraki oyuncuya +1 eklendi.`);
+    finishPlay(pIdx);
+}
+
+function drawCardsSequence(pIdx, count) {
+    return new Promise(async (resolve) => {
+        isProcessing = true;
+        let drawn = 0;
+        let counterEl = document.getElementById('draw-counter');
+        counterEl.style.opacity = 1; 
+        while(drawn < count) {
+            await drawCardsInternal(pIdx, 1);
+            drawn++;
+            await wait(600);
+        }
+        counterEl.style.opacity = 0;
+        isProcessing = false;
+        resolve();
+    });
+}
+
+async function drawCardsInternal(pIdx, count) {
+    for(let i=0; i<count; i++) {
+        if(deck.length === 0) {
+            if(discardPile.length > 1) {
+                let top = discardPile.pop(); deck = discardPile; discardPile = [top]; deck = shuffleDeck(deck); addSystemLog("Deste karıştırıldı.");
+            } else break;
+        }
+        let card = deck.pop(); hands[pIdx].push(card);
+        let source = document.getElementById('draw-pile');
+        let target = (pIdx === 0) ? document.getElementById('player-hand') : document.getElementById(`bot${pIdx}-wrapper`); 
+        SoundFX.playDraw();
+        
+        // Animasyonu beklemeden devam etmemek için Promise yapısına çevirebilirdik ama
+        // oyun hızı için await kullanmadan 'fire and forget' tercih edilmiş, 
+        // sadece kart ekleme görsel efekt için.
+        animateFly(source, target, (pIdx===0?createCardHTML(card):null), null, pIdx===0);
+    }
+    hands[pIdx].saidUno = false;
+    updateUI();
+}
+
+function animateFly(from, to, html, cb, isPlayerCenter=false) {
+    if(!from || !to) { if(cb) cb(); return; }
+    let f = from.getBoundingClientRect();
+    let t = to.getBoundingClientRect();
+    let el = document.createElement('div');
+    if(html) { let w = document.createElement('div'); w.innerHTML = html; el = w.firstElementChild; el.classList.add('flying-card'); } else { el.className = 'card card-back-style flying-card'; }
+    el.style.left = f.left + 'px'; el.style.top = f.top + 'px';
+    document.body.appendChild(el);
+    
+    // Force Reflow
+    void el.offsetWidth;
+
+    let destL = t.left, destT = t.top;
+    if(isPlayerCenter) { destL += t.width/2 - 45; destT += t.height/2 - 65; }
+    
+    // Transition End Logic
+    const onEnd = () => {
+        el.remove();
+        if(cb) cb();
+    };
+
+    el.addEventListener('transitionend', function handler(e) {
+        if (e.propertyName !== 'left' && e.propertyName !== 'top') return; // Only trigger for position
+        el.removeEventListener('transitionend', handler);
+        onEnd();
+    });
+
+    // Fallback safety (slightly larger than 1.0s) just in case
+    setTimeout(() => {
+        if(document.body.contains(el)) {
+             el.remove();
+             if(cb) cb();
+        }
+    }, 1100);
+
+    el.style.left = destL + 'px';
+    el.style.top = destT + 'px';
+}
+
+function animateBlock(targetIdx, dir) {
+    let nextP = (targetIdx + dir + 4) % 4;
+    let targetEl = (nextP === 0) ? document.getElementById('player-hand') : document.getElementById(`bot${nextP}-wrapper`);
+    let b = document.createElement('div'); b.innerText = '🔪'; b.className = 'blocked-anim';
+    if (targetEl) {
+        let rect = targetEl.getBoundingClientRect();
+        b.style.left = (rect.left + rect.width/2 - 30) + 'px'; 
+        b.style.top = (rect.top + rect.height/2 - 30) + 'px';
+        document.body.appendChild(b); setTimeout(() => b.remove(), 2000);
+    }
+}
+
+function animateReverse() {
+    document.querySelectorAll('.arrow-icon').forEach(el => {
+        el.classList.add('arrow-spin'); setTimeout(() => el.classList.remove('arrow-spin'), 1000);
+    });
+}
+
+function animateTableEffect(cb) {
+    let centerEl = document.getElementById('play-area');
+    let rect = centerEl.getBoundingClientRect();
+    let centerX = rect.left + rect.width/2; let centerY = rect.top + rect.height/2;
+    let ids = ['player-hand', 'bot1-wrapper', 'bot2-wrapper', 'bot3-wrapper'];
+    let animCards = [];
+    ids.forEach(id => {
+        let el = document.getElementById(id); 
+        if(el) {
+            let r = el.getBoundingClientRect();
+            let startX = r.left + (r.width / 2) - 35; let startY = r.top + (r.height / 2) - 50;
+            for(let i=0; i<3; i++) { 
+                let ac = document.createElement('div'); ac.className = 'anim-temp-card'; ac.style.left = startX + 'px'; ac.style.top = startY + 'px'; document.body.appendChild(ac); animCards.push(ac);
+            }
+        }
+    });
+    setTimeout(() => {
+        animCards.forEach(ac => { ac.style.transition = 'all 0.8s ease-in'; ac.style.left = (centerX - 30) + 'px'; ac.style.top = (centerY - 45) + 'px'; ac.style.transform = `rotate(${Math.random()*360}deg)`; });
+    }, 50);
+    setTimeout(() => {
+        animCards.forEach(ac => { ac.style.transition = 'all 0.8s ease-out'; let angle = Math.random() * Math.PI * 2; let dist = 300; ac.style.left = (centerX + Math.cos(angle)*dist) + 'px'; ac.style.top = (centerY + Math.sin(angle)*dist) + 'px'; ac.style.opacity = 0; });
+    }, 1000);
+    setTimeout(() => { animCards.forEach(ac => ac.remove()); cb(); }, 1800);
+}
+
+function animateMixerEffect(dir, isMobile, cb) {
+    let dp = document.getElementById('play-area');
+    let rect = dp.getBoundingClientRect();
+    let cx = rect.left + rect.width/2; let cy = rect.top + rect.height/2;
+    let mixerContainer = document.createElement('div'); mixerContainer.className = 'mixer-container'; mixerContainer.style.left = cx + 'px'; mixerContainer.style.top = cy + 'px';
+    document.body.appendChild(mixerContainer);
+    
+    let radius = isMobile ? 60 : 130;
+    for(let i=0; i<8; i++) {
+        let c = document.createElement('div'); c.className = 'mixer-card card-back-style'; 
+        c.style.transform = `rotate(${(i/8)*360}deg) translateY(-${radius}px)`; 
+        mixerContainer.appendChild(c);
+    }
+    
+    // Transition event logic
+    mixerContainer.addEventListener('transitionend', () => {
+        mixerContainer.remove();
+        cb();
+    });
+
+    let rotation = dir * 360 * 2; mixerContainer.style.transition = 'transform 2s ease-in-out';
+    void mixerContainer.offsetWidth; // Force Reflow
+    mixerContainer.style.transform = `rotate(${rotation}deg)`;
+}
+
+function createCardHTML(card) {
+    let emoji = '';
+    if(card.type === 'num') emoji = VEGETABLES[card.color];
+    else if(card.val === 'Wild') emoji = `<div class="guvec-grid"><span>🍅</span><span>🥦</span><span>🥔</span><span>🍆</span></div>`;
+    else emoji = SPECIALS[card.val] || card.val;
+    let cls = (card.color === 'wild') ? 'wild-bg' : card.color;
+    let borderStyle = '';
+    if(card.chosenColor) {
+        let cCode = card.chosenColor==='red'?'#e74c3c':card.chosenColor==='green'?'#2ecc71':card.chosenColor==='yellow'?'#f39c12':'#9b59b6';
+        borderStyle = `border-color: ${cCode} !important; border-width: 3px;`;
+    }
+    let cornerTxt = (card.type === 'num') ? card.val : '';
+    return `<div class="card ${cls}" style="${borderStyle}" data-val="${card.val}">
+        <div class="card-corner top-left">${cornerTxt}</div>
+        <div class="card-emoji">${emoji}</div>
+        <div class="card-corner bottom-right">${cornerTxt}</div>
+    </div>`;
+}
+
+function showSonTabakPopup(who) {
+    let p = document.getElementById('son-tabak-popup');
+    document.getElementById('son-tabak-who').innerText = who + " dedi!";
+    p.style.display = 'block'; setTimeout(() => p.style.display = 'none', 1200);
+}
+
+function generateGameSummary(winner, scores, roundScores) {
+    // Round Loser (Most points in THIS round)
+    let maxRoundScore = -1;
+    let worstRoundPlayer = "";
+    players.forEach((p, i) => {
+        if(roundScores[i] > maxRoundScore) {
+            maxRoundScore = roundScores[i];
+            worstRoundPlayer = p;
+        }
+    });
+
+    let comments = [
+        `Vay vay vay! ${winner} resmen masayı süpürdü!`,
+        `İnanılmaz bir final! ${winner} rakiplerine nefes aldırmadı.`,
+        `Sebzeler havada uçuştu ama ${winner} tabağını bitiren ilk isim oldu!`,
+        `Bu ne hız ${winner}? Düdüklü tencere gibi basınç yaptın rakiplere!`,
+        `Tarihi bir an! ${winner} kazanan oldu.`
+    ];
+    let roasts = [
+        `${worstRoundPlayer} ise bu elin günah keçisi oldu, bir elde ${maxRoundScore} puan aldı!`,
+        `${worstRoundPlayer}, bu el market alışverişine çıkmış gibisin, ${maxRoundScore} puan ne?!`,
+        `Sanırım ${worstRoundPlayer} oyunu yanlış anladı, amaç kart toplamak değil atmaktı!`,
+        `${worstRoundPlayer} için bir dakikalık saygı duruşu... Bu el çok canı yandı.`
+    ];
+    return `🎤 <b>Spiker:</b> "${comments[Math.floor(Math.random()*comments.length)]} ${roasts[Math.floor(Math.random()*roasts.length)]}"`;
+}
+
+function endGame(pIdx) {
+    gameActive = false;
+    let winner = players[pIdx];
+    lastWinner = pIdx;
+    let roundScores = hands.map(h => h.reduce((sum, c) => {
+        let v = 0;
+        if(c.type === 'num') v = parseInt(c.val); else if(c.type === 'action') v = 20; else v = 30;
+        return sum + v;
+    }, 0));
+    roundScores.forEach((s, i) => scores[i] += s);
+    document.getElementById('winner-text').innerText = `🎉 ${winner} Kazandı!`;
+    document.getElementById('ai-summary').innerHTML = generateGameSummary(winner, scores, roundScores);
+
+    let html = "<table style='width:100%'>";
+    players.forEach((p, i) => {
+        let color = playerColors[i];
+        let boldStyle = (i === pIdx) ? "font-weight:bold; font-size:1.1em;" : "";
+        html += `<tr style="${boldStyle}"><td style="color:${color}">${p}</td><td>+${roundScores[i]} (Top: ${scores[i]})</td></tr>`;
+    });
+    html += "</table>";
+    document.getElementById('final-scores').innerHTML = html;
+    
+    document.getElementById('end-modal').style.display = 'flex';
+    
+    startVegetableRain();
+    SoundFX.playFanfare();
+    triggerBotChat(pIdx, "win");
+    updateUI();
+}
+
+function updateVisuals() {
+    let container = document.querySelector('.game-container');
+    container.classList.remove('ambient-red', 'ambient-green', 'ambient-yellow', 'ambient-purple');
+    
+    let activeColor = null;
+    if(discardPile.length > 0) {
+        let top = discardPile[discardPile.length-1];
+        activeColor = top.chosenColor || top.color;
+        if(activeColor !== 'wild') container.classList.add(`ambient-${activeColor}`);
+    }
+    document.querySelectorAll('.arrow-icon').forEach(el => el.className = 'arrow-icon');
+    let aL = document.getElementById('arrow-left'); let aR = document.getElementById('arrow-right');
+    let aT1 = document.getElementById('arrow-top-1'); let aT2 = document.getElementById('arrow-top-2');
+    if(direction === 1) { aL.innerText = '⬆️'; aR.innerText = '⬇️'; aT1.innerText = '➡️'; aT2.innerText = '➡️'; } 
+    else { aL.innerText = '⬇️'; aR.innerText = '⬆️'; aT1.innerText = '⬅️'; aT2.innerText = '⬅️'; }
+    if(gameActive) {
+        let nextP = (currentPlayer + direction + 4) % 4;
+        let glowClass = activeColor && activeColor !== 'wild' ? `glow-${activeColor}` : 'glow-neutral';
+        if((currentPlayer===0 && nextP===1) || (currentPlayer===1 && nextP===0)) aL.classList.add('active', glowClass);
+        else if((currentPlayer===1 && nextP===2) || (currentPlayer===2 && nextP===1)) aT1.classList.add('active-static', glowClass);
+        else if((currentPlayer===2 && nextP===3) || (currentPlayer===3 && nextP===2)) aT2.classList.add('active-static', glowClass);
+        else if((currentPlayer===3 && nextP===0) || (currentPlayer===0 && nextP===3)) aR.classList.add('active', glowClass);
+    }
+}
+
+function updateUI(skipHandRebuild = false) {
+    let ranked = players.map((n, i) => ({n, s: scores[i], idx: i})); 
+    ranked.sort((a,b) => a.s - b.s);
+    
+    let html = ""; 
+    ranked.forEach((r) => {
+        let color = playerColors[r.idx];
+        let rowClass = (r.idx === 0) ? 'score-row-human' : '';
+        html += `<tr class="${rowClass}"><td style="color:${color}">${r.n}</td><td>${r.s}</td></tr>`;
+    });
+    document.getElementById('score-table').querySelector('tbody').innerHTML = html;
+    
+    for(let i=1; i<=3; i++) {
+        let wrap = document.getElementById(`bot${i}-wrapper`);
+        let pColor = playerColors[i];
+        document.getElementById(`bot${i}-name`).innerHTML = `<span style="color:${pColor}">${players[i]}</span> (${hands[i].length}) <span class="bot-personality">${botLogicTypes[i] || ''}</span>`;
+        if(currentPlayer === i) wrap.classList.add('current-player'); else wrap.classList.remove('current-player');
+        
+        let stack = document.getElementById(`bot${i}-stack`); 
+        stack.innerHTML = '';
+        
+        let visibleCount = Math.min(hands[i].length, 6);
+        let totalWidth = 60 + (visibleCount > 0 ? (visibleCount - 1) * 8 : 0);
+        stack.style.width = totalWidth + 'px';
+
+        for(let j=0; j<visibleCount; j++) {
+            let mc = document.createElement('div'); 
+            mc.className = 'mini-card-back'; 
+            mc.style.top = (j*4) + 'px'; 
+            mc.style.left = (j*8) + 'px'; 
+            stack.appendChild(mc);
+        }
+    }
+    document.getElementById('deck-count').innerText = deck.length;
+    let dp = document.getElementById('discard-pile');
+    if(!dp.querySelector('.tp-overlay')) {
+        dp.innerHTML = '';
+        if(discardPile.length > 0) {
+            let c = discardPile[discardPile.length-1]; dp.innerHTML = createCardHTML(c);
+        }
+    }
+    let pBadge = document.getElementById('penalty-badge');
+    if(drawStack > 0) {
+        pBadge.innerText = "+" + drawStack; pBadge.style.display = 'flex'; pBadge.className = ''; 
+        if(drawStack===1) pBadge.classList.add('p-1'); 
+        else if(drawStack===2) pBadge.classList.add('p-2'); 
+        else if(drawStack===3) pBadge.classList.add('p-3'); 
+        else if(drawStack===4) pBadge.classList.add('p-4'); 
+        else if(drawStack===5) pBadge.classList.add('p-5'); 
+        else pBadge.classList.add('p-6');
+    } else { pBadge.style.display = 'none'; }
+    if(!skipHandRebuild) {
+        let ph = document.getElementById('player-hand'); ph.innerHTML = '';
+        if(currentPlayer === 0) ph.classList.add('current-player-area'); else ph.classList.remove('current-player-area');
+        ph.className = ''; 
+        let isMobile = window.innerWidth < 900;
+        if(hands[0].length > (isMobile?9:15)) ph.classList.add('hand-super-packed'); else if(hands[0].length > (isMobile?5:10)) ph.classList.add('hand-packed'); else ph.classList.add('hand-normal');
+        hands[0].forEach((c, idx) => {
+            let div = document.createElement('div'); div.innerHTML = createCardHTML(c); let cardEl = div.firstElementChild;
+            if(currentPlayer === 0 && canPlay(c) && !isProcessing) {
+                cardEl.classList.add('playable'); cardEl.onclick = () => playerPlayCard(idx);
+                let colorCode = cardEl.style.borderColor || '#333'; cardEl.style.boxShadow = `0 0 10px ${colorCode}`;
+            } else { cardEl.style.opacity = 0.6; cardEl.style.boxShadow = 'none'; }
+            ph.appendChild(cardEl);
+        });
+    }
+    let btn = document.getElementById('son-tabak-btn');
+    let canSaySonTabak = (currentPlayer === 0 && hands[0].length <= 2);
+    btn.disabled = !canSaySonTabak;
+    if (drawStack > 0) btn.disabled = true;
+    let chBtn = document.getElementById('challenge-btn');
+    if(!canChallenge || drawStack > 0) chBtn.disabled = true;
+    updateVisuals();
+}
+
+updateCardBacks();
+openSetup();
+
+</script>
+</body>
+</html>
