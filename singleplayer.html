@@ -455,7 +455,7 @@ const CHAT_POOL = {
     "fail": ["Hayır ya!", "Nasıl unuttum!", "Olamaz!", "Kahretsin!", "Konsantre olamadım.", "İlginç.", "Gözümden kaçmış.", "Tuhaf.", "Ayy unuttum!", "Görmedim!", "Üstüme gelmeyin!", "Kafam karıştı!", "Farketmedim ya.", "Dalmışım pardon.", "Kolpaya geldik.", "Yine girdi.", "Ya bırak yaa.", "Şanslısınız.", "Önemli değil.", "Bilerek yaptım.", "Unuttum.", "Tüh.", "Dikkat etmedim."]
 };
 
-function botSpeak(pIdx, eventType, prob = 0.4) {
+function botSpeak(pIdx, eventType, prob = 0.8) {
     if (Math.random() > prob) return;
     let pool = CHAT_POOL[eventType];
     if (!pool || pool.length === 0) return;
@@ -1212,4 +1212,5 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
