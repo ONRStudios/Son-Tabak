@@ -497,14 +497,21 @@ let actionQueue = [], isProcessingQueue = false, isDealing = false, isActionLock
 
 /* --- BAŞLANGIÇ --- */
 window.onload = () => {
-    gamePlayers = [
-        { uid: myUid, name: myName, isBot: false, score: 0, hand: [], saidSonTabak: false, challengeUsed: false },
-        { uid: 'bot1', name: '🤖 Rifu', isBot: true, score: 0, hand: [], saidSonTabak: false, challengeUsed: false },
-        { uid: 'bot2', name: '🤖 Utku', isBot: true, score: 0, hand: [], saidSonTabak: false, challengeUsed: false },
-        { uid: 'bot3', name: '🤖 Kübra', isBot: true, score: 0, hand: [], saidSonTabak: false, challengeUsed: false }
+    const botNamePool = [
+        '🤖 Rifu', '🤖 Utku', '🤖 Kübra', '🤖 Aysi', '🤖 Furkan', '🤖 Ercü', '🤖 Elif', '🤖 Onur', '🤖 Bilge'
     ];
-    playerColors = shuffleDeck(['#c0392b', '#f1c40f', '#8e44ad', '#27ae60']);
-    startRound();
+    
+    let shuffledBots = shuffleDeck([...botNamePool]);
+    
+    gamePlayers = [
+        { uid: myUid, name: myName, isBot: false, score: 0, hand: [], saidSonTabak: false, challengeUsed: false },
+        { uid: 'bot1', name: shuffledBots[0], isBot: true, score: 0, hand: [], saidSonTabak: false, challengeUsed: false },
+        { uid: 'bot2', name: shuffledBots[1], isBot: true, score: 0, hand: [], saidSonTabak: false, challengeUsed: false },
+        { uid: 'bot3', name: shuffledBots[2], isBot: true, score: 0, hand: [], saidSonTabak: false, challengeUsed: false }
+    ];
+
+    playerColors = shuffleDeck(['#c0392b', '#f1c40f', '#8e44ad', '#27ae60']);
+    startRound();
 };
 
 function startRound() {
@@ -564,7 +571,8 @@ function localPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredSonTabak
     if(gameDiscard.length > 2) gameDiscard = gameDiscard.slice(-2);
     
     let newDir = direction, newDrawStack = drawStack, nextP = currentPlayer, newWinner = -1;
-    gamePlayers[pIdx].saidSonTabak = false;
+    let isSafe = gamePlayers[pIdx].saidSonTabak || declaredSonTabak;
+    gamePlayers[pIdx].saidSonTabak = false;
     
     if(card.val === 'Wild Mixer') newDir = mixerDir || 1; 
     else if (card.val === 'Reverse') newDir *= -1;
@@ -639,9 +647,10 @@ function localPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredSonTabak
         }
     }
 
-    let isSafe = gamePlayers[pIdx].saidSonTabak || declaredSonTabak;
     if (gameHands[pIdx].length === 1 && isSafe) gamePlayers[pIdx].saidSonTabak = true;
-    else gamePlayers[pIdx].saidSonTabak = false;
+    else gamePlayers[pIdx].saidSonTabak = false;
+    
+    if (pIdx === myPlayerIdx) localSaidSonTabak = false; // İşlem bitince butonu sıfırla
 
     if(card.val === 'Wild Mixer' || card.val === 'Wild Table') {
         for(let i=0; i<4; i++) if(gameHands[i].length === 1) gamePlayers[i].saidSonTabak = true;
@@ -867,7 +876,7 @@ function attemptBotMove() {
         if(currentPObj && currentPObj.isBot) {
             setTimeout(() => { hostBotTurn(); }, ANIM_CONFIG.BOT_THINK);
         } else if (currentPlayer === myPlayerIdx) {
-            localSaidSonTabak = false; isActionLocked = false;
+            isActionLocked = false;
         }
     }
 }
@@ -1251,3 +1260,4 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
