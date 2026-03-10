@@ -434,6 +434,52 @@ const SoundFX = {
 };
 
 const ANIM_CONFIG = { FLY_DURATION: 1000, FLY_BUFFER: 1100, DRAW_INTERVAL: 600, INITIAL_DEAL: 250, TOAST: 2000, POPUP: 3000, BOT_THINK: 500 };
+/* --- DEVASA CHAT HAVUZU --- */
+const CHAT_POOL = {
+    "start_good": ["Bu el benim, dağılın!", "Ağlamaya hazır olun.", "Kartlar ateş ediyor!", "İyi gibi.", "Plan hazır.", "Güzel güzel.", "Ay elim titriyor!", "Çok heyecanlıyım!", "Nefes al...", "Akarı var.", "Hallederiz.", "Keyifli olacak.", "Yaslan arkana.", "Hah, ezikler sizi.", "Çok çabuk bitecek.", "Sizi ağlatacağım.", "Güzel el.", "Şanslıyım.", "Başlayalım."],
+    "start_bad": ["Bu ne biçim el?", "Şansıma tüküreyim.", "Zorlayacağız artık.", "Zorlu.", "Çevrilir ya.", "Riskli.", "Bittim ben!", "Çok kötü geldi!", "Ağlamak istiyorum!", "İmdat!", "Sıkıntı yok, döner.", "Kartları kim karıştırdı?", "El dozer 🚜.", "Bakacağız.", "Hile mi yaptınız?", "Kim dağıttı?", "Karışmamış.", "Biraz zor.", "Bakalım.", "Şanssızlık."],
+    "block": ["Geç!", "Sıranı bekle aslanım.", "Bıçaklarım affetmem!", "Sen bi dur.", "Sıradaki.", "Al bakalım.", "Geç abicim.", "Bıçak.", "Özür dilerim.", "Kızma n'olur!", "Mecburdum!", "Ay çok pardon!", "Bi soluklan.", "Yavaş gel.", "Acelen ne?", "Dinlen biraz şampiyon.", "Kes sesini!", "Otur yerine!", "Zırla!", "Zaa!", "Bekleme yapma!", "Bıçaklandın.", "Sırayı geç.", "Geç bakalım."],
+    "reverse": ["Hop geri!", "Zaaa...", "Geri vites!", "Döndür Allah.", "Dönsün.", "Ters yön.", "Dönmesini bekle.", "Yön değişimi.", "Dönsün!", "Ne tarafa döndü?", "Terse!", "Geri!", "Dönelim bakalım.", "Dönder!", "Sen bekle biraz daha.", "U dönüşü.", "Yemedi mi?", "Ters köşe!", "Kudur!", "Ağlama!", "Hadi yallah!", "Yön değişsin.", "Tersine."],
+    "plus2": ["Al bakalım hediyeni!", "Çek çek.", "Saadet zinciri hadi.", "+2 benden sana!", "Biraz daha çek sen.", "Yazık.", "Yüklen.", "+2 reyis", "İstemeyerek attım!", "Çok özür dilerim!", "Ay sana mı geldi?", "Kızmadın di mi?", "Al dursun.", "Lazım olur.", "Hadi saadet zinciri.", "Yorma kendini.", "Al bunları da sus.", "Beter ol!", "Çek bakalım köle!", "Hahahaha!", "+2 çek."],
+    "wild": ["Rengi ben belirlerim.", "Değişsin yeter.", "Renkler değişti!", "Kırmızı olsun, kan olsun!", "Ne olsun?", "Moring.", "Biraz da bundan devam.", "Yeter hep bu renk.", "Ay hangi rengi seçsem?", "Kararsız kaldım.", "Değişsin!", "Sıkıldım bu renkten!", "Renk katalım.", "Değişiklik iyidir.", "Hangi renk olsun?", "Canım sıkıldı, renk değişsin.", "Bak bakalım renk neymiş.", "Rengini belli et.", "Biat edin!", "Ben ne dersem o.", "Renk değişsin."],
+    "draw_1": ["İstediğim bu değil.", "Of ya.", "Sabrım taşıyor.", "Hadi ama!", "Bunu planlamamıştım.", "Uh.", "Çekiyim.", "Eyvallah.", "Yine mi kart?", "Gelmedi ya!", "Gerildim.", "Çekelim bakalım.", "Çekeriz sorun yok.", "Yolla.", "Acelesi yok.", "Nasip.", "Hile var!", "Bu kartlar bozuk.", "Sıkıcı...", "Of pof!", "Gelmedi.", "Bir tane daha."],
+    "draw_2": ["Yine mi ceza?", "Şaka gibi...", "Ver iki tane.", "Ver bakalım.", "Çekelim bari.", "İki mi?", "İki tane mi?", "Nereye koyacağım bunları?", "Ay bayılazam!", "İki tane de olur.", "Zararı yok.", "Sırf gıcıklığına veriyorsunuz di mi?", "İğrençsiniz.", "Hıh.", "İki kart daha.", "Şanssızlık.", "Hadi devam."],
+    "draw_many": ["Dükkanı satın aldım resmen!", "Bu ne be?!", "Kart koleksiyonu yapıyorum sanki!", "Lanet olsun!", "Elime sığmıyor yeter!", "Bana mı kaldı?", "El yönetilmiyor.", "Bu hesapta yoktu.", "Boğuluyorum!", "Nereye koyacağım bunları!", "Aaaa çok fazla!", "Ooo bana girdi.", "Doldur bakalım.", "Haşırt the Blackboard.", "Sıçtık.", "Hilecisiniz hepiniz!", "Sizin yüzünüzden!", "Yapacağınız işe...", "Bayağı çektim.", "Deste bitti.", "Yeter da!"],
+    "wild_mixer": ["Ben alıyım onları.", "Ver bakalım o güzel elini!", "Senin elin benim elim!", "Ben seninkini alıyım.", "Hadi elden ele.", "Senin elin daha iyi duruyor.", "Senin elini alabilir miyim?", "Kafam karıştı, eller değişsin!", "Bu eli sen al yeter!", "Ver elini!", "Hadi bi kurtuluyum.", "O elini alırım.", "Benim çöplükten bir kurtulalım.", "Elini ver!", "Elleri değişelim.", "Strateji gereği."],
+    "wild_table": ["Herkesin planı çöp.", "Yeni bir başlangıç.", "Alıyım herkesin kartlarını!", "Yeniden dağıtalım.", "Bir resetleyelim.", "Kartları sevmedim.", "Her şey birbirine girsin!", "Ay kimde ne var bilmiyorum!", "Masa karışsın belki düzelir!", "Elleri alıyım.", "Herkes nasiplensin.", "Karıştıramlım bakalım.", "Planlarınız bozuldu mu? Zaa.", "Hepinizi batıracağım.", "Kaos benim işim.", "Kartları karışsın.", "Eşitlik olsun."],
+    "wild_pot": ["Herkes çeksin!", "Yanacağız hepimiz!", "Toplu ceza, en sevdiğim.", "Toplu dağıtım.", "Düdüklü tencere!", "Herkese kart!", "Düdüklü patlasın!", "Hepimiz yanacağız!", "Herkese çektiriyorum!", "Ortaya karışık.", "Herkese selamlar.", "Beraber batalım.", "Hepiniz çekin, beter olun!", "Tek başıma yanmam!", "Sürünün!", "Herkes bir tane çekiyor.", "Toplu çekelim."],
+    "wild_meze": ["Meze, afiyet olsun.", "Yemeğin yanında iyi gider.", "Al bunu da sus.", "Çekmeyi unutma.", "Afiyetler.", "Bu sadece başlangıç.", "Sadece tadımlık!", "Çok bir şey değil valla.", "Kızma n'olur.", "Çerez niyetine.", "Çekin bakalım.", "Al bunu!", "Haydi çekin bakalım.", "Sana özel.", "Bir kart çek.", "Meze.", "Sıradaki."],
+    "wild_antidraw": ["Keh keh!", "Yemezler aslanım.", "Bana sökmez!", "İptal!", "Çekmem!", "NAH!", "Kurtuldum mu?", "Çok şükür!", "Oh be!", "Buna gerek yok şimdi.", "Pas geçelim.", "Temiz iş.", "Sizin kurallarınız bana sökmez.", "Yemezler canım.", "Zaa iptal!", "Tuvalet kağıdı.", "Kurtulduk."],
+    "uno": ["Son Tabak!", "Bitiyor bekleyin!", "Kazanıyorum!", "Hadi!", "Oyun sonu yaklaşıyor.", "Son kart!", "Checkmate.", "Hadi hızlı!", "Ay bitiyor mu?", "Değiştirmeyin!", "Tutmayın beni!", "Ben ufaktan biter.", "Son Tabak gençler.", "Bitiyor sanki.", "...", "Bitti bile ezikler!", "Ağlamayın!", "Yolun sonu.", "Çok şükür.", "Tek kart."],
+    "win": ["Söylemiştim!", "Ezdim geçtim!", "Ders verdim size!", "Kral benim!", "Çok kolaydı.", "Planlandığım gibi.", "Zeka kazandı.", "Belliydi.", "Beklenen sonuç.", "İnanamıyorum!", "Ben mi kazandım!", "Elim ayağım titredi!", "Yaşa!", "Keyifliydi.", "Zorlanmadım.", "Tertemiz.", "Hadi hadi puanları toplayın!", "Çok kolaysınız!", "Sıkıldım kazanmaktan.", "Easy.", "Hadi tekrar.", "Kazandım!", "Güzel oyun.", "Tebrikler."],
+    "fail": ["Hayır ya!", "Nasıl unuttum!", "Olamaz!", "Kahretsin!", "Konsantre olamadım.", "İlginç.", "Gözümden kaçmış.", "Tuhaf.", "Ayy unuttum!", "Görmedim!", "Üstüme gelmeyin!", "Kafam karıştı!", "Farketmedim ya.", "Dalmışım pardon.", "Kolpaya geldik.", "Yine girdi.", "Ya bırak yaa.", "Şanslısınız.", "Önemli değil.", "Bilerek yaptım.", "Unuttum.", "Tüh.", "Dikkat etmedim."]
+};
+
+function botSpeak(pIdx, eventType, prob = 0.4) {
+    if (Math.random() > prob) return;
+    let pool = CHAT_POOL[eventType];
+    if (!pool || pool.length === 0) return;
+    
+    let msg = pool[Math.floor(Math.random() * pool.length)];
+    let botName = gamePlayers[pIdx].name;
+    let botColor = playerColors[pIdx] || '#333';
+    
+    // Sağdaki chat ekranına yaz
+    addChatLog(botName, msg, botColor);
+    
+    // Botun üstündeki konuşma baloncuğunu patlat
+    if (pIdx !== myPlayerIdx) {
+        let bubbleId = `bot${(pIdx - myPlayerIdx + 4) % 4}-chat`;
+        let bubble = document.getElementById(bubbleId);
+        if (bubble) {
+            bubble.innerText = msg;
+            bubble.classList.add('visible');
+            // Timeout çakışmasını önlemek için id sakla
+            if (bubble.timeoutId) clearTimeout(bubble.timeoutId);
+            bubble.timeoutId = setTimeout(() => { bubble.classList.remove('visible'); }, 3000);
+        }
+    }
+}
 const CARD_PATTERNS = [
     'linear-gradient(135deg, #e67e22 0%, #d35400 100%)', 'repeating-linear-gradient(45deg, #e67e22, #e67e22 10px, #d35400 10px, #d35400 20px)',
     'radial-gradient(circle, #e67e22 20%, #d35400 90%)', 'conic-gradient(#e67e22, #d35400, #e67e22)',
@@ -1166,3 +1212,4 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
