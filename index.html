@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v0.97 (Open Beta)</title>
+    <title>Son Tabak Online - v0.98 (Open Beta)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
     
@@ -93,7 +93,6 @@
         #lobby-chat-msgs { flex: 1; overflow-y: auto; border: 1px solid #eee; background: #fdfdfd; border-radius: 8px; padding: 5px; margin-bottom: 5px; font-size: 0.85em; display: flex; flex-direction: column; gap: 2px; }
         .l-chat-line { padding: 2px 4px; border-bottom: 1px dashed #f0f0f0; word-break: break-word; }
         .l-chat-input-area { display: flex; gap: 5px; height: 35px; }
-        /* Lobi Chat input daralma engeli için min-width: 0 */
         #l-chat-input { flex: 1; min-width: 0; border: 1px solid #ccc; border-radius: 15px; padding: 0 10px; font-size: 0.9em; outline: none; }
         #l-chat-send { background: #27ae60; color: white; border: none; width: 40px; border-radius: 50%; font-size: 1.2em; cursor: pointer; display: flex; justify-content: center; align-items: center; }
         
@@ -154,8 +153,10 @@
         #slot-left { left: 40px; } 
         #slot-right { right: 40px; }
         
-        #slot-left .bot-name { position: absolute; left: -45px; top: 50%; transform: translateY(-50%) rotate(-90deg); margin: 0; white-space: nowrap; }
-        #slot-right .bot-name { position: absolute; right: -45px; top: 50%; transform: translateY(-50%) rotate(90deg); margin: 0; white-space: nowrap; }
+        /* İsim kutuları tam kartların üstünde dursun */
+        #slot-left .bot-name { position: absolute; left: -10px; top: 50%; transform: translateY(-50%) rotate(-90deg); margin: 0; white-space: nowrap; z-index: 15; }
+        #slot-right .bot-name { position: absolute; right: -10px; top: 50%; transform: translateY(-50%) rotate(90deg); margin: 0; white-space: nowrap; z-index: 15; }
+        
         .side-bot .bot-stack-visual { position: absolute; left: 0; top: 50%; transform: translateY(-50%); margin: 0 !important; }
         #slot-left .chat-bubble { left: 130%; top: 50%; }
         #slot-right .chat-bubble { right: 130%; top: 50%; }
@@ -311,21 +312,23 @@
             
             .game-container { grid-area: game; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; align-items: center; margin: 0; padding: 5px 0; overflow: hidden; box-sizing: border-box; }
             #top-area { height: auto; min-height: 80px; width: 100%; transform: scale(0.80); transform-origin: center top; margin: 0; }
-            #play-area { height: auto; width: 100%; transform: scale(0.80); margin: 0; flex-grow: 1; gap: 15px; } /* Mobil Ortadaki Deste Boşluğu Düzeltildi */
+            #play-area { height: auto; width: 100%; transform: scale(0.80); margin: 0; flex-grow: 1; gap: 15px; } 
             #bottom-area { padding-bottom: 2px; transform: scale(0.85); transform-origin: center bottom; margin: 0; }
             .bot-wrapper { transform: scale(0.85); margin: 0; } 
             
-            /* Mobil Ok ve Yan Slot Düzenlemeleri (Kenarlara dışarı taşırıldı ve Yukarı Çekildi) */
+            /* Mobil Ok ve Yan Slot Düzenlemeleri (YUKARI ÇEKİLDİ VE KARTIN ÜSTÜNE HİZALANDI) */
             .arrow-icon, .arrow-top-static { font-size: 1.5em; }
             .mode-5p #arrow-side-left, .mode-6p #arrow-side-left { left: 5px; bottom: 20%; } 
             .mode-5p #arrow-side-right, .mode-6p #arrow-side-right { right: 5px; bottom: 20%; }
             .mode-5p #arrow-corner-tl, .mode-6p #arrow-corner-tl { left: 5%; top: 22%; }
             .mode-5p #arrow-corner-tr, .mode-6p #arrow-corner-tr { right: 5%; top: 22%; }
             
-            #slot-left { left: -30px; top: 45%; }
-            #slot-right { right: -30px; top: 45%; }
-            #slot-left .bot-name { left: 95px; font-size: 0.7em;}
-            #slot-right .bot-name { right: 95px; font-size: 0.7em;}
+            #slot-left { left: -30px; top: 40%; }
+            #slot-right { right: -30px; top: 40%; }
+            
+            /* İsimleri yan kutunun kendi kart bölgesinin ortasına denk getiriyoruz */
+            #slot-left .bot-name { left: 35px; font-size: 0.7em; z-index: 15;}
+            #slot-right .bot-name { right: 35px; font-size: 0.7em; z-index: 15;}
 
             .flying-card { transform: scale(0.8); transform-origin: top left; }
             .card[data-val="+2"] .card-emoji { font-size: 2.0em !important; gap: 1px !important; }
@@ -338,7 +341,7 @@
             .right-panel { grid-area: panel; flex-direction: row; height: 100%; gap: 5px; padding: 0; box-sizing: border-box; overflow: hidden; }
             .info-container { height: 100%; flex: 1; }
             .chat-container { height: 100%; flex: 1; }
-            #score-table td { padding: 1px 4px; font-size: 0.65em; } /* Mobil 6 kişi puan tablosu sığdırma */
+            #score-table td { padding: 1px 4px; font-size: 0.65em; } 
             #chat-messages { font-size: 0.65em !important; padding: 2px !important; gap: 1px !important; }
             .chat-line { line-height: 1.1 !important; margin-bottom: 2px !important; }
             .panel-header { font-size: 0.75em; padding: 3px; }
@@ -348,7 +351,6 @@
             #player-input { font-size: 0.7em; padding: 2px 5px; height: 25px; flex: 1; min-width: 0; }
             #send-btn { width: 25px; height: 25px; font-size: 1em; }
             
-            /* Lobi İçi Chat Düzeltmesi (Send Butonunun Kaybolmasını Engeller) */
             .l-chat-input-area { width: 100%; box-sizing: border-box; padding-right: 5px; }
             #l-chat-input { width: auto; flex: 1; min-width: 0; }
 
@@ -473,7 +475,7 @@
 
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.97 (Open Beta)</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.98 (Open Beta)</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     
@@ -762,24 +764,17 @@ function enterWaitingRoom() { updateGlobalStatus('waiting'); document.getElement
 function sendHeartbeat() { if(!currentRoomId || !myUid) return; db.collection("rooms").doc(currentRoomId).collection("presence").doc(myUid).set({ name: myName, lastSeen: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }); }
 
 document.getElementById('start-game-btn').addEventListener('click', () => { 
-    let finalPlayers = [...localPlayers]; 
-    let maxP = 4; 
+    let finalPlayers = [...localPlayers]; let maxP = 4; 
     db.collection("rooms").doc(currentRoomId).get().then(doc => { 
         if(doc.exists) maxP = doc.data().maxPlayers || 4; 
-        let botNames = ["🤖 Rifu", "🤖 Utku", "🤖 Kübra", "🤖 Onur", "🤖 Furkan", "🤖 Aysi", "🤖 Bilge", "🤖 Kedi", "🤖 Luna"]; 
-        botNames = shuffleDeck(botNames); 
-        let botIdx = 0; 
-        while(finalPlayers.length < maxP) { finalPlayers.push({ uid: 'bot_' + Date.now() + '_' + botIdx, name: botNames[botIdx % botNames.length], isBot: true, score: 0, hand: [], isReady: true, saidSonTabak: false, challengeUsed: false, lastSeen: Date.now() }); botIdx++; } 
+        let botNames = ["🤖 Rifu", "🤖 Utku", "🤖 Kübra", "🤖 Onur", "🤖 Furkan", "🤖 Aysi", "🤖 Bilge", "🤖 Kedi", "🤖 Luna"]; botNames = shuffleDeck(botNames); 
+        let botIdx = 0; while(finalPlayers.length < maxP) { finalPlayers.push({ uid: 'bot_' + Date.now() + '_' + botIdx, name: botNames[botIdx % botNames.length], isBot: true, score: 0, hand: [], isReady: true, saidSonTabak: false, challengeUsed: false, lastSeen: Date.now() }); botIdx++; } 
         finalPlayers = shuffleDeck(finalPlayers); finalPlayers = finalPlayers.map(p => ({...p, isReady: false, saidSonTabak: false, challengeUsed: false })); 
         const newDeck = createFullDeck(); const hands = Array(maxP).fill().map(() => []);
         let initialCards = maxP === 6 ? 5 : (maxP === 5 ? 6 : 7);
         for(let i=0; i<initialCards; i++) { for(let p=0; p<maxP; p++) hands[p].push(newDeck.pop()); } 
-        finalPlayers.forEach((p, i) => p.hand = hands[i].map(serializeCard)); 
-        let first = newDeck.pop(); while(first.color === 'wild' || first.type === 'action') { newDeck.unshift(first); first = newDeck.pop(); } 
-        
-        let baseColors = ['#c0392b', '#8e44ad', '#d35400', '#27ae60', '#1A237E', '#b7950b']; 
-        let pColors = shuffleDeck(baseColors.slice(0, maxP));
-        
+        finalPlayers.forEach((p, i) => p.hand = hands[i].map(serializeCard)); let first = newDeck.pop(); while(first.color === 'wild' || first.type === 'action') { newDeck.unshift(first); first = newDeck.pop(); } 
+        let baseColors = ['#c0392b', '#8e44ad', '#d35400', '#27ae60', '#1A237E', '#b7950b']; let pColors = shuffleDeck(baseColors.slice(0, maxP));
         const initialState = { deck: newDeck.map(serializeCard), discardPile: [serializeCard(first)], currentPlayer: Math.floor(Math.random()*maxP), direction: 1, drawStack: 0, gameActive: true, lastAction: { type: 'start', timestamp: Date.now() }, vulnerablePlayerIdx: -1, playerColors: pColors, hasDrawn: false }; 
         db.collection("rooms").doc(currentRoomId).update({ status: 'playing', players: finalPlayers, gameState: initialState, lastActive: Date.now() }); 
     }); 
@@ -879,10 +874,7 @@ async function nextRound() {
     for(let i=0; i<initialCards; i++) { for(let p=0; p<maxP; p++) hands[p].push(newDeck.pop()); } 
     const updatedPlayers = gamePlayers.map((p, i) => ({ ...p, hand: hands[i].map(serializeCard), isReady: false, saidSonTabak: false, challengeUsed: false })); 
     let first = newDeck.pop(); while(first.color === 'wild' || first.type === 'action') { newDeck.unshift(first); first = newDeck.pop(); } 
-    
-    let baseColors = ['#c0392b', '#8e44ad', '#d35400', '#27ae60', '#1A237E', '#b7950b']; 
-    let pColors = shuffleDeck(baseColors.slice(0, maxP)); 
-    
+    let baseColors = ['#c0392b', '#8e44ad', '#d35400', '#27ae60', '#1A237E', '#b7950b']; let pColors = shuffleDeck(baseColors.slice(0, maxP)); 
     const nextState = { deck: newDeck.map(serializeCard), discardPile: [serializeCard(first)], currentPlayer: lastWinner, direction: 1, drawStack: 0, gameActive: true, lastAction: { type: 'newRound', timestamp: Date.now() }, vulnerablePlayerIdx: -1, playerColors: pColors, hasDrawn: false }; 
     await db.collection("rooms").doc(currentRoomId).update({ players: updatedPlayers, gameState: nextState, lastActive: Date.now() }); 
 }
@@ -891,15 +883,50 @@ async function hostBotTurn() {
     try {
         if(!isHost) return; const currentPObj = gamePlayers[currentPlayer]; if(!currentPObj || !currentPObj.isBot) return; 
         if (lastGameState && lastGameState.lastAction && lastGameState.lastAction.type === 'draw' && lastGameState.lastAction.pIdx === currentPlayer && lastGameState.lastAction.isPenalty === true) return; 
-        let maxP = gamePlayers.length; let guiltyIdx = -1; for(let i=0; i<maxP; i++) { if(i !== currentPlayer && gameHands[i].length === 1 && !gamePlayers[i].saidSonTabak) { guiltyIdx = i; break; } }
-        if(guiltyIdx !== -1 && drawStack === 0) { if(Math.random() < 0.95) { await serverPunishVulnerable(guiltyIdx); await wait(1500); return; } }
+        
+        let maxP = gamePlayers.length; let guiltyIdx = -1; 
+        for(let i=0; i<maxP; i++) { if(i !== currentPlayer && gameHands[i].length === 1 && !gamePlayers[i].saidSonTabak) { guiltyIdx = i; break; } }
+        
+        // BUG FIX: Bot artık itiraz edip turn'den çıkmayacak. 1.5 sn bekleyip kart atacak.
+        if(guiltyIdx !== -1 && drawStack === 0) { 
+            if(Math.random() < 0.95) { 
+                await serverPunishVulnerable(guiltyIdx); 
+                await wait(1500); 
+            } 
+        }
+        
         const hand = gameHands[currentPlayer]; let willSaySonTabak = (hand.length === 2 && Math.random() > 0.05);
         let minOpponentHand = 100; let nextPIdx = (currentPlayer + direction + maxP) % maxP; let prevPIdx = (currentPlayer - direction + maxP) % maxP; let nextPlayerHandCount = gameHands[nextPIdx].length; let prevPlayerHandCount = gameHands[prevPIdx].length;
         for(let i=0; i<maxP; i++) { if(i !== currentPlayer) minOpponentHand = Math.min(minOpponentHand, gameHands[i].length); }
         let panicThreshold = Math.random() > 0.5 ? 2 : 3; let isPanic = (minOpponentHand <= panicThreshold); let playableCards = hand.filter(c => canPlay(c));
-        if (drawStack > 0) { if (playableCards.length > 0) { let cardToPlay = playableCards[Math.floor(Math.random() * playableCards.length)]; await playBotCardSmart(cardToPlay, hand.indexOf(cardToPlay), willSaySonTabak); } else { await serverDrawCard(currentPlayer, drawStack, true); setTimeout(() => serverPassTurn(currentPlayer), 1500 + (drawStack*600)); } return; }
-        if (hasDrawn) { if(hand.length > 0) { let drawnCard = hand[hand.length - 1]; if (canPlay(drawnCard)) { if (isPanic || drawnCard.type === 'num') { await playBotCardSmart(drawnCard, hand.length - 1, willSaySonTabak); return; } } } await serverPassTurn(currentPlayer); return; }
+        
+        if (drawStack > 0) { 
+            if (playableCards.length > 0) { 
+                let cardToPlay = playableCards[Math.floor(Math.random() * playableCards.length)]; 
+                await playBotCardSmart(cardToPlay, hand.indexOf(cardToPlay), willSaySonTabak); 
+            } else { 
+                await serverDrawCard(currentPlayer, drawStack, true); 
+                setTimeout(() => serverPassTurn(currentPlayer), 1500 + (drawStack*600)); 
+            } 
+            return; 
+        }
+        
+        if (hasDrawn) { 
+            if(hand.length > 0) { 
+                let drawnCard = hand[hand.length - 1]; 
+                if (canPlay(drawnCard)) { 
+                    if (isPanic || drawnCard.type === 'num') { 
+                        await playBotCardSmart(drawnCard, hand.length - 1, willSaySonTabak); 
+                        return; 
+                    } 
+                } 
+            } 
+            await serverPassTurn(currentPlayer); 
+            return; 
+        }
+        
         if (playableCards.length === 0) { await serverDrawCard(currentPlayer, 1); return; }
+        
         let cardToPlay = null; let safePlayableCards = [...playableCards];
         if (!isPanic) { safePlayableCards = safePlayableCards.filter(c => c.val !== 'Wild Anti-Draw'); if (hand.length <= minOpponentHand) safePlayableCards = safePlayableCards.filter(c => c.val !== 'Wild Mixer' && c.val !== 'Wild Table'); }
         if (safePlayableCards.length === 0) safePlayableCards = [...playableCards];
@@ -981,15 +1008,15 @@ function updateUI() {
                     stack.appendChild(mc);
                 }
             } else {
+                // ÜST KARTLARIN KAYMASI ENGELLENDİ: Stack width sabitlenip içeride hizalandı.
                 let totalW = 60 + (visibleCount > 0 ? (visibleCount-1)*8 : 0);
-                stack.style.width = '100px'; 
+                stack.style.width = totalW + 'px'; 
                 stack.style.height = '90px';
-                let startX = (100 - totalW) / 2;
                 for(let j=0; j<visibleCount; j++) {
                     let mc = document.createElement('div'); 
                     mc.className = 'mini-card-back'; 
                     mc.style.top = (j*4)+'px'; 
-                    mc.style.left = (startX + j*8)+'px'; 
+                    mc.style.left = (j*8)+'px'; 
                     stack.appendChild(mc);
                 }
             }
