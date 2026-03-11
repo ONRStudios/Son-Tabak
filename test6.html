@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v0.93 (Open Beta)</title>
+    <title>Son Tabak Online - v0.94 (Open Beta)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
     
@@ -183,13 +183,13 @@
         .chat-bubble.visible { opacity: 1; }
         .bot-stack-visual { position: relative; height: 90px; width: 100px; margin-top: 5px; transition: width 0.3s; display: flex; justify-content: center; }
         
-        /* SAĞ VE SOL KISIM ÖZEL STİLLERİ */
-        .side-stack { transform: rotate(90deg); margin-top: 30px; }
-        #slot-left .bot-name { transform: rotate(-90deg) translateX(-40px); }
-        #slot-right .bot-name { transform: rotate(90deg) translateX(40px); }
-        .side-bot { display: none; position: absolute; top: 50%; transform: translateY(-50%); z-index: 10; }
-        #slot-left { left: 10px; }
-        #slot-right { right: 10px; }
+        /* SAĞ VE SOL KISIM ÖZEL STİLLERİ (FLEX İLE ÇARPIŞMAYI ÖNLER) */
+        .side-bot { display: none; position: absolute; top: 50%; transform: translateY(-50%); z-index: 10; align-items: center; }
+        #slot-left { left: 20px; flex-direction: row-reverse; gap: 15px; }
+        #slot-right { right: 20px; flex-direction: row; gap: 15px; }
+        .side-stack { transform: rotate(90deg); margin: 0 !important; width: 100px; height: 90px; }
+        #slot-left .bot-name { transform: rotate(-90deg); margin: 0; white-space: nowrap; }
+        #slot-right .bot-name { transform: rotate(90deg); margin: 0; white-space: nowrap; }
 
         .mini-card-back { width: 60px; height: 90px; border: 3px solid #fff; border-radius: 8px; position: absolute; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); background-size: cover; background-position: center; box-sizing: border-box; display: flex; justify-content: center; align-items: center; overflow: hidden; transition: all 0.3s; background: var(--card-pattern) !important; }
         .card-back-style { background: var(--card-pattern) !important; background-size: cover; border: 3px solid #fff !important; }
@@ -212,15 +212,35 @@
         }
         .mini-card-back::after { font-size: 0.75em; transform: translate(-50%, -50%) rotate(-15deg) scale(0.8); }
         
-        .arrow-icon { font-size: 2.5em; color: #bdc3c7; font-weight: 900; transition: all 0.5s; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 1; }
-        .arrow-icon.active { animation: pulseArrow 2s infinite; text-shadow: 0 0 20px currentColor; z-index: 20; }
-        .arrow-top-static { display: none; } /* Eskisi gibi değil, dinamik yapacağız */
-        @keyframes pulseArrow { 0% { transform: translateY(-50%) scale(1.0); } 50% { transform: translateY(-50%) scale(1.25); } 100% { transform: translateY(-50%) scale(1.0); } }
-        @keyframes pulseArrowStatic { 0% { transform: scale(1.0); } 50% { transform: scale(1.3); } 100% { transform: scale(1.0); } }
-        .arrow-spin { animation: spinArrow 1.2s ease-in-out forwards !important; }
-        @keyframes spinArrow { 0% { transform: translateY(-50%) rotate(0deg) scale(1); } 50% { transform: translateY(-50%) rotate(180deg) scale(1.4); color: #e74c3c; } 100% { transform: translateY(-50%) rotate(360deg) scale(1); } }
+        /* --- YENİ DİNAMİK OK SİSTEMİ CSS --- */
+        .arrow-icon { 
+            font-size: 2.5em; color: #bdc3c7; font-weight: 900; transition: all 0.5s; 
+            z-index: 10; position: absolute; opacity: 1; 
+            display:flex; align-items:center; justify-content:center; width: 40px; height: 40px; 
+        }
+        #arrow-side-left { left: 15px; top: 0; bottom: 0; margin: auto; }
+        #arrow-side-right { right: 15px; top: 0; bottom: 0; margin: auto; }
+        #arrow-corner-tl { left: 12%; top: 18%; }
+        #arrow-corner-tr { right: 12%; top: 18%; }
+        
+        /* Üsttekiler Flex'te hizalanıyor */
+        .arrow-top-static { display: none; font-size: 2.5em; color: #bdc3c7; font-weight: 900; transition: all 0.5s; margin: 0 15px; align-self: center; }
+        
+        .arrow-icon.active, .arrow-top-static.active { animation: pulseArrow 2s infinite; text-shadow: 0 0 20px currentColor; z-index: 20; }
+        
+        @keyframes pulseArrow { 
+            0% { transform: rotate(var(--rot, 0deg)) scale(1.0); } 
+            50% { transform: rotate(var(--rot, 0deg)) scale(1.25); } 
+            100% { transform: rotate(var(--rot, 0deg)) scale(1.0); } 
+        }
+        
+        .arrow-spin { animation: spinArrow 0.8s ease-in-out forwards !important; }
+        @keyframes spinArrow { 
+            0% { filter: hue-rotate(0deg) drop-shadow(0 0 10px red); transform: rotate(var(--rot, 0deg)) scale(1); } 
+            50% { filter: hue-rotate(180deg) drop-shadow(0 0 20px red); transform: rotate(var(--rot, 0deg)) scale(1.5); color: #e74c3c; } 
+            100% { filter: hue-rotate(360deg) drop-shadow(0 0 10px red); transform: rotate(var(--rot, 0deg)) scale(1); } 
+        }
         .glow-red { color: #c0392b !important; } .glow-green { color: #27ae60 !important; } .glow-yellow { color: #f1c40f !important; } .glow-purple { color: #9b59b6 !important; } .glow-neutral { color: #3498db !important; }
-        #arrow-left { left: 25px; } #arrow-right { right: 25px; } 
         
         #play-area { display: flex; align-items: center; justify-content: center; gap: 80px; width: 100%; min-height: 180px; position: relative; transition: transform 0.3s; z-index: 5; grid-row: 2; align-self: center; }
         .card { width: 105px; height: 155px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; cursor: pointer; border: 3px solid #555; box-shadow: 5px 5px 15px rgba(0,0,0,0.2); background-color: white; position: relative; user-select: none; transition: transform 0.2s; box-sizing: border-box; flex-shrink: 0; }
@@ -441,8 +461,17 @@
             #play-area { height: auto; width: 100%; transform: scale(0.80); margin: 0; flex-grow: 1; }
             #bottom-area { padding-bottom: 2px; transform: scale(0.85); transform-origin: center bottom; margin: 0; }
             .bot-wrapper { transform: scale(0.85); margin: 0; } 
-            .arrow-icon { font-size: 1.5em; position: absolute; top: 50%; transform: translateY(-50%); z-index: 15; }
-            #arrow-left { left: 5px; } #arrow-right { right: 5px; } 
+            
+            /* Mobil Ok Düzenlemeleri */
+            .arrow-icon { font-size: 1.5em; }
+            #arrow-side-left { left: 5px; } 
+            #arrow-side-right { right: 5px; }
+            #arrow-corner-tl { left: 5%; top: 12%; }
+            #arrow-corner-tr { right: 5%; top: 12%; }
+            
+            #slot-left { left: 5px; gap: 5px; }
+            #slot-right { right: 5px; gap: 5px; }
+
             .flying-card { transform: scale(0.8); transform-origin: top left; }
             
             .card[data-val="+2"] .card-emoji { font-size: 2.0em !important; gap: 1px !important; }
@@ -584,13 +613,16 @@
 
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.93 (Open Beta)</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.94 (Open Beta)</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     <div class="game-container">
-        <div id="arrow-left" class="arrow-icon">⬆️</div>
-        <div id="arrow-right" class="arrow-icon">⬇️</div>
         
+        <div id="arrow-side-left" class="arrow-icon">➡️</div>
+        <div id="arrow-side-right" class="arrow-icon">➡️</div>
+        <div id="arrow-corner-tl" class="arrow-icon">➡️</div>
+        <div id="arrow-corner-tr" class="arrow-icon">➡️</div>
+
         <div id="slot-left" class="bot-wrapper side-bot">
             <div class="bot-name" id="bot-left-name">Sol</div>
             <div class="bot-stack-visual side-stack" id="bot-left-stack"></div>
@@ -610,11 +642,15 @@
                 <div class="chat-bubble" id="bot-top1-chat"></div>
             </div>
             
+            <div id="arrow-top-1" class="arrow-top-static">➡️</div>
+            
             <div class="bot-wrapper top-bot" id="slot-top2" style="display:none;">
                 <div class="bot-name" id="bot-top2-name">Üst 2</div>
                 <div class="bot-stack-visual" id="bot-top2-stack"></div>
                 <div class="chat-bubble" id="bot-top2-chat"></div>
             </div>
+            
+            <div id="arrow-top-2" class="arrow-top-static">➡️</div>
             
             <div class="bot-wrapper top-bot" id="slot-top3" style="display:none;">
                 <div class="bot-name" id="bot-top3-name">Üst 3</div>
@@ -1319,11 +1355,10 @@ function sendHeartbeat() {
 document.getElementById('start-game-btn').addEventListener('click', () => {
     let finalPlayers = [...localPlayers];
     let maxP = 4;
-    // Eğer veritabanında maxPlayers yoksa default 4 al
     db.collection("rooms").doc(currentRoomId).get().then(doc => {
         if(doc.exists) maxP = doc.data().maxPlayers || 4;
         
-        let botNames = ["🤖 Rifu", "🤖 Utku", "🤖 Kübra", "🤖 Onur", "🤖 Furkan", "🤖 Aysi", "🤖 Bilge", "🤖 Kedi", "🤖 Luna"];
+        let botNames = ["🤖 Rifu", "🤖 Utku", "🤖 Kübra", "🤖 Onur", "🤖 Furkan", "🤖 Aysi", "🤖 Bilge", "🤖 Luna"];
         botNames = shuffleDeck(botNames);
         let botIdx = 0;
         while(finalPlayers.length < maxP) {
@@ -1341,7 +1376,6 @@ document.getElementById('start-game-btn').addEventListener('click', () => {
         let first = newDeck.pop();
         while(first.color === 'wild' || first.type === 'action') { newDeck.unshift(first); first = newDeck.pop(); }
         
-        // 6 renklik liste dinamik
         let pColors = shuffleDeck(['#c0392b', '#f1c40f', '#8e44ad', '#27ae60', '#e67e22', '#3498db']).slice(0, maxP);
 
         const initialState = {
@@ -1948,7 +1982,9 @@ function updateUI() {
         if(el) el.style.display = 'none';
     });
 
-    for(let i=0; i < gamePlayers.length; i++) {
+    let maxP = gamePlayers.length;
+
+    for(let i=0; i < maxP; i++) {
         if (i === myPlayerIdx) continue;
         
         let p = gamePlayers[i];
@@ -1967,7 +2003,7 @@ function updateUI() {
             stack.innerHTML = "";
             let visibleCount = Math.min(handLen, 6);
             let totalW = 60 + (visibleCount > 0 ? (visibleCount-1)*8 : 0);
-            if(!domId.includes('left') && !domId.includes('right')) stack.style.width = totalW + 'px'; // Sadece üsttekiler genişler
+            if(!domId.includes('left') && !domId.includes('right')) stack.style.width = totalW + 'px'; 
 
             for(let j=0; j<visibleCount; j++) {
                 let mc = document.createElement('div'); 
@@ -1981,24 +2017,70 @@ function updateUI() {
         }
     }
 
-    // ARROWS (YÖN OKLARI)
-    let aL = document.getElementById('arrow-left'), aR = document.getElementById('arrow-right');
-    aL.className = 'arrow-icon'; aR.className = 'arrow-icon';
-    if(direction === 1) { aL.innerText = '⬆️'; aR.innerText = '⬇️'; } else { aL.innerText = '⬇️'; aR.innerText = '⬆️'; }
+    // --- YENİ DİNAMİK OK (ARROW) SİSTEMİ ---
+    let arrowsToShow = [];
     
-    if(gameActive) {
-        let topCard = gameDiscard[gameDiscard.length-1]; let activeColor = topCard ? (topCard.chosenColor || topCard.color) : null; if(activeColor === 'wild') activeColor = 'neutral';
-        let glowClass = activeColor ? `glow-${activeColor}` : '';
-        
-        let maxP = gamePlayers.length;
-        let relCurrent = (currentPlayer - myPlayerIdx + maxP) % maxP;
-        let relNext = ((currentPlayer+direction+maxP)%maxP - myPlayerIdx + maxP) % maxP;
-        
-        let tArr = null;
-        if((relCurrent===0 && relNext===1) || (relCurrent===1 && relNext===0)) tArr = aL;
-        if((relCurrent===maxP-1 && relNext===0) || (relCurrent===0 && relNext===maxP-1)) tArr = aR;
-        if(tArr && glowClass) tArr.classList.add('active', glowClass);
+    // Tüm okları gizle ve aktif classlarını temizle
+    let allArrows = ['arrow-side-left', 'arrow-side-right', 'arrow-corner-tl', 'arrow-corner-tr', 'arrow-top-1', 'arrow-top-2'];
+    allArrows.forEach(id => { 
+        let el = document.getElementById(id); 
+        if(el) { 
+            el.style.display = 'none'; 
+            el.classList.remove('active', 'glow-red', 'glow-green', 'glow-yellow', 'glow-purple', 'glow-neutral'); 
+        } 
+    });
+
+    // Oyuncu sayısına göre aralardaki okların listesi ve saat yönü(cw)/ters(ccw) açısı
+    if (maxP === 4) {
+        arrowsToShow = [
+            { id: 'arrow-side-left', cw: -90, ccw: 90 },
+            { id: 'arrow-top-1', cw: 0, ccw: 180 },
+            { id: 'arrow-top-2', cw: 0, ccw: 180 },
+            { id: 'arrow-side-right', cw: 90, ccw: -90 }
+        ];
+    } else if (maxP === 5) {
+        arrowsToShow = [
+            { id: 'arrow-side-left', cw: -90, ccw: 90 },
+            { id: 'arrow-corner-tl', cw: -45, ccw: 135 },
+            { id: 'arrow-top-1', cw: 0, ccw: 180 },
+            { id: 'arrow-corner-tr', cw: 45, ccw: -135 },
+            { id: 'arrow-side-right', cw: 90, ccw: -90 }
+        ];
+    } else if (maxP === 6) {
+        arrowsToShow = [
+            { id: 'arrow-side-left', cw: -90, ccw: 90 },
+            { id: 'arrow-corner-tl', cw: -45, ccw: 135 },
+            { id: 'arrow-top-1', cw: 0, ccw: 180 },
+            { id: 'arrow-top-2', cw: 0, ccw: 180 },
+            { id: 'arrow-corner-tr', cw: 45, ccw: -135 },
+            { id: 'arrow-side-right', cw: 90, ccw: -90 }
+        ];
     }
+
+    // Sıranın kimde olduğuna göre o oku renklendir
+    let relCurrent = (currentPlayer - myPlayerIdx + maxP) % maxP;
+    let activeArrowIndex = direction === 1 ? relCurrent : (relCurrent - 1 + maxP) % maxP;
+
+    arrowsToShow.forEach((arr, idx) => {
+        let el = document.getElementById(arr.id);
+        if(el) {
+            if (arr.id.includes('top')) el.style.display = 'inline-block';
+            else el.style.display = 'flex';
+            
+            // Dönüş Yönü Ayarla (CSS değişkeni ile keyframe animasyonu bozulmaz)
+            let rot = direction === 1 ? arr.cw : arr.ccw;
+            el.style.setProperty('--rot', `${rot}deg`);
+            el.style.transform = `rotate(${rot}deg)`;
+            
+            if (gameActive && idx === activeArrowIndex) {
+                let topCard = gameDiscard[gameDiscard.length-1]; 
+                let activeColor = topCard ? (topCard.chosenColor || topCard.color) : null; 
+                if(activeColor === 'wild') activeColor = 'neutral';
+                let glowClass = activeColor ? `glow-${activeColor}` : '';
+                if(glowClass) el.classList.add('active', glowClass);
+            }
+        }
+    });
 
     if(gameDeck) document.getElementById('deck-count').innerText = gameDeck.length;
     let pBadge = document.getElementById('penalty-badge');
@@ -2065,11 +2147,12 @@ function animateFly(from, to, html, callback) {
 
 function animateReverse() { 
     return new Promise(resolve => {
-        document.querySelectorAll('.arrow-icon').forEach(el => { el.classList.add('arrow-spin'); });
+        // Okların hepsine sadece spin animasyonu tetikliyoruz, yönü CSS koruyacak.
+        document.querySelectorAll('.arrow-icon, .arrow-top-static').forEach(el => { el.classList.add('arrow-spin'); });
         setTimeout(() => { 
-            document.querySelectorAll('.arrow-icon').forEach(el => { el.classList.remove('arrow-spin'); }); 
+            document.querySelectorAll('.arrow-icon, .arrow-top-static').forEach(el => { el.classList.remove('arrow-spin'); }); 
             resolve(); 
-        }, 1200);
+        }, 800);
     });
 }
 function animateBlock(pIdx) {
