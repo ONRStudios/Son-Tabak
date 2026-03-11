@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v0.93 (Open Beta)</title>
+    <title>Son Tabak Online - v0.97 (Open Beta)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
     
@@ -36,41 +36,17 @@
             -webkit-tap-highlight-color: transparent; 
         }
 
-        #confetti-canvas { 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            pointer-events: none; z-index: 20000; 
-        }
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20000; }
         
         /* --- GİRİŞ EKRANI --- */
-        #login-overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: var(--bg-color); z-index: 8000; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            color: white; overflow: hidden; 
-        }
-
-        .floating-bg { 
-            position: absolute; font-size: 3rem; opacity: 0.3; bottom: -50px; 
-            animation: floatAnim linear infinite; pointer-events: none; z-index: 0; 
-        }
-        @keyframes floatAnim { 
-            0% { transform: translateY(0) rotate(0deg); opacity: 0; } 
-            10% { opacity: 0.3; } 
-            90% { opacity: 0.3; } 
-            100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; } 
-        }
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 8000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; overflow: hidden; }
+        .floating-bg { position: absolute; font-size: 3rem; opacity: 0.3; bottom: -50px; animation: floatAnim linear infinite; pointer-events: none; z-index: 0; }
+        @keyframes floatAnim { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 10% { opacity: 0.3; } 90% { opacity: 0.3; } 100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; } }
 
         .brand-corner { position: absolute; top: 20px; left: 20px; font-size: 1.5em; font-weight: 900; color: var(--primary); z-index: 10; display: flex; align-items: center; gap: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); font-family: var(--main-font); }
         .production-corner { position: absolute; bottom: 10px; left: 20px; font-size: 0.7em; color: rgba(255,255,255,0.4); z-index: 10; letter-spacing: 1px; }
         .rules-corner { position: absolute; top: 20px; right: 20px; z-index: 9000; }
-        
-        .icon-btn { 
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); 
-            border-radius: 50%; width: 40px; height: 40px; font-size: 1.5em; 
-            cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; transition: 0.3s; 
-        }
+        .icon-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; width: 40px; height: 40px; font-size: 1.5em; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
         .icon-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
 
         .login-content { position: relative; z-index: 5; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; }
@@ -85,7 +61,6 @@
         .login-input-group { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 15px; width: 300px; max-width: 90%; }
         .styled-input { background: rgba(0,0,0,0.3); border: none; padding: 15px; border-radius: 10px; color: white; font-size: 1.1em; text-align: center; outline: none; transition: 0.3s; border: 1px solid transparent; width: 100%; box-sizing: border-box; }
         .styled-input:focus { background: rgba(0,0,0,0.5); border-color: var(--primary); }
-        
         .login-btn-main { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.2em; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 0 #d35400; width: 100%; font-family: var(--main-font); }
         .login-btn-main:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #d35400; }
         .login-btn-main:active { transform: translateY(2px); box-shadow: 0 2px 0 #d35400; }
@@ -93,10 +68,8 @@
         /* --- LOBİ EKRANI --- */
         #lobby-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 7500; display: none; flex-direction: column; padding: 60px 20px 20px 20px; box-sizing: border-box; overflow: hidden; }
         .lobby-grid { display: grid; grid-template-columns: 1fr 1.6fr 0.8fr; gap: 15px; height: 100%; width: 100%; max-width: 1400px; margin: 0 auto; grid-template-rows: 1fr 200px; }
-        
         .lobby-col { background: rgba(255,255,255,0.95); border-radius: 15px; padding: 15px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; position: relative; transition: all 0.3s ease; }
         .col-title { font-size: 1.2em; font-weight: 800; color: #2c3e50; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #eee; display: flex; justify-content: space-between; align-items: center; user-select: none; }
-        
         .create-form { display: flex; flex-direction: column; gap: 10px; }
         .mode-check { display: flex; align-items: center; gap: 10px; background: #f9f9f9; padding: 10px; border-radius: 8px; margin-top: 5px; cursor: pointer; border: 1px solid #eee; }
 
@@ -120,7 +93,8 @@
         #lobby-chat-msgs { flex: 1; overflow-y: auto; border: 1px solid #eee; background: #fdfdfd; border-radius: 8px; padding: 5px; margin-bottom: 5px; font-size: 0.85em; display: flex; flex-direction: column; gap: 2px; }
         .l-chat-line { padding: 2px 4px; border-bottom: 1px dashed #f0f0f0; word-break: break-word; }
         .l-chat-input-area { display: flex; gap: 5px; height: 35px; }
-        #l-chat-input { flex: 1; border: 1px solid #ccc; border-radius: 15px; padding: 0 10px; font-size: 0.9em; outline: none; }
+        /* Lobi Chat input daralma engeli için min-width: 0 */
+        #l-chat-input { flex: 1; min-width: 0; border: 1px solid #ccc; border-radius: 15px; padding: 0 10px; font-size: 0.9em; outline: none; }
         #l-chat-send { background: #27ae60; color: white; border: none; width: 40px; border-radius: 50%; font-size: 1.2em; cursor: pointer; display: flex; justify-content: center; align-items: center; }
         
         .p-list-item { display: flex; align-items: center; padding: 4px 8px; border-bottom: 1px solid #f5f5f5; font-size: 0.85em; color: #555; background: white; border-radius: 4px; }
@@ -131,10 +105,7 @@
 
         /* --- OYUN ALANI DÜZENİ --- */
         #main-game-wrapper { display: none; }
-        .main-wrapper { 
-            display: grid; width: 98%; max-width: 1400px; height: auto; min-height: 98vh; gap: 10px; padding: 5px; box-sizing: border-box; 
-            grid-template-columns: 1fr 300px; grid-template-rows: auto 1fr auto; grid-template-areas: "game logo" "game panel" "game buttons"; 
-        }
+        .main-wrapper { display: grid; width: 98%; max-width: 1400px; height: auto; min-height: 98vh; gap: 10px; padding: 5px; box-sizing: border-box; grid-template-columns: 1fr 300px; grid-template-rows: auto 1fr auto; grid-template-areas: "game logo" "game panel" "game buttons"; }
 
         #brand-area { grid-area: logo; text-align: center; background: #fff; padding: 10px; border-radius: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: center; height: fit-content; }
         .brand-title { font-size: 1.5em; font-weight: 900; color: #2c3e50; line-height: 1; font-family: var(--main-font); }
@@ -146,7 +117,7 @@
         .panel-header { font-weight: bold; color: #fff; background: #34495e; padding: 5px; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center; padding-left: 10px; padding-right: 10px;}
         
         #score-table { width: 100%; font-size: 0.85em; border-collapse: collapse; margin-top: 5px; table-layout: fixed; }
-        #score-table td { padding: 4px 6px; border-bottom: 1px solid #eee; text-align: left; vertical-align: middle; font-size: 0.8em; }
+        #score-table td { padding: 2px 6px; border-bottom: 1px solid #eee; text-align: left; vertical-align: middle; font-size: 0.8em; }
         .me-row { background-color: #fff9c4; font-weight: bold; border-left: 4px solid #f1c40f; }
 
         .chat-container { background: #fff; border-radius: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.2); flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; height: 300px; }
@@ -171,7 +142,7 @@
         #top-area { display: flex; justify-content: space-evenly; width: 95%; padding-top: 10px; min-height: 140px; position: relative; z-index: 5; grid-row: 1; align-self: start; }
         .bot-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; width: 100px; position: relative; transition: 0.3s; }
         .bot-name { background: white; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.8em; z-index: 5; margin-bottom: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s; white-space: nowrap; border: 1px solid #ddd; }
-        .current-player .bot-name { background: #3498db; color: white; box-shadow: 0 0 10px #3498db; transform: scale(1.1); border-color: #2980b9; }
+        .current-player .bot-name { background: #3498db; color: white !important; box-shadow: 0 0 10px #3498db; transform: scale(1.1); border-color: #2980b9; }
         
         .chat-bubble { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; border: 2px solid #333; padding: 5px 8px; border-radius: 8px; font-size: 0.7em; font-weight: bold; white-space: normal; width: 120px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.4); z-index: 300; opacity: 0; pointer-events: none; line-height: 1.1; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s; }
         .chat-bubble.visible { opacity: 1; }
@@ -219,16 +190,18 @@
         .arrow-icon.active, .arrow-top-static.active { animation: pulseArrow 2s infinite; text-shadow: 0 0 20px currentColor; z-index: 20; }
         @keyframes pulseArrow { 0% { transform: rotate(var(--rot, 0deg)) scale(1.0); } 50% { transform: rotate(var(--rot, 0deg)) scale(1.25); } 100% { transform: rotate(var(--rot, 0deg)) scale(1.0); } }
         
+        /* Geri Dönüşüm Rotasyon Düzeltmesi (Sadece döner ve büyür, renk değiştirmez) */
         .arrow-spin { animation: spinArrow 0.8s ease-in-out forwards !important; }
         @keyframes spinArrow { 
-            0% { filter: drop-shadow(0 0 10px red); transform: rotate(var(--rot, 0deg)) scale(1); } 
-            50% { filter: drop-shadow(0 0 20px red); transform: rotate(calc(var(--rot, 0deg) + 180deg)) scale(1.5); color: #e74c3c; } 
-            100% { filter: drop-shadow(0 0 10px red); transform: rotate(var(--rot, 0deg)) scale(1); } 
+            0% { transform: rotate(var(--rot, 0deg)) scale(1); } 
+            50% { transform: rotate(calc(var(--rot, 0deg) + 180deg)) scale(1.2); } 
+            100% { transform: rotate(calc(var(--rot, 0deg) + 360deg)) scale(1); } 
         }
         
         .glow-red { color: #c0392b !important; } .glow-green { color: #27ae60 !important; } .glow-yellow { color: #f1c40f !important; } .glow-purple { color: #9b59b6 !important; } .glow-neutral { color: #3498db !important; }
         
-        #play-area { display: flex; align-items: center; justify-content: center; gap: 80px; width: 100%; min-height: 180px; position: relative; transition: transform 0.3s; z-index: 5; grid-row: 2; align-self: center; }
+        /* Oyun Alanı ve Ortadaki Desteler */
+        #play-area { display: flex; align-items: center; justify-content: center; gap: 30px; width: 100%; min-height: 180px; position: relative; transition: transform 0.3s; z-index: 5; grid-row: 2; align-self: center; }
         .card { width: 105px; height: 155px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; cursor: pointer; border: 3px solid #555; box-shadow: 5px 5px 15px rgba(0,0,0,0.2); background-color: white; position: relative; user-select: none; transition: transform 0.2s; box-sizing: border-box; flex-shrink: 0; }
         #draw-pile.card:hover { transform: none; }
        @media (hover: hover) and (pointer: fine) { .playable:hover { transform: translateY(-30px) scale(1.1); z-index: 100; } }
@@ -335,23 +308,24 @@
             .main-wrapper { display: grid; grid-template-columns: 100%; grid-template-rows: 40px 1fr 120px 40px; grid-template-areas: "logo" "game" "panel" "buttons"; width: 100%; min-height: 100vh; height: auto; padding: 5px; gap: 5px; box-sizing: border-box; }
             #brand-area { grid-area: logo; padding: 4px 8px; flex-direction: row; align-items: center; gap: 5px; border-radius: 10px; margin: 0; height: 100%; box-sizing: border-box; }
             .brand-title { font-size: 1.1em; display: flex; gap: 5px; } .version { font-size: 0.6em; margin: 0; align-self: center; } .brand-sub { font-size: 0.7em; margin: 0; margin-left: auto; }
+            
             .game-container { grid-area: game; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; align-items: center; margin: 0; padding: 5px 0; overflow: hidden; box-sizing: border-box; }
             #top-area { height: auto; min-height: 80px; width: 100%; transform: scale(0.80); transform-origin: center top; margin: 0; }
-            #play-area { height: auto; width: 100%; transform: scale(0.80); margin: 0; flex-grow: 1; }
+            #play-area { height: auto; width: 100%; transform: scale(0.80); margin: 0; flex-grow: 1; gap: 15px; } /* Mobil Ortadaki Deste Boşluğu Düzeltildi */
             #bottom-area { padding-bottom: 2px; transform: scale(0.85); transform-origin: center bottom; margin: 0; }
             .bot-wrapper { transform: scale(0.85); margin: 0; } 
             
-            /* Mobil Ok ve Yan Slot Düzenlemeleri (YUKARI ÇEKİLDİ) */
+            /* Mobil Ok ve Yan Slot Düzenlemeleri (Kenarlara dışarı taşırıldı ve Yukarı Çekildi) */
             .arrow-icon, .arrow-top-static { font-size: 1.5em; }
             .mode-5p #arrow-side-left, .mode-6p #arrow-side-left { left: 5px; bottom: 20%; } 
             .mode-5p #arrow-side-right, .mode-6p #arrow-side-right { right: 5px; bottom: 20%; }
             .mode-5p #arrow-corner-tl, .mode-6p #arrow-corner-tl { left: 5%; top: 22%; }
             .mode-5p #arrow-corner-tr, .mode-6p #arrow-corner-tr { right: 5%; top: 22%; }
             
-            #slot-left { left: 25px; top: 40%; }
-            #slot-right { right: 25px; top: 40%; }
-            #slot-left .bot-name { left: -30px; font-size: 0.7em;}
-            #slot-right .bot-name { right: -30px; font-size: 0.7em;}
+            #slot-left { left: -30px; top: 45%; }
+            #slot-right { right: -30px; top: 45%; }
+            #slot-left .bot-name { left: 95px; font-size: 0.7em;}
+            #slot-right .bot-name { right: 95px; font-size: 0.7em;}
 
             .flying-card { transform: scale(0.8); transform-origin: top left; }
             .card[data-val="+2"] .card-emoji { font-size: 2.0em !important; gap: 1px !important; }
@@ -364,13 +338,20 @@
             .right-panel { grid-area: panel; flex-direction: row; height: 100%; gap: 5px; padding: 0; box-sizing: border-box; overflow: hidden; }
             .info-container { height: 100%; flex: 1; }
             .chat-container { height: 100%; flex: 1; }
-            #score-table td { padding: 1px 4px; font-size: 0.65em; }
+            #score-table td { padding: 1px 4px; font-size: 0.65em; } /* Mobil 6 kişi puan tablosu sığdırma */
             #chat-messages { font-size: 0.65em !important; padding: 2px !important; gap: 1px !important; }
             .chat-line { line-height: 1.1 !important; margin-bottom: 2px !important; }
             .panel-header { font-size: 0.75em; padding: 3px; }
-            .chat-input-area { padding: 2px; }
-            #player-input { font-size: 0.7em; padding: 2px 5px; height: 25px; }
+            
+            /* Mobil Lobi Chat Düzenlemesi */
+            .chat-input-area { padding: 2px; width: 100%; box-sizing: border-box; }
+            #player-input { font-size: 0.7em; padding: 2px 5px; height: 25px; flex: 1; min-width: 0; }
             #send-btn { width: 25px; height: 25px; font-size: 1em; }
+            
+            /* Lobi İçi Chat Düzeltmesi (Send Butonunun Kaybolmasını Engeller) */
+            .l-chat-input-area { width: 100%; box-sizing: border-box; padding-right: 5px; }
+            #l-chat-input { width: auto; flex: 1; min-width: 0; }
+
             .buttons-container { grid-area: buttons; flex-direction: row; gap: 5px; padding: 0; box-sizing: border-box; height: 100%; margin: 0; min-height: 40px; z-index: 100; }
             .game-btn { font-size: 0.8em; padding: 0; display: flex; align-items: center; justify-content: center; height: 100%; flex: 1; margin: 0; }
         }
@@ -421,7 +402,7 @@
 
                 <label class="mode-check" style="cursor: pointer; opacity: 1;">
                     <input type="checkbox" id="offline-mode-check">
-                    <span style="font-size:0.9em; font-weight:bold; color:#555;">Offline 4 Kişilik Masa</span>
+                    <span style="font-size:0.9em; font-weight:bold; color:#555;">Tek Kişilik Masa (Offline)</span>
                 </label>
 
                 <button class="login-btn-main" id="create-room-btn" style="padding:10px; margin-top:10px;">Masayı Kur</button>
@@ -492,7 +473,7 @@
 
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.93 (Open Beta)</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.97 (Open Beta)</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     
@@ -780,11 +761,29 @@ function initGameChat(roomId) { if(gameChatUnsub) gameChatUnsub(); const chatDiv
 function enterWaitingRoom() { updateGlobalStatus('waiting'); document.getElementById('lobby-overlay').style.display = 'none'; document.getElementById('waiting-room-overlay').style.display = 'flex'; document.getElementById('leave-room-btn').onclick = () => { document.getElementById('leave-modal').style.display = 'flex'; }; if(roomUnsubscribe) roomUnsubscribe(); if(heartbeatInterval) clearInterval(heartbeatInterval); heartbeatInterval = setInterval(sendHeartbeat, ANIM_CONFIG.HEARTBEAT_MS); if(botInterval) clearInterval(botInterval); botInterval = setInterval(runBotWatchdog, 1000); initGameChat(currentRoomId); roomUnsubscribe = db.collection("rooms").doc(currentRoomId).onSnapshot((docSnap) => { if(!docSnap.exists) { location.reload(); return; } const data = docSnap.data(); localPlayers = data.players; if(previousPlayersList.length > 0) { localPlayers.forEach(p => { if(!previousPlayersList.find(op => op.uid === p.uid)) { if(!p.isBot) showToast(`${p.name} odaya katıldı!`); } }); previousPlayersList.forEach(op => { if(!localPlayers.find(p => p.uid === op.uid)) showToast(`${op.name} ayrıldı.`); }); } previousPlayersList = localPlayers; const firstHuman = localPlayers.find(p => !p.isBot); isHost = (firstHuman && firstHuman.uid === myUid); document.getElementById(isHost ? 'wr-host-controls' : 'wr-guest-controls').style.display = 'block'; document.getElementById(!isHost ? 'wr-host-controls' : 'wr-guest-controls').style.display = 'none'; document.getElementById('wr-room-name').innerText = `Masa: ${data.name}`; const grid = document.getElementById('wr-player-grid'); grid.innerHTML = ""; localPlayers.forEach(p => { const isMe = p.uid === myUid; const isHostPlayer = p.uid === firstHuman?.uid; const colors = ['#e74c3c', '#2ecc71', '#3498db', '#9b59b6', '#f1c40f', '#e67e22']; const colorIdx = p.name.length % colors.length; const avatarColor = colors[colorIdx]; const firstLetter = p.name.charAt(0).toUpperCase(); const card = document.createElement('div'); card.className = `wr-card ${isMe ? 'active' : ''} ${isHostPlayer ? 'host-card' : ''}`; card.innerHTML = ` ${isHostPlayer ? '<div class="host-crown">👑</div>' : ''} <div class="wr-status ready"></div> <div class="wr-avatar" style="background:${avatarColor}">${p.isBot ? '🤖' : firstLetter}</div> <div class="wr-name">${p.name}</div> <div class="wr-role">${isHostPlayer ? 'Masa Sahibi' : (p.isBot ? 'Bot' : 'Oyuncu')}</div> `; grid.appendChild(card); }); if(data.status === 'playing') { document.getElementById('waiting-room-overlay').style.display = 'none'; document.getElementById('main-game-wrapper').style.display = 'grid'; updateGlobalStatus('playing'); myPlayerIdx = localPlayers.findIndex(p => p.uid === myUid); syncGameLoop(data); } }); }
 function sendHeartbeat() { if(!currentRoomId || !myUid) return; db.collection("rooms").doc(currentRoomId).collection("presence").doc(myUid).set({ name: myName, lastSeen: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }); }
 
-document.getElementById('start-game-btn').addEventListener('click', () => { let finalPlayers = [...localPlayers]; let maxP = 4; db.collection("rooms").doc(currentRoomId).get().then(doc => { if(doc.exists) maxP = doc.data().maxPlayers || 4; let botNames = ["🤖 Rifu", "🤖 Utku", "🤖 Kübra", "🤖 Onur", "🤖 Furkan", "🤖 Aysi", "🤖 Bilge", "🤖 Elif", "🤖 Luna"]; botNames = shuffleDeck(botNames); let botIdx = 0; while(finalPlayers.length < maxP) { finalPlayers.push({ uid: 'bot_' + Date.now() + '_' + botIdx, name: botNames[botIdx % botNames.length], isBot: true, score: 0, hand: [], isReady: true, saidSonTabak: false, challengeUsed: false, lastSeen: Date.now() }); botIdx++; } finalPlayers = shuffleDeck(finalPlayers); finalPlayers = finalPlayers.map(p => ({...p, isReady: false, saidSonTabak: false, challengeUsed: false })); const newDeck = createFullDeck(); const hands = Array(maxP).fill().map(() => []);
+document.getElementById('start-game-btn').addEventListener('click', () => { 
+    let finalPlayers = [...localPlayers]; 
+    let maxP = 4; 
+    db.collection("rooms").doc(currentRoomId).get().then(doc => { 
+        if(doc.exists) maxP = doc.data().maxPlayers || 4; 
+        let botNames = ["🤖 Rifu", "🤖 Utku", "🤖 Kübra", "🤖 Onur", "🤖 Furkan", "🤖 Aysi", "🤖 Bilge", "🤖 Kedi", "🤖 Luna"]; 
+        botNames = shuffleDeck(botNames); 
+        let botIdx = 0; 
+        while(finalPlayers.length < maxP) { finalPlayers.push({ uid: 'bot_' + Date.now() + '_' + botIdx, name: botNames[botIdx % botNames.length], isBot: true, score: 0, hand: [], isReady: true, saidSonTabak: false, challengeUsed: false, lastSeen: Date.now() }); botIdx++; } 
+        finalPlayers = shuffleDeck(finalPlayers); finalPlayers = finalPlayers.map(p => ({...p, isReady: false, saidSonTabak: false, challengeUsed: false })); 
+        const newDeck = createFullDeck(); const hands = Array(maxP).fill().map(() => []);
         let initialCards = maxP === 6 ? 5 : (maxP === 5 ? 6 : 7);
-        for(let i=0; i<initialCards; i++) { for(let p=0; p<maxP; p++) hands[p].push(newDeck.pop()); } finalPlayers.forEach((p, i) => p.hand = hands[i].map(serializeCard)); let first = newDeck.pop(); while(first.color === 'wild' || first.type === 'action') { newDeck.unshift(first); first = newDeck.pop(); } 
-        let baseColors = ['#c0392b', '#8e44ad', '#d35400', '#27ae60', '#1A237E', '#b7950b']; let pColors = shuffleDeck(baseColors.slice(0, maxP));
-        const initialState = { deck: newDeck.map(serializeCard), discardPile: [serializeCard(first)], currentPlayer: Math.floor(Math.random()*maxP), direction: 1, drawStack: 0, gameActive: true, lastAction: { type: 'start', timestamp: Date.now() }, vulnerablePlayerIdx: -1, playerColors: pColors, hasDrawn: false }; db.collection("rooms").doc(currentRoomId).update({ status: 'playing', players: finalPlayers, gameState: initialState, lastActive: Date.now() }); }); });
+        for(let i=0; i<initialCards; i++) { for(let p=0; p<maxP; p++) hands[p].push(newDeck.pop()); } 
+        finalPlayers.forEach((p, i) => p.hand = hands[i].map(serializeCard)); 
+        let first = newDeck.pop(); while(first.color === 'wild' || first.type === 'action') { newDeck.unshift(first); first = newDeck.pop(); } 
+        
+        let baseColors = ['#c0392b', '#8e44ad', '#d35400', '#27ae60', '#1A237E', '#b7950b']; 
+        let pColors = shuffleDeck(baseColors.slice(0, maxP));
+        
+        const initialState = { deck: newDeck.map(serializeCard), discardPile: [serializeCard(first)], currentPlayer: Math.floor(Math.random()*maxP), direction: 1, drawStack: 0, gameActive: true, lastAction: { type: 'start', timestamp: Date.now() }, vulnerablePlayerIdx: -1, playerColors: pColors, hasDrawn: false }; 
+        db.collection("rooms").doc(currentRoomId).update({ status: 'playing', players: finalPlayers, gameState: initialState, lastActive: Date.now() }); 
+    }); 
+});
 
 let isBotThinking = false; let lastBotActionTime = 0; 
 function syncGameLoop(roomData) { const gs = roomData.gameState; if(isHost && roomData.lastActive && (Date.now() - roomData.lastActive > 60000)) { confirmLeaveGame(); return; } if(!gs) return; gameDeck = (gs.deck || []).map(deserializeCard); gameDiscard = (gs.discardPile || []).map(deserializeCard); gamePlayers = roomData.players; gameHands = gamePlayers.map(p => (p.hand || []).map(deserializeCard)); currentPlayer = gs.currentPlayer; direction = gs.direction; drawStack = gs.drawStack; gameActive = gs.gameActive; vulnerablePlayerIdx = gs.vulnerablePlayerIdx; playerColors = gs.playerColors; hasDrawn = gs.hasDrawn || false; if(currentPlayer !== myPlayerIdx) { localSaidSonTabak = false; isActionLocked = false; } if(lastGameState && lastGameState.lastAction.timestamp !== gs.lastAction.timestamp) { let action = gs.lastAction; if(action.card && typeof action.card === 'string') action.card = deserializeCard(action.card); actionQueue.push(action); processActionQueue(); } else if (!isProcessingQueue) { updateUI(); } if (gs.winnerIdx !== undefined && gs.winnerIdx !== -1 && gameActive === false) { if(actionQueue.length === 0 && !isProcessingQueue) { if(document.getElementById('end-modal').style.display !== 'flex') showEndGame(gs.winnerIdx, roomData.players); updateReadyStatusUI(); } } if(!lastGameState && gs.lastAction.type === 'start') { actionQueue.push(gs.lastAction); processActionQueue(); } lastGameState = gs; attemptBotMove(); }
@@ -846,6 +845,7 @@ function playerSendMessage() { let input = document.getElementById('player-input
 function rebuildDeckFromState(currentHands, topDiscardCard) { let fullDeck = createFullDeck().map(serializeCard); let activeCards = []; currentHands.forEach(hand => { hand.forEach(c => activeCards.push(serializeCard(c))); }); if(topDiscardCard) activeCards.push(serializeCard(topDiscardCard)); activeCards.forEach(cardStr => { let idx = fullDeck.indexOf(cardStr); if(idx > -1) { fullDeck.splice(idx, 1); } }); return shuffleDeck(fullDeck.map(deserializeCard)); }
 async function serverDrawCard(pIdx, count, isPenalty = false) { let newDeck = [...gameDeck], newDiscard = [...gameDiscard]; let newHands = gameHands.map(h => [...h]); if(newDeck.length < count) { let topCard = newDiscard.length > 0 ? newDiscard[newDiscard.length - 1] : null; newDeck = rebuildDeckFromState(newHands, topCard); if(newDeck.length === 0) newDeck = createFullDeck(); } for(let i=0; i<count; i++) if(newDeck.length > 0) newHands[pIdx].push(newDeck.pop()); let pUpdates = [...gamePlayers]; pUpdates[pIdx].hand = newHands[pIdx].map(serializeCard); pUpdates[pIdx].saidSonTabak = false; let updates = { "players": pUpdates, "gameState.deck": newDeck.map(serializeCard), "gameState.discardPile": newDiscard.map(serializeCard), "gameState.drawStack": 0, "gameState.hasDrawn": true, "gameState.lastAction": { type: 'draw', pIdx, count, timestamp: Date.now(), isPenalty: isPenalty }, "lastActive": Date.now() }; if(isPenalty) updates["gameState.hasDrawn"] = false; await db.collection("rooms").doc(currentRoomId).update(updates); }
 async function serverPassTurn(pIdx) { let maxP = gamePlayers.length; await db.collection("rooms").doc(currentRoomId).update({ "gameState.currentPlayer": (currentPlayer + direction + maxP) % maxP, "gameState.hasDrawn": false, "gameState.vulnerablePlayerIdx": -1, "lastActive": Date.now() }); }
+
 async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredSonTabak = false) {
     let newHands = gameHands.map(h => [...h]); let newDiscard = [...gameDiscard]; if(!newHands[pIdx] || !newHands[pIdx][cIdx]) return; let card = newHands[pIdx][cIdx]; if(cardWithColor) card = cardWithColor;
     newHands[pIdx].splice(cIdx, 1); newDiscard.push(card); if(newDiscard.length > 2) newDiscard = newDiscard.slice(-2);
@@ -865,9 +865,27 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
     if(newWinner !== -1) { updates["gameState.gameActive"] = false; updates["gameState.winnerIdx"] = newWinner; let roundScores = newHands.map(h => h.reduce((sum, c) => { if (c.type === 'num') return sum + parseInt(c.val); else if (['Wild Mixer', 'Wild Meze', '+2', 'Wild', 'Wild Table', 'Wild Anti-Draw', 'Wild Pot'].includes(c.val)) return sum + 30; else return sum + 20; }, 0)); updates["players"] = playerUpdates.map((p, i) => ({ ...p, score: p.score + roundScores[i], lastRoundScore: roundScores[i] })); }
     await db.collection("rooms").doc(currentRoomId).update(updates);
 }
+
 async function serverPunishVulnerable(victimIdx) { let newDeck = [...gameDeck], newHands = gameHands.map(h=>[...h]), c = newDeck.pop(); if(c) newHands[victimIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[victimIdx].hand = newHands[victimIdx].map(serializeCard); await db.collection("rooms").doc(currentRoomId).update({ "players": pUpdates, "gameState.deck": newDeck.map(serializeCard), "gameState.vulnerablePlayerIdx": -1, "gameState.lastAction": { type: 'challenge', success: true, victimIdx: victimIdx, timestamp: Date.now() } }); }
 async function serverPunishChallenger(challengerIdx) { let maxP = gamePlayers.length; let newDeck = [...gameDeck], newHands = gameHands.map(h=>[...h]), c = newDeck.pop(); if(c) newHands[challengerIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[challengerIdx].hand = newHands[challengerIdx].map(serializeCard); pUpdates[challengerIdx].challengeUsed = true; let nextP = (currentPlayer + direction + maxP) % maxP; await db.collection("rooms").doc(currentRoomId).update({ "players": pUpdates, "gameState.deck": newDeck.map(serializeCard), "gameState.currentPlayer": nextP, "gameState.hasDrawn": false, "gameState.lastAction": { type: 'challenge', success: false, victimIdx: challengerIdx, timestamp: Date.now() } }); }
-async function nextRound() { if(!isHost) return; document.getElementById('end-modal').style.display = 'none'; const newDeck = createFullDeck(); let maxP = gamePlayers.length; const hands = Array(maxP).fill().map(() => []);   let initialCards = maxP === 6 ? 5 : (maxP === 5 ? 6 : 7);         for(let i=0; i<initialCards; i++) { for(let p=0; p<maxP; p++) hands[p].push(newDeck.pop()); } const updatedPlayers = gamePlayers.map((p, i) => ({ ...p, hand: hands[i].map(serializeCard), isReady: false, saidSonTabak: false, challengeUsed: false })); let first = newDeck.pop(); while(first.color === 'wild' || first.type === 'action') { newDeck.unshift(first); first = newDeck.pop(); } let baseColors = ['#c0392b', '#8e44ad', '#d35400', '#27ae60', '#1A237E', '#b7950b']; let pColors = shuffleDeck(baseColors.slice(0, maxP)); const nextState = { deck: newDeck.map(serializeCard), discardPile: [serializeCard(first)], currentPlayer: lastWinner, direction: 1, drawStack: 0, gameActive: true, lastAction: { type: 'newRound', timestamp: Date.now() }, vulnerablePlayerIdx: -1, playerColors: pColors, hasDrawn: false }; await db.collection("rooms").doc(currentRoomId).update({ players: updatedPlayers, gameState: nextState, lastActive: Date.now() }); }
+
+async function nextRound() { 
+    if(!isHost) return; 
+    document.getElementById('end-modal').style.display = 'none'; 
+    const newDeck = createFullDeck(); 
+    let maxP = gamePlayers.length; 
+    const hands = Array(maxP).fill().map(() => []);   
+    let initialCards = maxP === 6 ? 5 : (maxP === 5 ? 6 : 7);         
+    for(let i=0; i<initialCards; i++) { for(let p=0; p<maxP; p++) hands[p].push(newDeck.pop()); } 
+    const updatedPlayers = gamePlayers.map((p, i) => ({ ...p, hand: hands[i].map(serializeCard), isReady: false, saidSonTabak: false, challengeUsed: false })); 
+    let first = newDeck.pop(); while(first.color === 'wild' || first.type === 'action') { newDeck.unshift(first); first = newDeck.pop(); } 
+    
+    let baseColors = ['#c0392b', '#8e44ad', '#d35400', '#27ae60', '#1A237E', '#b7950b']; 
+    let pColors = shuffleDeck(baseColors.slice(0, maxP)); 
+    
+    const nextState = { deck: newDeck.map(serializeCard), discardPile: [serializeCard(first)], currentPlayer: lastWinner, direction: 1, drawStack: 0, gameActive: true, lastAction: { type: 'newRound', timestamp: Date.now() }, vulnerablePlayerIdx: -1, playerColors: pColors, hasDrawn: false }; 
+    await db.collection("rooms").doc(currentRoomId).update({ players: updatedPlayers, gameState: nextState, lastActive: Date.now() }); 
+}
 
 async function hostBotTurn() {
     try {
@@ -915,7 +933,6 @@ async function playBotCardSmart(cardToPlay, cardIdx, willSaySonTabak) {
    if (willSaySonTabak) { await serverBotSaySonTabak(currentPlayer); await wait(100); }
     await serverPlayCard(currentPlayer, cardIdx, cardToPlay, mixDir, willSaySonTabak);
 }
-async function serverBotSaySonTabak(pIdx) { let pUpdates = [...gamePlayers]; pUpdates[pIdx].saidSonTabak = true; await db.collection("rooms").doc(currentRoomId).update({ players: pUpdates, "gameState.vulnerablePlayerIdx": -1, "gameState.lastAction": { type: 'sonTabak', pIdx: pIdx, timestamp: Date.now() }}); }
 
 /* --- GÜNCELLENMİŞ YARDIMCI GÖRSELLER & ANİMASYONLAR --- */
 function updateUI() {
@@ -954,22 +971,25 @@ function updateUI() {
             if (isSide) {
                 let totalH = 60 + (visibleCount > 0 ? (visibleCount-1)*12 : 0);
                 stack.style.width = '90px';
-                stack.style.height = totalH + 'px';
+                stack.style.height = '120px';
+                let startY = (120 - totalH) / 2;
                 for(let j=0; j<visibleCount; j++) {
                     let mc = document.createElement('div'); 
                     mc.className = 'mini-card-back rotated-card'; 
                     mc.style.left = '0px'; 
-                    mc.style.top = (j*12) + 'px'; 
+                    mc.style.top = (startY + j*12) + 'px'; 
                     stack.appendChild(mc);
                 }
             } else {
                 let totalW = 60 + (visibleCount > 0 ? (visibleCount-1)*8 : 0);
-                stack.style.width = totalW + 'px'; 
+                stack.style.width = '100px'; 
                 stack.style.height = '90px';
+                let startX = (100 - totalW) / 2;
                 for(let j=0; j<visibleCount; j++) {
                     let mc = document.createElement('div'); 
                     mc.className = 'mini-card-back'; 
-                    mc.style.top = (j*4)+'px'; mc.style.left = (j*8)+'px'; 
+                    mc.style.top = (j*4)+'px'; 
+                    mc.style.left = (startX + j*8)+'px'; 
                     stack.appendChild(mc);
                 }
             }
