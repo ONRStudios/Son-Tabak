@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v0.98 (Open Beta)</title>
+    <title>Son Tabak Online - v0.94 (Open Beta)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
     
@@ -139,8 +139,8 @@
         .ambient-purple { box-shadow: inset 0 0 60px rgba(142, 68, 173, 0.4) !important; border-color: #8e44ad !important; }
         
         #top-area { display: flex; justify-content: space-evenly; width: 95%; padding-top: 10px; min-height: 140px; position: relative; z-index: 5; grid-row: 1; align-self: start; }
-        .bot-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; width: 100px; position: relative; transition: 0.3s; }
-        .bot-name { background: white; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.8em; z-index: 5; margin-bottom: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s; white-space: nowrap; border: 1px solid #ddd; }
+        .bot-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; width: 110px; min-width: 110px; max-width: 110px; position: relative; transition: 0.3s; }
+        .bot-name { background: white; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.8em; z-index: 5; margin-bottom: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s; white-space: nowrap; border: 1px solid #ddd; max-width: 100%; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; }
         .current-player .bot-name { background: #3498db; color: white !important; box-shadow: 0 0 10px #3498db; transform: scale(1.1); border-color: #2980b9; }
         
         .chat-bubble { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; border: 2px solid #333; padding: 5px 8px; border-radius: 8px; font-size: 0.7em; font-weight: bold; white-space: normal; width: 120px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.4); z-index: 300; opacity: 0; pointer-events: none; line-height: 1.1; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s; }
@@ -475,7 +475,7 @@
 
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.98 (Open Beta)</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.94 (Open Beta)</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     
@@ -673,12 +673,12 @@ const deserializeCard = (s) => {
 
 function getLightColor(hex) {
     const lightMap = {
-        '#c0392b': '#ff9999', 
-        '#8e44ad': '#e598f8', 
-        '#d35400': '#f8c471', 
-        '#27ae60': '#abebc6', 
-        '#1A237E': '#9fa8da', 
-        '#b7950b': '#fcf3cf'  
+        '#c0392b': '#ff9999', // Kırmızı
+        '#8e44ad': '#e598f8', // Mor
+        '#b7950b': '#fcf3cf', // Koyu Sarı
+        '#27ae60': '#abebc6', // Yeşil
+        '#d81b60': '#f8bbd0', // Pembe/Fuşya
+        '#ff6b00': '#ffcc80'  // Canlı Turuncu
     };
     return lightMap[hex] || '#ffffff';
 }
@@ -767,14 +767,15 @@ document.getElementById('start-game-btn').addEventListener('click', () => {
     let finalPlayers = [...localPlayers]; let maxP = 4; 
     db.collection("rooms").doc(currentRoomId).get().then(doc => { 
         if(doc.exists) maxP = doc.data().maxPlayers || 4; 
-        let botNames = ["🤖 Rifu", "🤖 Utku", "🤖 Kübra", "🤖 Onur", "🤖 Furkan", "🤖 Aysi", "🤖 Bilge", "🤖 Kedi", "🤖 Luna"]; botNames = shuffleDeck(botNames); 
+        let botNames = ["🤖 Rifu", "🤖 Utku", "🤖 Kübra", "🤖 Onur", "🤖 Furkan", "🤖 Aysi", "🤖 Bilge", "🤖 Elif", "🤖 Luna"]; botNames = shuffleDeck(botNames); 
         let botIdx = 0; while(finalPlayers.length < maxP) { finalPlayers.push({ uid: 'bot_' + Date.now() + '_' + botIdx, name: botNames[botIdx % botNames.length], isBot: true, score: 0, hand: [], isReady: true, saidSonTabak: false, challengeUsed: false, lastSeen: Date.now() }); botIdx++; } 
         finalPlayers = shuffleDeck(finalPlayers); finalPlayers = finalPlayers.map(p => ({...p, isReady: false, saidSonTabak: false, challengeUsed: false })); 
         const newDeck = createFullDeck(); const hands = Array(maxP).fill().map(() => []);
         let initialCards = maxP === 6 ? 5 : (maxP === 5 ? 6 : 7);
         for(let i=0; i<initialCards; i++) { for(let p=0; p<maxP; p++) hands[p].push(newDeck.pop()); } 
         finalPlayers.forEach((p, i) => p.hand = hands[i].map(serializeCard)); let first = newDeck.pop(); while(first.color === 'wild' || first.type === 'action') { newDeck.unshift(first); first = newDeck.pop(); } 
-        let baseColors = ['#c0392b', '#8e44ad', '#d35400', '#27ae60', '#1A237E', '#b7950b']; let pColors = shuffleDeck(baseColors.slice(0, maxP));
+        let baseColors = ['#c0392b', '#8e44ad', '#b7950b', '#27ae60', '#d81b60', '#ff6b00']; 
+        let pColors = shuffleDeck(baseColors.slice(0, maxP));
         const initialState = { deck: newDeck.map(serializeCard), discardPile: [serializeCard(first)], currentPlayer: Math.floor(Math.random()*maxP), direction: 1, drawStack: 0, gameActive: true, lastAction: { type: 'start', timestamp: Date.now() }, vulnerablePlayerIdx: -1, playerColors: pColors, hasDrawn: false }; 
         db.collection("rooms").doc(currentRoomId).update({ status: 'playing', players: finalPlayers, gameState: initialState, lastActive: Date.now() }); 
     }); 
@@ -1223,3 +1224,4 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
