@@ -749,8 +749,8 @@ async function handleLocalAction(action) {
 
         if(action.card.val === 'Wild Table') await animateTableEffect();
         if(action.card.val === 'Wild Mixer') await animateMixerEffect(direction); 
-        if(action.card.val === 'Wild Pot') animatePotEffect(pIdx, direction);
-        if(action.card.val === 'Wild Meze') animateMezeEffect(pIdx);
+        if(action.card.val === 'Wild Pot') await animatePotEffect(pIdx, direction); // AWAIT EKLENDİ
+        if(action.card.val === 'Wild Meze') await animateMezeEffect(pIdx); // AWAIT EKLENDİ
 
         if(action.penaltyCount && action.penaltyCount > 0) {
             let targetIdx = currentPlayer;
@@ -1130,15 +1130,29 @@ function animateMixerEffect(dir) {
     });
 }
 function animatePotEffect(senderIdx, dir) {
-    let source = document.getElementById('draw-pile');
-    for(let k=0; k<4; k++) {
-        let targetPIdx = (senderIdx + (k * dir) + 4) % 4; let targetId = targetPIdx === myPlayerIdx ? 'player-hand' : `bot${(targetPIdx - myPlayerIdx + 4) % 4}-wrapper`;
-        setTimeout(() => { animateFly(source, document.getElementById(targetId), null); }, k * ANIM_CONFIG.DRAW_INTERVAL);
-    }
+    return new Promise(resolve => {
+        let source = document.getElementById('draw-pile');
+        for(let k=0; k<4; k++) {
+            let targetPIdx = (senderIdx + (k * dir) + 4) % 4;
+            let targetId = targetPIdx === myPlayerIdx ? 'player-hand' : `bot${(targetPIdx - myPlayerIdx + 4) % 4}-wrapper`;
+            
+            setTimeout(() => { 
+                // animateFly fonksiyonunun son parametresi callback'tir. Son kart uçtuğunda Promise'i çözeriz.
+                animateFly(source, document.getElementById(targetId), null, () => {
+                    if (k === 3) resolve(); // Son kartın animasyonu bittiğinde oyunu devam ettir
+                }); 
+            }, k * ANIM_CONFIG.DRAW_INTERVAL);
+        }
+    });
 }
+
 function animateMezeEffect(senderIdx) {
-    let prevIdx = (senderIdx - direction + 4) % 4; let targetId = prevIdx === myPlayerIdx ? 'player-hand' : `bot${(prevIdx - myPlayerIdx + 4) % 4}-wrapper`;
-    animateFly(document.getElementById('draw-pile'), document.getElementById(targetId), null);
+    return new Promise(resolve => {
+        let prevIdx = (senderIdx - direction + 4) % 4;
+        let targetId = prevIdx === myPlayerIdx ? 'player-hand' : `bot${(prevIdx - myPlayerIdx + 4) % 4}-wrapper`;
+        // Meze animasyonu bitince resolve çağrılır
+        animateFly(document.getElementById('draw-pile'), document.getElementById(targetId), null, resolve);
+    });
 }
 async function animateInitialDeal() {
     isDealing = true; document.getElementById('player-hand').innerHTML = '';
@@ -1260,4 +1274,5 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
