@@ -14,8 +14,8 @@
     <style>
         /* --- TEMEL CSS --- */
         :root {
-            /* Pamuk Şeker Default Desen */
-            --card-pattern: linear-gradient(135deg, #ffb6c1 0%, #add8e6 100%);
+            /* Klasik Yaldız Default Desen (Sarı) */
+            --card-pattern: radial-gradient(ellipse at center, #f1c40f 0%, #b7950b 100%);
             --bg-color: #2e8b57; /* Bayram Yeşili */
             --primary: #d35400;
             --accent: #f1c40f;
@@ -174,14 +174,14 @@
 
         .online-stamp { 
             position: absolute; 
-            top: 0; 
-            right: -30px; 
+            top: 20px; 
+            right: -20px; 
             background: #c0392b; 
             color: white; 
-            padding: 2px 8px; 
-            font-size: 0.4em; 
+            padding: 4px 10px; 
+            font-size: 0.55em; 
             font-weight: bold; 
-            transform: rotate(30deg); 
+            transform: rotate(25deg); 
             border: 2px solid white; 
             box-shadow: 2px 2px 5px rgba(0,0,0,0.3); 
             animation: stampPulse 2s infinite; 
@@ -189,9 +189,9 @@
         }
 
         @keyframes stampPulse { 
-            0% { transform: rotate(30deg) scale(1); } 
-            50% { transform: rotate(30deg) scale(1.1); } 
-            100% { transform: rotate(30deg) scale(1); } 
+            0% { transform: rotate(25deg) scale(1); } 
+            50% { transform: rotate(25deg) scale(1.1); } 
+            100% { transform: rotate(25deg) scale(1); } 
         }
 
         .login-input-group { 
@@ -567,11 +567,11 @@
         .corner-deco {
             position: absolute;
             font-size: 7em;
-            opacity: 0.15;
+            opacity: 0.4; /* Biraz daha belirgin */
             pointer-events: none;
             z-index: 0;
             user-select: none;
-            filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.1));
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
         }
         .top-left-deco { top: 10px; left: 15px; transform: rotate(-15deg); }
         .top-right-deco { top: 10px; right: 15px; transform: rotate(15deg); }
@@ -708,7 +708,7 @@
             top: 50%; 
             left: 50%;
             transform: translate(-50%, -50%) rotate(-15deg);
-            color: #ffffff; /* Yazıyı beyaz ve daha görünür yapalım ki her desene gitsin */
+            color: #ffffff; 
             font-family: var(--main-font); 
             font-weight: 900; 
             font-size: 1.1em; 
@@ -1377,7 +1377,7 @@
 <canvas id="confetti-canvas"></canvas>
 
 <div id="login-overlay">
-    <div class="brand-corner">🍬 Kalority Şeker Sürümü</div>
+    <div class="brand-corner">🔥 Kalority</div>
     <div class="rules-corner"><button class="icon-btn" onclick="openRules()">📖</button></div>
     <div class="production-corner">ONR Studios Production</div>
 
@@ -1388,9 +1388,9 @@
 
     <div class="login-content">
         <div class="logo-container">
-            <span class="plate-anim">🍬</span>
+            <span class="plate-anim">🍽️</span>
             <div class="game-title-login">SON<br>TABAK</div>
-            <div class="online-stamp" style="background: #2ecc71;">BAYRAM</div>
+            <div class="online-stamp">BAYRAM</div>
         </div>
         <div class="login-input-group">
             <input type="text" id="username-in" class="styled-input" placeholder="Adını Yaz" maxlength="12">
@@ -1400,8 +1400,8 @@
 </div>
 
 <div id="lobby-overlay">
-    <div class="brand-corner" style="position:fixed; top:15px; left:20px;">🍬 Kalority</div>
-    <div class="rules-corner" style="position:fixed; top:15px; right:20px;"><button class="icon-btn" style="background:#333;" onclick="openRules()">📖</button></div>
+    <div class="brand-corner" style="position:fixed; top:15px; left:20px;">🔥 Kalority</div>
+    <div class="rules-corner" style="position:fixed; top:15px; right:20px;"><button class="icon-btn" onclick="openRules()">📖</button></div>
     <div class="production-corner" style="position:fixed; bottom:10px; left:20px; color:#555;">ONR Studios Production</div>
 
     <div class="lobby-grid">
@@ -1489,7 +1489,7 @@
 
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍬 Son Tabak <span class="version">Bayram Sürümü</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">Bayram Sürümü</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     
@@ -1800,14 +1800,14 @@ const ANIM_CONFIG = {
 
 // YENİ 8 BAYRAM DESENİ
 const CARD_PATTERNS = [
-    'linear-gradient(135deg, #ffb6c1 0%, #add8e6 100%)', // 1. Pamuk Şeker (Default)
-    'repeating-linear-gradient(45deg, #a2d991, #a2d991 10px, #fdfbf7 10px, #fdfbf7 20px)', // 2. Fıstık & Kaymak
-    'repeating-linear-gradient(45deg, #3e2723, #3e2723 10px, #f39c12 10px, #f39c12 15px)', // 3. Bayram Çikolatası
-    'repeating-linear-gradient(-45deg, #e74c3c, #e74c3c 15px, #ffffff 15px, #ffffff 30px)', // 4. Şeker Paketi
-    'radial-gradient(circle, #e91e63 20%, #fce4ec 90%)', // 5. Güllü Lokum
-    'linear-gradient(to top, #f1c40f 0%, #85c1e9 100%)', // 6. Bayram Sabahı
-    'conic-gradient(from 0deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #ff9a9e)', // 7. Rengarenk Draje
-    'radial-gradient(ellipse at center, #f1c40f 0%, #b7950b 100%)' // 8. Klasik Yaldız
+    'radial-gradient(ellipse at center, #f1c40f 0%, #b7950b 100%)', // 1. Klasik Yaldız (Default)
+    'linear-gradient(135deg, #ffb6c1 0%, #add8e6 100%)', // 2. Pamuk Şeker
+    'repeating-linear-gradient(45deg, #a2d991, #a2d991 10px, #fdfbf7 10px, #fdfbf7 20px)', // 3. Fıstık & Kaymak
+    'repeating-linear-gradient(45deg, #3e2723, #3e2723 10px, #f39c12 10px, #f39c12 15px)', // 4. Bayram Çikolatası
+    'repeating-linear-gradient(-45deg, #e74c3c, #e74c3c 15px, #ffffff 15px, #ffffff 30px)', // 5. Şeker Paketi
+    'radial-gradient(circle, #e91e63 20%, #fce4ec 90%)', // 6. Güllü Lokum
+    'linear-gradient(to top, #f1c40f 0%, #85c1e9 100%)', // 7. Bayram Sabahı
+    'conic-gradient(from 0deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #ff9a9e)' // 8. Rengarenk Draje
 ];
 let currentPattern = CARD_PATTERNS[0];
 
@@ -3673,7 +3673,6 @@ async function animateInitialDeal() {
     updateUI();
 }
 
-// ARTIK BAYRAM ŞEKERLERİ YAĞIYOR
 function startCandyRain() { 
     const canvas = document.getElementById('confetti-canvas'); 
     const ctx = canvas.getContext('2d'); 
@@ -3974,7 +3973,6 @@ function showEndGame(winnerIdx, finalPlayers) {
         } 
     });
     
-    // BAYRAM KONSEPTİ YORUMLAR (SPİKER)
     let comments = [ 
         `Vay vay vay! Bayram harçlıklarını toplar gibi masadaki tüm puanları topladı!`, 
         `Ağzımızın tadı bozulmasın diyerek baklava tadında bir galibiyet aldı!`, 
@@ -3988,7 +3986,6 @@ function showEndGame(winnerIdx, finalPlayers) {
         `Bu masaya bayram erken geldi! Muazzam bir zafer!` 
     ];
     
-    // BAYRAM KONSEPTİ ROASTLAR
     let roasts = [ 
         `${worstRoundPlayerName} ise bu el bayram ziyaretinde unutulan çocuk gibi köşede kaldı, tam ${maxRoundScore} puan yedi!`, 
         `${worstRoundPlayerName} harçlık beklerken ceza yedi! ${maxRoundScore} puan ne?! Bayramlıkları kirlendi resmen.`, 
@@ -4010,7 +4007,6 @@ function showEndGame(winnerIdx, finalPlayers) {
     document.getElementById('end-modal').style.display = 'flex'; 
     updateReadyStatusUI(); 
     
-    // YENİ ŞEKER YAĞMURU
     startCandyRain(); 
     SoundFX.playFanfare();
 }
