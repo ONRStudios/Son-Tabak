@@ -1563,6 +1563,20 @@
     </div>
 </div>
 
+<div id="warning-modal" class="modal">
+    <div class="modal-box" style="text-align:center;">
+        <h3 style="color:#e74c3c;">🚨 Şefin Uyarısı</h3>
+        <p style="font-size:0.9em; color:#555;">
+            Lütfen oyun esnasında <b>sayfayı yenilemeyin (F5 atmayın)</b>. Aksi takdirde masada kalırsınız ve yeniden oturmak için masanın sizi atmasını (1 dk) beklemek zorunda kalırsınız.
+        </p>
+        <p style="font-size:0.9em; color:#555;">
+            Oyundan ayrılmak istediğinizde her zaman menüdeki <b>❌ Çıkış</b> butonunu kullanmaya özen gösterin.
+        </p>
+        <br>
+        <button class="game-btn btn-blue" onclick="document.getElementById('warning-modal').style.display='none'">Anladım Şef! 👨‍🍳</button>
+    </div>
+</div>
+
 <div id="pattern-modal" class="modal">
     <div class="modal-box">
         <h3>Kart Deseni</h3>
@@ -1891,6 +1905,9 @@ document.getElementById('login-btn').addEventListener('click', () => {
         document.getElementById('login-overlay').style.display = 'none'; 
         document.getElementById('lobby-overlay').style.display = 'flex'; 
         
+        // POPUP'I BURADA AÇIYORUZ
+        document.getElementById('warning-modal').style.display = 'flex';
+        
         initLobbyFeatures(); 
         updateGlobalStatus('lobby'); 
         listenRooms(); 
@@ -2114,6 +2131,17 @@ function proceedJoin(roomId) {
         let players = rData.players; 
         let targetIndex = -1; 
         let myCleanName = myName.trim().toLowerCase(); 
+
+        // YENİ: Masada aynı isimde "gerçek" bir oyuncu var mı kontrolü
+        const isNameTaken = players.some(p => 
+            !p.isBot && 
+            p.uid !== myUid && // Sayfayı yenileyip UID'si değişmeyen kendi bağlantısını engellememek için
+            p.name.trim().toLowerCase() === myCleanName
+        );
+
+        if (isNameTaken) {
+            return alert("Aynı isim şu anda masada oturmakta! Lütfen sayfayı yenileyip farklı bir isimle giriş yapın.");
+        }
         
         const sameNameBotIdx = players.findIndex(p => { 
             if (!p.isBot) return false; 
@@ -3967,4 +3995,5 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
