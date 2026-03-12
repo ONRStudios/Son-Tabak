@@ -1199,16 +1199,17 @@
             .login-input-group { width: 90% !important; padding: 25px; }
             .game-title-login { font-size: 2.2em; }
             .plate-anim { font-size: 4em; }
+            /* Kartların üst üste binmesini engellemek için genişliği geri verdik */
             .bot-wrapper.top-bot {
-                min-width: 75px !important;
-                max-width: 75px !important;
-                width: 75px !important;
+                min-width: 95px !important; 
+                max-width: 95px !important;
+                width: 95px !important;
             }
 
-            /* Aradaki okların devasa görünmez boşluklarını (margin) sıfırlıyoruz */
+            /* Ok boşlukları dengelendi */
             .arrow-top-static {
-                margin: 0 2px !important;
-                width: 25px !important;
+                margin: 0 5px !important;
+                width: 20px !important;
             }
             
             #lobby-overlay { overflow-y: auto; padding: 50px 10px 10px 10px; display: none; }
@@ -1293,15 +1294,15 @@
                 box-sizing: border-box; 
             }
 
-            #top-area { 
-               height: auto; 
+           #top-area { 
+                height: auto; 
                 min-height: 80px; 
                 width: 100%; 
-                transform: scale(0.80); 
+                transform: scale(0.76); /* 0.72 ile 0.80 arası altın oran */
                 transform-origin: center top; 
                 margin: 0 auto; 
                 justify-content: center; 
-                gap: 5px; /* Kartları birbirine hafif yaklaştırdık ki kenarlara taşmasın */
+                gap: 5px; 
             }
             #play-area { height: auto; width: 100%; transform: scale(0.80); margin: 0; flex-grow: 1; gap: 15px; } 
             #bottom-area { padding-bottom: 2px; transform: scale(0.85); transform-origin: center bottom; margin: 0; }
@@ -4048,6 +4049,7 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
 
 
