@@ -659,7 +659,7 @@
         }
         
         /* YAN SLOTLAR - YENİ TASARIM (FLEX DEĞİL, SABİT KUTU) */
-        .side-bot { display: none; position: absolute; top: 50%; transform: translateY(-50%); z-index: 10; width: 90px; height: 120px; }
+        .side-bot { display: none; position: absolute; top: 50%; transform: translateY(-50%); z-index: 10; width: 90px; height: 120px; min-width: 90px !important; max-width: 90px !important; }
         #slot-left { left: 40px; } 
         #slot-right { right: 40px; }
         
@@ -4027,6 +4027,7 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
 
 
