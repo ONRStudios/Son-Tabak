@@ -570,14 +570,17 @@
         
         #top-area { 
             display: flex; 
-            justify-content: space-evenly; 
-            width: 95%; 
+            justify-content: center; /* space-evenly yerine center kullanıyoruz */
+            align-items: center;
+            gap: 15px; /* Oyuncular arası sabit simetrik boşluk */
+            width: 100%; 
             padding-top: 10px; 
             min-height: 140px; 
             position: relative; 
             z-index: 5; 
             grid-row: 1; 
             align-self: start; 
+            margin: 0 auto;
         }
 
         .bot-wrapper { 
@@ -665,8 +668,16 @@
         #slot-right .bot-name { position: absolute; right: -10px; top: 50%; transform: translateY(-50%) rotate(90deg); margin: 0; white-space: nowrap; z-index: 15; }
         
         .side-bot .bot-stack-visual { position: absolute; left: 0; top: 50%; transform: translateY(-50%); margin: 0 !important; }
-        #slot-left .chat-bubble { left: 130%; top: 50%; }
-        #slot-right .chat-bubble { right: 130%; top: 50%; }
+        #slot-left .chat-bubble { 
+            left: 50%; 
+            top: 130%; /* İsim kutusunun hemen altına indirir */
+            transform: translateX(-50%); 
+        }
+        #slot-right .chat-bubble { 
+            left: 50%; 
+            top: 130%; /* İsim kutusunun hemen altına indirir */
+            transform: translateX(-50%); 
+        }
 
         .mini-card-back { 
             width: 60px; 
@@ -1274,7 +1285,16 @@
                 box-sizing: border-box; 
             }
 
-            #top-area { height: auto; min-height: 80px; width: 100%; transform: scale(0.80); transform-origin: center top; margin: 0; }
+            #top-area { 
+                height: auto; 
+                min-height: 80px; 
+                width: 100%; 
+                transform: scale(0.80); 
+                transform-origin: center top; 
+                margin: 0 auto; 
+                justify-content: center; /* Simetri için eklendi */
+                gap: 10px; /* Simetri için eklendi */
+            }
             #play-area { height: auto; width: 100%; transform: scale(0.80); margin: 0; flex-grow: 1; gap: 15px; } 
             #bottom-area { padding-bottom: 2px; transform: scale(0.85); transform-origin: center bottom; margin: 0; }
             .bot-wrapper { transform: scale(0.85); margin: 0; } 
@@ -1286,12 +1306,25 @@
             .mode-5p #arrow-corner-tl, .mode-6p #arrow-corner-tl { left: 5%; top: 22%; }
             .mode-5p #arrow-corner-tr, .mode-6p #arrow-corner-tr { right: 5%; top: 22%; }
             
-            #slot-left { left: -30px; top: 40%; }
-            #slot-right { right: -30px; top: 40%; }
+            #slot-left { left: -15px; top: 40%; } /* Sola yapışma hizası düzeltildi */
+            #slot-right { right: -15px; top: 40%; } /* Sağdaki kartlar dışa itildi, simetri sağlandı */
             
             /* İsimleri yan kutunun kendi kart bölgesinin ortasına denk getiriyoruz */
-            #slot-left .bot-name { left: 35px; font-size: 0.7em; z-index: 15;}
-            #slot-right .bot-name { right: 35px; font-size: 0.7em; z-index: 15;}
+            #slot-left .bot-name { left: 45px; font-size: 0.7em; z-index: 15;}
+            #slot-right .bot-name { right: 45px; font-size: 0.7em; z-index: 15;}
+
+            /* Mobil Chat Balonları (İsimlerin altında, dışarı taşmayacak şekilde) */
+            #slot-left .chat-bubble { 
+                left: 65px; 
+                top: 120px; 
+                transform: translateX(-50%); 
+            }
+            #slot-right .chat-bubble { 
+                left: auto;
+                right: 65px; 
+                top: 120px; 
+                transform: translateX(50%); 
+            }
 
             .flying-card { transform: scale(0.8); transform-origin: top left; }
             .card[data-val="+2"] .card-emoji { font-size: 2.0em !important; gap: 1px !important; }
@@ -3994,6 +4027,7 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
 
 
