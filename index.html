@@ -864,7 +864,15 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
 
 async function serverPunishVulnerable(victimIdx) { let newDeck = [...gameDeck], newHands = gameHands.map(h=>[...h]), c = newDeck.pop(); if(c) newHands[victimIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[victimIdx].hand = newHands[victimIdx].map(serializeCard); await db.collection("rooms").doc(currentRoomId).update({ "players": pUpdates, "gameState.deck": newDeck.map(serializeCard), "gameState.vulnerablePlayerIdx": -1, "gameState.lastAction": { type: 'challenge', success: true, victimIdx: victimIdx, timestamp: Date.now() } }); }
 async function serverPunishChallenger(challengerIdx) { let maxP = gamePlayers.length; let newDeck = [...gameDeck], newHands = gameHands.map(h=>[...h]), c = newDeck.pop(); if(c) newHands[challengerIdx].push(c); let pUpdates = [...gamePlayers]; pUpdates[challengerIdx].hand = newHands[challengerIdx].map(serializeCard); pUpdates[challengerIdx].challengeUsed = true; let nextP = (currentPlayer + direction + maxP) % maxP; await db.collection("rooms").doc(currentRoomId).update({ "players": pUpdates, "gameState.deck": newDeck.map(serializeCard), "gameState.currentPlayer": nextP, "gameState.hasDrawn": false, "gameState.lastAction": { type: 'challenge', success: false, victimIdx: challengerIdx, timestamp: Date.now() } }); }
-
+async function serverBotSaySonTabak(botIdx) {
+    let ps = [...gamePlayers];
+    ps[botIdx].saidSonTabak = true;
+    await db.collection("rooms").doc(currentRoomId).update({
+        players: ps,
+        "gameState.vulnerablePlayerIdx": -1,
+        "gameState.lastAction": { type: 'sonTabak', pIdx: botIdx, timestamp: Date.now() }
+    });
+}
 async function nextRound() { 
     if(!isHost) return; 
     document.getElementById('end-modal').style.display = 'none'; 
@@ -958,7 +966,7 @@ async function playBotCardSmart(cardToPlay, cardIdx, willSaySonTabak) {
             let bestColor = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b); if (counts[bestColor] === 0) bestColor = ['red', 'green', 'yellow', 'purple'][Math.floor(Math.random()*4)]; cardToPlay.chosenColor = bestColor;
         }
     }
-   if (willSaySonTabak) { await serverBotSaySonTabak(currentPlayer); await wait(100); }
+   if (willSaySonTabak) { await serverBotSaySonTabak(currentPlayer); await wait(600); }
     await serverPlayCard(currentPlayer, cardIdx, cardToPlay, mixDir, willSaySonTabak);
 }
 
@@ -1224,4 +1232,5 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
