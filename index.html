@@ -1199,6 +1199,17 @@
             .login-input-group { width: 90% !important; padding: 25px; }
             .game-title-login { font-size: 2.2em; }
             .plate-anim { font-size: 4em; }
+            .bot-wrapper.top-bot {
+                min-width: 75px !important;
+                max-width: 75px !important;
+                width: 75px !important;
+            }
+
+            /* Aradaki okların devasa görünmez boşluklarını (margin) sıfırlıyoruz */
+            .arrow-top-static {
+                margin: 0 2px !important;
+                width: 25px !important;
+            }
             
             #lobby-overlay { overflow-y: auto; padding: 50px 10px 10px 10px; display: none; }
             .lobby-grid { display: flex; flex-direction: row; flex-wrap: wrap; height: auto; gap: 10px; padding-bottom: 20px; align-items: flex-start; }
@@ -1286,7 +1297,7 @@
                height: auto; 
                 min-height: 80px; 
                 width: 100%; 
-                transform: scale(0.72); /* 0.80'den 0.72'ye düşürdük, köşelerden kurtarıldı */
+                transform: scale(0.80); 
                 transform-origin: center top; 
                 margin: 0 auto; 
                 justify-content: center; 
@@ -4037,6 +4048,7 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
 
 
