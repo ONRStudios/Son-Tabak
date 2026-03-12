@@ -2583,7 +2583,6 @@ async function handleRemoteAction(action) {
         } 
         isDealing = false; 
         updateUI(); 
-    } 
     } else if (action.type === 'pass') {
         // Sıra geçme işlemi geldiğinde ufak bir bekleme yapıp UI'ın sağlıklı yenilenmesini sağlıyoruz.
         await wait(100);
@@ -3995,5 +3994,6 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
 
