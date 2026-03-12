@@ -1283,14 +1283,14 @@
             }
 
             #top-area { 
-                height: auto; 
+               height: auto; 
                 min-height: 80px; 
                 width: 100%; 
-                transform: scale(0.80); 
+                transform: scale(0.72); /* 0.80'den 0.72'ye düşürdük, köşelerden kurtarıldı */
                 transform-origin: center top; 
                 margin: 0 auto; 
-                justify-content: center; /* Simetri için eklendi */
-                gap: 10px; /* Simetri için eklendi */
+                justify-content: center; 
+                gap: 5px; /* Kartları birbirine hafif yaklaştırdık ki kenarlara taşmasın */
             }
             #play-area { height: auto; width: 100%; transform: scale(0.80); margin: 0; flex-grow: 1; gap: 15px; } 
             #bottom-area { padding-bottom: 2px; transform: scale(0.85); transform-origin: center bottom; margin: 0; }
@@ -1307,8 +1307,21 @@
             #slot-right { right: -15px; top: 40%; } /* Sağdaki kartlar dışa itildi, simetri sağlandı */
             
             /* İsimleri yan kutunun kendi kart bölgesinin ortasına denk getiriyoruz */
-            #slot-left .bot-name { left: 45px; font-size: 0.7em; z-index: 15;}
-            #slot-right .bot-name { right: 45px; font-size: 0.7em; z-index: 15;}
+          #slot-left .bot-name { 
+                left: 50%; 
+                top: 50%;
+                transform: translate(-50%, -50%) rotate(-90deg); 
+                font-size: 0.7em; 
+                z-index: 15;
+            }
+            #slot-right .bot-name { 
+                left: 50%; 
+                right: auto; /* Masaüstünden gelen right kuralını eziyoruz */
+                top: 50%;
+                transform: translate(-50%, -50%) rotate(90deg); 
+                font-size: 0.7em; 
+                z-index: 15;
+            }
 
             /* Mobil Chat Balonları (İsimlerin altında, dışarı taşmayacak şekilde) */
             #slot-left .chat-bubble { 
@@ -4024,6 +4037,7 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
+
 
 
 
