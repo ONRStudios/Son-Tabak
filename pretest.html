@@ -1382,7 +1382,10 @@
 
 <div id="login-overlay">
     <div class="brand-corner">🔥 Kalority</div>
-    <div class="rules-corner"><button class="icon-btn" onclick="openRules()">📖</button></div>
+    <div class="rules-corner" style="position:fixed; top:15px; right:20px; display:flex; gap:10px;">
+    <button class="icon-btn" style="background:#333;" onclick="openSettings()" title="Ayarlar">⚙️</button>
+    <button class="icon-btn" style="background:#333;" onclick="openRules()" title="Kurallar">📖</button>
+</div>
     <div class="production-corner">ONR Studios Production</div>
 
     <div class="floating-bg" style="left:10%; animation-duration:12s; animation-delay: -5s;">🍅</div>
@@ -1454,12 +1457,34 @@
         </div>
     </div>
 </div>
+<div id="settings-modal" class="modal">
+    <div class="modal-box">
+        <h3>⚙️ Mutfak Ayarları</h3>
+        
+        <div style="width: 100%; text-align: left; margin-bottom: 15px; background: #f9f9f9; padding: 10px; border-radius: 8px; box-sizing: border-box;">
+            <label style="font-size:0.9em; font-weight:bold; color:#555;">Şefin Adı:</label>
+            <input type="text" id="settings-username-in" class="styled-input" maxlength="12" style="background:#fff; border:1px solid #ccc; color:#333; margin-top:5px; width:100%; box-sizing:border-box;">
+            
+            <div style="font-size:0.75em; color:#e67e22; margin-top:8px; line-height:1.3; font-family: sans-serif;">
+                ⚠️ <b>DİKKAT:</b> Kimlik değişimi sonrası <b>20 gün boyunca</b> tekrar değiştiremezsin. Lütfen iyi düşün!
+            </div>
+
+            <div id="settings-info" style="font-size:0.8em; margin-top:8px; font-weight:bold;"></div>
+            <div id="settings-error" style="font-size:0.8em; margin-top:5px; font-weight:bold; color:#c0392b; display:none;"></div>
+        </div>
+
+        <div style="display:flex; gap:10px; width:100%;">
+            <button class="game-btn btn-green" id="change-name-btn" onclick="saveNewUsername()">Kaydet</button>
+            <button class="game-btn btn-red" onclick="document.getElementById('settings-modal').style.display='none'">Kapat</button>
+        </div>
+    </div>
+</div>
 <div id="new-user-modal" class="modal">
     <div class="modal-box">
         <h3>👨‍🍳 Şefin Adını Belirle</h3>
         <p style="font-size:0.8em; color:#555;">En az 3 harf olmalı.</p>
         <input type="text" id="new-username-in" class="styled-input" placeholder="Şefin Adı" maxlength="12" style="background:#eee; color:#333; margin-bottom:10px;">
-        <button class="login-btn-main" id="save-username-btn">Kaydet ve Başla</button>
+        <button class="login-btn-main" id="save-username-btn">Kaydet ve Mutfağa Gir</button>
     </div>
 </div>
 <div id="waiting-room-overlay" class="modal">
@@ -1738,6 +1763,102 @@ const deserializeCard = (s) => {
     return card;
 };
 
+function openSettings() {
+    const modal = document.getElementById('settings-modal');
+    const input = document.getElementById('settings-username-in');
+    const infoText = document.getElementById('settings-info');
+    const errorText = document.getElementById('settings-error');
+    const saveBtn = document.getElementById('change-name-btn');
+
+    input.value = myName; // Mevcut ismi yazdır
+    errorText.style.display = 'none'; // Menü açıldığında eski hataları gizle
+
+    // Veritabanından son değiştirme tarihini çek
+    db.collection("users").doc(myUid).get().then(doc => {
+        if (doc.exists) {
+            let data = doc.data();
+            let lastChange = data.lastUsernameChange || 0;
+            let now = Date.now();
+            let twentyDays = 20 * 24 * 60 * 60 * 1000;
+
+            if (now - lastChange >= twentyDays || lastChange === 0) {
+                infoText.innerText = "✅ Kimlik değişimi içn uygunsun.";
+                infoText.style.color = "#27ae60"; // Yeşil
+                saveBtn.disabled = false;
+                saveBtn.style.opacity = "1";
+            } else {
+                let remainingMillis = twentyDays - (now - lastChange);
+                let remainingDays = Math.ceil(remainingMillis / (1000 * 60 * 60 * 24));
+                infoText.innerText = `⏳ Kimlik değşiimi için ${remainingDays} gün beklemelisin.`;
+                infoText.style.color = "#c0392b"; // Kırmızı
+                saveBtn.disabled = true;
+                saveBtn.style.opacity = "0.5";
+            }
+        }
+        modal.style.display = 'flex';
+    });
+}
+
+async function saveNewUsername() {
+    const rawName = document.getElementById('settings-username-in').value.trim();
+    const errorText = document.getElementById('settings-error');
+    const btn = document.getElementById('change-name-btn');
+
+    errorText.style.display = 'none'; // Her tıklamada hata alanını sıfırla
+
+    if (rawName === myName) {
+        document.getElementById('settings-modal').style.display = 'none';
+        return; // İsim aynıysa hiçbir şey yapma
+    }
+
+    if (rawName.length < 3) {
+        errorText.innerText = "❌ İsmin en az 3 karakter olmalı Şef!";
+        errorText.style.display = 'block';
+        return;
+    }
+
+    const lowerName = rawName.toLowerCase();
+    btn.innerText = "Kimlik kontrolü...";
+    btn.disabled = true; // Spam tıklamayı önlemek için butonu kilitliyoruz
+
+    try {
+        // İsim benzersiz mi kontrolü
+        const snapshot = await db.collection("users").where("usernameLower", "==", lowerName).get();
+        
+        if (!snapshot.empty) {
+            btn.innerText = "Kaydet";
+            btn.disabled = false;
+            // Ekrana hatayı şık bir şekilde basıyoruz
+            errorText.innerText = "❌ Bu isim mutfakta zaten kullanılıyor! Başka bir isim dene.";
+            errorText.style.display = 'block';
+            return;
+        }
+
+        // Müsaitse güncelle ve zamanlayıcıyı sıfırla
+        await db.collection("users").doc(myUid).update({
+            username: rawName,
+            usernameLower: lowerName,
+            lastUsernameChange: Date.now()
+        });
+
+        myName = rawName;
+        updateGlobalStatus('lobby'); // Lobideki ismin güncellenmesi için
+        
+        // İşlem bittikten sonra kapat ve haber ver
+        document.getElementById('settings-modal').style.display = 'none';
+        btn.innerText = "Kaydet";
+        btn.disabled = false;
+        showToast("Kimlik değiştirildi!"); // Alert yerine oyunun kendi toast bildirimini kullanıyoruz
+
+    } catch (error) {
+        console.error("Kimlik değişim hatası:", error);
+        errorText.innerText = "❌ Bağlantı hatası oluştu.";
+        errorText.style.display = 'block';
+        btn.innerText = "Kaydet";
+        btn.disabled = false;
+    }
+}
+    
 function getLightColor(hex) {
     const lightMap = {
         '#c0392b': '#ff9999', // Kırmızı
