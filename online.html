@@ -2525,15 +2525,16 @@ function runBotWatchdog() {
 
 async function processActionQueue() { 
     if (isProcessingQueue) return; 
-    if (actionQueue.length === 0) { 
-        if (lastGameState && lastGameState.winnerIdx !== undefined && lastGameState.winnerIdx !== -1 && lastGameState.gameActive === false) { 
-            if (document.getElementById('end-modal').style.display !== 'flex') { 
-                showEndGame(lastGameState.winnerIdx, gamePlayers); 
-                updateReadyStatusUI(); 
-            } 
+ if (actionQueue.length === 0) { 
+    if (lastGameState && lastGameState.winnerIdx !== undefined && lastGameState.winnerIdx !== -1 && lastGameState.gameActive === false) { 
+        if (document.getElementById('end-modal').style.display !== 'flex') { 
+            showEndGame(lastGameState.winnerIdx, gamePlayers); 
         } 
-        return; 
+        // MODAL AÇIK OLSA BİLE TİKLERİ GÜNCELLE:
+        updateReadyStatusUI(); 
     } 
+    return; 
+ }
     
     isProcessingQueue = true; 
     const action = actionQueue.shift(); 
@@ -3882,6 +3883,7 @@ function openPatternModal() {
 function closePatternModal() { document.getElementById('pattern-modal').style.display = 'none'; }
 function handleChatKey(e) { if (e.key === 'Enter') playerSendMessage(); }
 
+// YENİ toggleReadyState FONKSİYONU
 function toggleReadyState() { 
     if (!currentRoomId) return; 
     amIReady = !amIReady; 
@@ -3891,13 +3893,33 @@ function toggleReadyState() {
     btn.classList.toggle('btn-blue'); 
     btn.classList.toggle('btn-dark'); 
     
-    let ps = [...gamePlayers]; 
-    let meIdx = ps.findIndex(p => p.uid === myUid); 
-    
-    if (meIdx !== -1) { 
-        ps[meIdx].isReady = amIReady; 
-        db.collection("rooms").doc(currentRoomId).update({ players: ps, lastActive: Date.now() }); 
-    } 
+    // Lokal gamePlayers'ı DEĞİL, Firebase Transaction'ı kullanıyoruz:
+    const roomRef = db.collection("rooms").doc(currentRoomId);
+
+    db.runTransaction((transaction) => {
+        return transaction.get(roomRef).then((doc) => {
+            if (!doc.exists) return;
+            
+            let data = doc.data();
+            let currentPlayers = data.players || [];
+            let meIdx = currentPlayers.findIndex(p => p.uid === myUid);
+            
+            if (meIdx !== -1) {
+                currentPlayers[meIdx].isReady = amIReady;
+                transaction.update(roomRef, { 
+                    players: currentPlayers, 
+                    lastActive: Date.now() 
+                });
+            }
+        });
+    }).catch((err) => {
+        console.error("Hazır durumu güncellenemedi: ", err);
+        // Hata olursa UI'ı geri al (Opsiyonel)
+        amIReady = !amIReady;
+        btn.innerText = amIReady ? "Bekleniyor..." : "Devam Et ⏳";
+        btn.classList.toggle('btn-blue');
+        btn.classList.toggle('btn-dark');
+    });
 }
 
 const cleanupRoom = async () => { 
@@ -4049,4 +4071,3 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
 </html>
-
