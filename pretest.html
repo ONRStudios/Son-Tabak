@@ -1794,7 +1794,7 @@ function openSettings() {
             } else {
                 let remainingMillis = twentyDays - (now - lastChange);
                 let remainingDays = Math.ceil(remainingMillis / (1000 * 60 * 60 * 24));
-                infoText.innerText = `⏳ Kimlik değşiimi için ${remainingDays} gün beklemelisin.`;
+                infoText.innerText = `⏳ Kimlik değişimi için ${remainingDays} gün beklemelisin.`;
                 infoText.style.color = "#c0392b"; // Kırmızı
                 saveBtn.disabled = true;
                 saveBtn.style.opacity = "0.5";
