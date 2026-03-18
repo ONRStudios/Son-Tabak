@@ -2619,10 +2619,17 @@ async function handleRemoteAction(action) {
         document.getElementById('end-continue-btn').innerText = "Devam Et ⏳"; 
         document.getElementById('end-continue-btn').className = "game-btn btn-blue"; 
         await animateInitialDeal(); 
-    } else if (action.type === 'play') {
+} else if (action.type === 'play') {
+        // ÇÖZÜM 2 DEVAMI: Action "play" ile ezilse bile popup'ı çıkartıyoruz
+        if (action.saidSonTabak) {
+            const pName = gamePlayers[action.pIdx].name;
+            showSonTabakPopup(pName);
+            SoundFX.playUno();
+        }
+
         let pIdx = action.pIdx; 
         let sourceId = pIdx === myPlayerIdx ? 'player-hand' : getPlayerDOMId(pIdx); 
-        let source = document.getElementById(sourceId); 
+        let source = document.getElementById(sourceId);
         
         if (pIdx === myPlayerIdx && source.children.length > 0) {
             source = source.children[Math.min(source.children.length - 1, 3)];
@@ -2812,7 +2819,9 @@ function resolveDirection(d) {
 function playerSaySonTabak() { 
     if (currentPlayer !== myPlayerIdx || gameHands[myPlayerIdx].length > 2) return; 
     localSaidSonTabak = true; 
-    let ps = [...gamePlayers]; 
+    document.getElementById('son-tabak-btn').disabled = true; // Butonu anında pasif yapalım
+
+    let ps = gamePlayers.map(p => ({...p})); // Deep copy düzeltmesi
     ps[myPlayerIdx].saidSonTabak = true; 
     db.collection("rooms").doc(currentRoomId).update({ 
         players: ps, 
@@ -2886,7 +2895,7 @@ async function serverDrawCard(pIdx, count, isPenalty = false) {
         if (newDeck.length > 0) newHands[pIdx].push(newDeck.pop()); 
     }
     
-    let pUpdates = [...gamePlayers]; 
+    let pUpdates = gamePlayers.map(p => ({...p})); 
     pUpdates[pIdx].hand = newHands[pIdx].map(serializeCard); 
     pUpdates[pIdx].saidSonTabak = false; 
     let updates = { 
@@ -2914,20 +2923,21 @@ async function serverPassTurn(pIdx) {
 }
 
 async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredSonTabak = false) {
-    let newHands = gameHands.map(h => [...h]); 
-    let newDiscard = [...gameDiscard]; 
-    if (!newHands[pIdx] || !newHands[pIdx][cIdx]) return; 
+    let newHands = gameHands.map(h => [...h]);
+    let newDiscard = [...gameDiscard];
+    if (!newHands[pIdx] || !newHands[pIdx][cIdx]) return;
     
-    let card = newHands[pIdx][cIdx]; 
+    let card = newHands[pIdx][cIdx];
     if (cardWithColor) card = cardWithColor;
-    newHands[pIdx].splice(cIdx, 1); 
-    newDiscard.push(card); 
+    newHands[pIdx].splice(cIdx, 1);
+    newDiscard.push(card);
     if (newDiscard.length > 2) newDiscard = newDiscard.slice(-2);
     
-    let maxP = gamePlayers.length; 
-    let newDir = direction, newDrawStack = drawStack, nextP = currentPlayer, newWinner = -1; 
-    let playerUpdates = [...gamePlayers]; 
-    playerUpdates[pIdx].saidSonTabak = false;
+    let maxP = gamePlayers.length;
+    let newDir = direction, newDrawStack = drawStack, nextP = currentPlayer, newWinner = -1;
+    
+    // ÇÖZÜM 1: Shallow copy yerine Deep copy yapıyoruz ki lokal UI state'imiz bozulmasın
+    let playerUpdates = gamePlayers.map(p => ({...p}));
     
     const safeDraw = () => {
         if (gameDeck.length === 0) {
@@ -3022,8 +3032,16 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
         } 
     }
     
+    // ÇÖZÜM 1 DEVAMI: Kart sayısını kontrol edip saidSonTabak durumunu sıfırla (Action kart yiyenleri kurtarır)
+    for (let i = 0; i < maxP; i++) {
+        if (newHands[i].length > 1) {
+            playerUpdates[i].saidSonTabak = false;
+        }
+    }
+
     playerUpdates = playerUpdates.map((p, i) => ({...p, hand: newHands[i].map(serializeCard)})); 
-    let isSafe = gamePlayers[pIdx].saidSonTabak || declaredSonTabak; 
+    
+    let isSafe = playerUpdates[pIdx].saidSonTabak || declaredSonTabak; 
     if (newHands[pIdx].length === 1 && isSafe) {
         playerUpdates[pIdx].saidSonTabak = true; 
     } else {
@@ -3033,6 +3051,7 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
     if (card.val === 'Wild Mixer' || card.val === 'Wild Table') { 
         for (let i = 0; i < maxP; i++) { 
             if (newHands[i].length === 1) playerUpdates[i].saidSonTabak = true; 
+            else playerUpdates[i].saidSonTabak = false;
         } 
     }
     
@@ -3044,7 +3063,8 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
         "gameState.drawStack": newDrawStack, 
         "gameState.vulnerablePlayerIdx": -1, 
         "gameState.hasDrawn": false, 
-        "gameState.lastAction": { type: 'play', pIdx, card: serializeCard(card), timestamp: Date.now(), penaltyCount: finalPenaltyCount }, 
+        // ÇÖZÜM 2: declaredSonTabak bilgisini play eyleminin içine ekliyoruz
+        "gameState.lastAction": { type: 'play', pIdx, card: serializeCard(card), timestamp: Date.now(), penaltyCount: finalPenaltyCount, saidSonTabak: declaredSonTabak }, 
         "lastActive": Date.now() 
     };
     
@@ -3070,7 +3090,7 @@ async function serverPunishVulnerable(victimIdx) {
     let newDeck = [...gameDeck], newHands = gameHands.map(h => [...h]), c = newDeck.pop(); 
     if (c) newHands[victimIdx].push(c); 
     
-    let pUpdates = [...gamePlayers]; 
+    let pUpdates = gamePlayers.map(p => ({...p})); 
     pUpdates[victimIdx].hand = newHands[victimIdx].map(serializeCard); 
     
     await db.collection("rooms").doc(currentRoomId).update({ 
@@ -3086,7 +3106,7 @@ async function serverPunishChallenger(challengerIdx) {
     let newDeck = [...gameDeck], newHands = gameHands.map(h => [...h]), c = newDeck.pop(); 
     if (c) newHands[challengerIdx].push(c); 
     
-    let pUpdates = [...gamePlayers]; 
+   let pUpdates = gamePlayers.map(p => ({...p})); 
     pUpdates[challengerIdx].hand = newHands[challengerIdx].map(serializeCard); 
     pUpdates[challengerIdx].challengeUsed = true; 
     let nextP = (currentPlayer + direction + maxP) % maxP; 
@@ -3101,7 +3121,7 @@ async function serverPunishChallenger(challengerIdx) {
 }
 
 async function serverBotSaySonTabak(botIdx) {
-    let ps = [...gamePlayers];
+    let ps = gamePlayers.map(p => ({...p}));
     ps[botIdx].saidSonTabak = true;
     
     await db.collection("rooms").doc(currentRoomId).update({
