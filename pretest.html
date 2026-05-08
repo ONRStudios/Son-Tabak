@@ -304,11 +304,14 @@
             user-select: none; 
         }
 
-        .create-form { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-        }
+.create-form { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    flex: 1; /* Sütundaki kalan tüm boşluğu doldurmasını sağlar */
+    overflow-y: auto; /* İçerik sığmazsa dikey kaydırma çubuğu çıkarır */
+    padding-bottom: 5px; /* Kaydırırken en altta biraz nefes payı bırakır */
+}
 
         .mode-check { 
             display: flex; 
