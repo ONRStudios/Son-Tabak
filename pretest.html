@@ -1375,10 +1375,11 @@
             .l-chat-input-area { width: 100%; box-sizing: border-box; padding-right: 5px; }
             #l-chat-input { width: auto; flex: 1; min-width: 0; }
 
-            .buttons-container { grid-area: buttons; flex-direction: row; gap: 5px; padding: 0; box-sizing: border-box; height: 100%; margin: 0; min-height: 40px; z-index: 100; }
+.buttons-container { grid-area: buttons; flex-direction: row; gap: 5px; padding: 0; box-sizing: border-box; height: 100%; margin: 0; min-height: 40px; z-index: 100; }
             .game-btn { font-size: 0.8em; padding: 0; display: flex; align-items: center; justify-content: center; height: 100%; flex: 1; margin: 0; }
-        
-        /* --- LOBİ BİLDİRİM POPUP --- */
+        } /* 🚨 İŞTE BU PARANTEZ EKSİKTİ! BÜTÜN SORUN BUYDU 🚨 */
+
+/* --- LOBİ BİLDİRİM POPUP --- */
 #lobby-notification {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     background: white; border: 4px solid #c0392b; border-radius: 15px; padding: 30px;
@@ -1394,6 +1395,7 @@
     perspective: 1000px;
     position: relative;
     background: transparent !important; box-shadow: none !important;
+    overflow: visible !important; /* Taklanın görünmesi için şart */
 }
 .info-flipper {
     width: 100%; height: 100%;
@@ -1423,7 +1425,7 @@
 /* --- VOTE PROGRESS VE BUTONLAR --- */
 .vote-progress {
     position: absolute; left: 0; width: 100%; height: 6px;
-    background: #2ecc71; /* Süreyle JS üzerinden kırmızıya dönecek */
+    background: #2ecc71; 
 }
 .vote-progress.top { top: 0; }
 .vote-progress.bottom { bottom: 0; }
@@ -1435,13 +1437,12 @@
 
 /* --- İSME TIKLAYINCA ÇIKAN KOV BUTONU --- */
 .kick-btn-popup {
-    position: absolute; top: 100%; left: 50%; transform: translateX(-50%) translateY(5px);
+    position: absolute; top: 120%; left: 50%; transform: translateX(-50%);
     background: #c0392b; color: white; border: none; padding: 6px 12px; border-radius: 8px;
     font-size: 0.75em; font-weight: bold; cursor: pointer; display: none; z-index: 200;
     box-shadow: 0 4px 6px rgba(0,0,0,0.3); white-space: nowrap; font-family: var(--main-font);
 }
 .kick-btn-popup.show { display: block; animation: popIn 0.2s; }
-        }
     </style>
 </head>
 <body>
@@ -2710,8 +2711,11 @@ function syncGameLoop(roomData) {
     const gs = roomData.gameState; 
     
     if (!gs) return; 
+
+    // 🚨 YENİ: Oylama mantığının çalışması için odanın son verisini global'de tutmalıyız!
+    latestRoomData = roomData; 
     
-    gameDeck = (gs.deck || []).map(deserializeCard); 
+    gameDeck = (gs.deck || []).map(deserializeCard);
     gameDiscard = (gs.discardPile || []).map(deserializeCard); 
     gamePlayers = roomData.players; 
     gameHands = gamePlayers.map(p => (p.hand || []).map(deserializeCard));
@@ -3689,7 +3693,7 @@ function updateUI() {
 
                 let kickBtnId = `kick-btn-${i}`;
                 let domContainer = document.getElementById(domId);
-                if (!document.getElementById(kickBtnId)) {
+               if (!document.getElementById(kickBtnId)) {
                     let btn = document.createElement('button');
                     btn.id = kickBtnId;
                     btn.className = 'kick-btn-popup';
@@ -3699,6 +3703,9 @@ function updateUI() {
                         btn.classList.remove('show');
                         startVoteKick(p.uid, p.name);
                     };
+                    nameEl.style.position = 'relative'; // Popup isme göre hizalansın
+                    nameEl.appendChild(btn); // domContainer yerine direkt İsmin içine gömüyoruz
+                }
                     domContainer.appendChild(btn);
                 }
             }
