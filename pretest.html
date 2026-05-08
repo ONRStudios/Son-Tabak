@@ -1377,6 +1377,70 @@
 
             .buttons-container { grid-area: buttons; flex-direction: row; gap: 5px; padding: 0; box-sizing: border-box; height: 100%; margin: 0; min-height: 40px; z-index: 100; }
             .game-btn { font-size: 0.8em; padding: 0; display: flex; align-items: center; justify-content: center; height: 100%; flex: 1; margin: 0; }
+        
+        /* --- LOBİ BİLDİRİM POPUP --- */
+#lobby-notification {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: white; border: 4px solid #c0392b; border-radius: 15px; padding: 30px;
+    z-index: 10000; text-align: center; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    min-width: 250px; font-family: var(--main-font); animation: popIn 0.3s ease-out;
+}
+.close-notif {
+    position: absolute; top: 5px; right: 10px; cursor: pointer; color: #777; font-size: 1.2em; border:none; background:none; font-weight:bold;
+}
+
+/* --- VOTE KICK KUTUSU & FLIP EFEKTİ --- */
+.info-container {
+    perspective: 1000px;
+    position: relative;
+    background: transparent !important; box-shadow: none !important;
+}
+.info-flipper {
+    width: 100%; height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    position: relative;
+}
+.info-container.flipped .info-flipper {
+    transform: rotateY(180deg);
+}
+.info-front, .info-back {
+    width: 100%; height: 100%;
+    position: absolute; top:0; left:0;
+    backface-visibility: hidden;
+    display: flex; flex-direction: column;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+.info-back {
+    transform: rotateY(180deg);
+    justify-content: center; align-items: center; text-align: center;
+    padding: 10px; box-sizing: border-box; background: #fdfdfd;
+}
+
+/* --- VOTE PROGRESS VE BUTONLAR --- */
+.vote-progress {
+    position: absolute; left: 0; width: 100%; height: 6px;
+    background: #2ecc71; /* Süreyle JS üzerinden kırmızıya dönecek */
+}
+.vote-progress.top { top: 0; }
+.vote-progress.bottom { bottom: 0; }
+.vote-btns { display: flex; gap: 15px; margin-top: 10px; }
+.vote-btn { font-size: 1.5em; width: 45px; height: 45px; border-radius: 50%; border: none; cursor: pointer; display: flex; justify-content:center; align-items:center; transition: 0.2s; box-shadow: 0 3px 5px rgba(0,0,0,0.3);}
+.vote-btn:hover { transform: scale(1.1); }
+.vote-yes { background: #2ecc71; color: white; }
+.vote-no { background: #e74c3c; color: white; }
+
+/* --- İSME TIKLAYINCA ÇIKAN KOV BUTONU --- */
+.kick-btn-popup {
+    position: absolute; top: 100%; left: 50%; transform: translateX(-50%) translateY(5px);
+    background: #c0392b; color: white; border: none; padding: 6px 12px; border-radius: 8px;
+    font-size: 0.75em; font-weight: bold; cursor: pointer; display: none; z-index: 200;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3); white-space: nowrap; font-family: var(--main-font);
+}
+.kick-btn-popup.show { display: block; animation: popIn 0.2s; }
         }
     </style>
 </head>
@@ -1458,12 +1522,16 @@
                 <span>Lobi Sohbeti 💬</span>
             </div>
             <div id="lobby-chat-msgs"></div>
-            <div class="l-chat-input-area">
+<div class="l-chat-input-area">
                 <input type="text" id="l-chat-input" placeholder="Bir şeyler yaz..." maxlength="50" onkeypress="if(event.key === 'Enter') sendLobbyMessage()">
                 <button id="l-chat-send" onclick="sendLobbyMessage()">➤</button>
             </div>
         </div>
     </div>
+</div> <div id="lobby-notification">
+    <button class="close-notif" onclick="this.parentElement.style.display='none'">✖</button>
+    <h2 id="lobby-notif-title" style="color:#c0392b; margin-top:0; margin-bottom: 10px;"></h2>
+    <p id="lobby-notif-desc" style="color:#333; margin:0; font-size:1.1em;"></p>
 </div>
 <div id="settings-modal" class="modal">
     <div class="modal-box">
@@ -1600,8 +1668,17 @@
     
     <div class="right-panel">
         <div class="info-container">
-            <div class="panel-header"><span>🏆 Puan</span></div>
-            <table id="score-table"><tbody></tbody></table>
+            <div class="info-flipper" id="info-flipper">
+                <div class="info-front">
+                    <div class="panel-header"><span>🏆 Puan</span></div>
+                    <table id="score-table"><tbody></tbody></table>
+                </div>
+                <div class="info-back" id="vote-back-panel">
+                    <div class="vote-progress top" id="v-prog-t"></div>
+                    <div class="vote-progress bottom" id="v-prog-b"></div>
+                    <div id="vote-content"></div>
+                </div>
+            </div>
         </div>
         <div class="chat-container">
             <div id="chat-messages"></div>
@@ -2074,6 +2151,8 @@ let previousPlayersList = [];
 let myLobbyColor = '#333'; 
 let botInterval = null; 
 let isActionLocked = false;
+let latestRoomData = null;
+let voteTimerInterval = null;
 
 auth.onAuthStateChanged((user) => { 
     if (user) myUid = user.uid; 
@@ -2385,6 +2464,10 @@ function proceedJoin(roomId) {
         if (isNameTaken) {
             return alert("Aynı isim şu anda masada oturmakta! Lütfen sayfayı yenileyip farklı bir isimle giriş yapın.");
         }
+
+        if (rData.bannedUsers && rData.bannedUsers[myUid] && rData.bannedUsers[myUid] > Date.now()) {
+            return alert("Mutfaktan kovuldunuz! 1 dakika dolmadan bu masaya giremezsiniz.");
+        }
         
         const sameNameBotIdx = players.findIndex(p => { 
             if (!p.isBot) return false; 
@@ -2632,12 +2715,19 @@ function syncGameLoop(roomData) {
     gameDiscard = (gs.discardPile || []).map(deserializeCard); 
     gamePlayers = roomData.players; 
     gameHands = gamePlayers.map(p => (p.hand || []).map(deserializeCard));
-    myPlayerIdx = gamePlayers.findIndex(p => p.uid === myUid);
+myPlayerIdx = gamePlayers.findIndex(p => p.uid === myUid);
     if (myPlayerIdx === -1) {
-        showToast("AFK kaldığın için mutfaktan atıldın! 🧹");
+        let vk = gs.voteKick || roomData.voteKick;
+        if (vk && vk.targetUid === myUid && vk.result === 'kicked') {
+            showLobbyNotif("KOVULDUN! 🥾", "Masa tarafından oylanarak mutfaktan atıldın.");
+        } else {
+            showLobbyNotif("AFK KALDIN! 💤", "Hareketsiz kaldığın için mutfaktan nazikçe kovuldun.");
+        }
         confirmLeaveGame();
         return;
     }
+    
+    handleVoteKickUI(roomData); // Oylama ekranını tetikle
     currentPlayer = gs.currentPlayer; 
     direction = gs.direction; 
     drawStack = gs.drawStack; 
@@ -2699,6 +2789,11 @@ function attemptBotMove() {
 
 function runBotWatchdog() { 
     if (!isHost || !gameActive || !currentRoomId) return; 
+    if (latestRoomData && latestRoomData.voteKick && latestRoomData.voteKick.active) {
+        if (Date.now() > latestRoomData.voteKick.expiresAt) {
+            evaluateVoteKick(latestRoomData);
+        }
+    }
     if (isProcessingQueue && actionQueue.length > 0) return; 
     
     const currentPObj = gamePlayers[currentPlayer]; 
@@ -3202,18 +3297,30 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
         } 
     }
     
-    playerUpdates = playerUpdates.map((p, i) => ({...p, hand: newHands[i].map(serializeCard)})); 
+playerUpdates = playerUpdates.map((p, i) => ({...p, hand: newHands[i].map(serializeCard)})); 
     let isSafe = gamePlayers[pIdx].saidSonTabak || declaredSonTabak; 
-    if (newHands[pIdx].length === 1 && isSafe) {
-        playerUpdates[pIdx].saidSonTabak = true; 
-    } else {
-        playerUpdates[pIdx].saidSonTabak = false;
-    }
     
-    if (card.val === 'Wild Mixer' || card.val === 'Wild Table') { 
-        for (let i = 0; i < maxP; i++) { 
-            if (newHands[i].length === 1) playerUpdates[i].saidSonTabak = true; 
-        } 
+    // Herkesin "Son Tabak" durumunu yeni el boyutlarına göre düzeltelim:
+    for (let i = 0; i < maxP; i++) {
+        if (i === pIdx) {
+            // Hamleyi yapan bizzat kendimiz isek:
+            if (newHands[i].length === 1 && isSafe) {
+                playerUpdates[i].saidSonTabak = true;
+            } else {
+                playerUpdates[i].saidSonTabak = false;
+            }
+        } else {
+            // Masadaki DİĞER oyuncular için:
+            if (card.val === 'Wild Mixer' || card.val === 'Wild Table') {
+                // Karıştırma kartlarında kura şansı kime gülüp 1 karta düştüyse otomatik korumaya alınır, diğerleri sıfırlanır
+                playerUpdates[i].saidSonTabak = (newHands[i].length === 1);
+            } else {
+                // Düdüklü Tencere veya Meze yüzünden kart sayısı 1'in üstüne çıktıysa, butonlarının tekrar açılabilmesi için değerleri sıfırla!
+                if (newHands[i].length > 1) {
+                    playerUpdates[i].saidSonTabak = false;
+                }
+            }
+        }
     }
     
     let updates = { 
@@ -3568,6 +3675,33 @@ function updateUI() {
             }
             if (isActive) el.classList.add('current-player'); 
             else el.classList.remove('current-player');
+
+            // YENİ: İnsansa tıklama olayını ve butonu bağla
+            if (!p.isBot) {
+                let nameEl = document.getElementById(`${nameTag}-name`);
+                nameEl.style.cursor = 'pointer';
+                nameEl.onclick = (e) => {
+                    e.stopPropagation();
+                    document.querySelectorAll('.kick-btn-popup').forEach(btn => btn.classList.remove('show'));
+                    let btn = document.getElementById(`kick-btn-${i}`);
+                    if (btn) btn.classList.add('show');
+                };
+
+                let kickBtnId = `kick-btn-${i}`;
+                let domContainer = document.getElementById(domId);
+                if (!document.getElementById(kickBtnId)) {
+                    let btn = document.createElement('button');
+                    btn.id = kickBtnId;
+                    btn.className = 'kick-btn-popup';
+                    btn.innerText = 'Mutfaktan Kov! 🥾';
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        btn.classList.remove('show');
+                        startVoteKick(p.uid, p.name);
+                    };
+                    domContainer.appendChild(btn);
+                }
+            }
         }
     }
 
@@ -4261,7 +4395,169 @@ function showEndGame(winnerIdx, finalPlayers) {
     startVegetableRain(); 
     SoundFX.playFanfare();
 }
+// --- Lobi Bildirimi Göster ---
+function showLobbyNotif(title, msg) {
+    let ln = document.getElementById('lobby-notification');
+    document.getElementById('lobby-notif-title').innerText = title;
+    document.getElementById('lobby-notif-desc').innerText = msg;
+    ln.style.display = 'block';
+}
 
+// --- Oylamayı Başlat ---
+function startVoteKick(targetUid, targetName) {
+    if(!currentRoomId) return;
+    db.collection("rooms").doc(currentRoomId).get().then(doc => {
+        let d = doc.data();
+        if(d.voteKick && d.voteKick.cooldownUntil > Date.now()) {
+            showToast("Oylama sistemi soğumada! Lütfen 1 dakika bekle.");
+            return;
+        }
+        db.collection("rooms").doc(currentRoomId).update({
+            voteKick: {
+                active: true,
+                targetUid: targetUid,
+                targetName: targetName,
+                initiatorName: myName,
+                expiresAt: Date.now() + 10000, // 10 saniye süre
+                yesVotes: [],
+                noVotes: [],
+                result: null,
+                resultTime: null,
+                cooldownUntil: Date.now() + 70000 // 10 sn oylama + 60 sn bekleme
+            }
+        });
+    });
+}
+
+// --- Flip Ekranı Yönetimi ---
+function handleVoteKickUI(roomData) {
+    let vk = roomData.voteKick;
+    let infoCont = document.querySelector('.info-container');
+    if (!infoCont) return;
+
+    clearInterval(voteTimerInterval);
+
+    if (vk && vk.active) {
+        infoCont.classList.add('flipped');
+        renderVoteActive(vk);
+
+        // Progress bar ve renk değişimi
+        voteTimerInterval = setInterval(() => {
+            let left = vk.expiresAt - Date.now();
+            if (left <= 0) left = 0;
+            let pct = (left / 10000) * 100;
+            let elT = document.getElementById('v-prog-t');
+            let elB = document.getElementById('v-prog-b');
+            let color = `hsl(${(left / 10000) * 120}, 80%, 50%)`; // 120'den (yeşil) 0'a (kırmızı) düşer
+            
+            if(elT) { elT.style.width = pct + '%'; elT.style.backgroundColor = color; }
+            if(elB) { elB.style.width = pct + '%'; elB.style.backgroundColor = color; }
+        }, 50);
+
+    } else if (vk && vk.result && vk.resultTime && Date.now() < vk.resultTime + 10000) {
+        // Sonuç ekranı (10 sn kalır)
+        infoCont.classList.add('flipped');
+        renderVoteResult(vk);
+
+        voteTimerInterval = setInterval(() => {
+            if (Date.now() >= vk.resultTime + 10000) {
+                infoCont.classList.remove('flipped');
+                clearInterval(voteTimerInterval);
+            }
+        }, 1000);
+    } else {
+        infoCont.classList.remove('flipped'); // Her şey bitmişse normale dön
+    }
+}
+
+// --- Oy Kullanma Ekranı Render ---
+function renderVoteActive(vk) {
+    let vc = document.getElementById('vote-content');
+    let html = `<div style="font-size:0.8em; color:#7f8c8d;">${vk.initiatorName} başlattı</div>`;
+    html += `<div style="font-size:1.5em; font-weight:bold; color:#c0392b; margin: 5px 0;">${vk.targetName}</div>`;
+    html += `<div style="font-size:0.9em; color:#333;">kovulmasını oyla</div>`;
+
+    let isTarget = (myUid === vk.targetUid);
+    let meObj = latestRoomData.players.find(p => p.uid === myUid);
+    let isBot = meObj ? meObj.isBot : true;
+
+    if (isTarget || isBot) {
+         html += `<div style="margin-top:15px; font-size:1em; font-style:italic; color:#555;">Oy veremezsin.</div>`;
+    } else {
+         let hasVotedYes = (vk.yesVotes || []).includes(myUid);
+         let hasVotedNo = (vk.noVotes || []).includes(myUid);
+
+         if (hasVotedYes || hasVotedNo) {
+             html += `<div style="margin-top:15px; font-size:1em; font-weight:bold; color:#3498db;">Oyunuzu kullandınız.</div>`;
+         } else {
+             html += `
+             <div class="vote-btns">
+                <button class="vote-btn vote-yes" onclick="castVote('yes')">✔️</button>
+                <button class="vote-btn vote-no" onclick="castVote('no')">❌</button>
+             </div>`;
+         }
+    }
+    vc.innerHTML = html;
+}
+
+// --- Sonuç Ekranı Render ---
+function renderVoteResult(vk) {
+    let vc = document.getElementById('vote-content');
+    let text = vk.result === 'kicked' ? 'KOVULDU!' : 'KOVULMADI.';
+    let color = vk.result === 'kicked' ? '#c0392b' : '#27ae60';
+
+    let html = `<div style="font-size:1.4em; font-weight:bold; color:#333; margin-top:15px;">${vk.targetName}</div>`;
+    html += `<div style="font-size:1.8em; font-weight:900; color:${color};">${text}</div>`;
+    vc.innerHTML = html;
+    
+    document.getElementById('v-prog-t').style.width = '0%';
+    document.getElementById('v-prog-b').style.width = '0%';
+}
+
+// --- Oy Ver (Firebase'e Yaz) ---
+function castVote(type) {
+    if (!currentRoomId) return;
+    let field = type === 'yes' ? 'voteKick.yesVotes' : 'voteKick.noVotes';
+    db.collection("rooms").doc(currentRoomId).update({
+        [field]: firebase.firestore.FieldValue.arrayUnion(myUid)
+    });
+}
+
+// --- Oylama Süresi Dolunca Host Tarafından Çalışır ---
+function evaluateVoteKick(roomData) {
+    let vk = roomData.voteKick;
+    let eligibleCount = roomData.players.filter(p => !p.isBot && p.uid !== vk.targetUid).length;
+    let yesCount = (vk.yesVotes || []).length;
+    
+    // %50 barajı (Oynamayanlar sayılmaz yani otomatik 'Hayır' sayılır)
+    let isKicked = yesCount >= (eligibleCount / 2);
+
+    let updates = {
+        "voteKick.active": false,
+        "voteKick.result": isKicked ? "kicked" : "survived",
+        "voteKick.resultTime": Date.now()
+    };
+
+    if (isKicked) {
+        let targetIdx = roomData.players.findIndex(p => p.uid === vk.targetUid);
+        if (targetIdx !== -1) {
+            let cleanName = roomData.players[targetIdx].name.replace('🤖', '').trim();
+            let ps = [...roomData.players];
+            ps[targetIdx] = {
+                ...ps[targetIdx],
+                uid: 'replaced_bot_' + Date.now(),
+                name: '🤖 ' + cleanName,
+                isBot: true,
+                isReady: true,
+                lastSeen: Date.now()
+            };
+            updates["players"] = ps;
+            updates[`bannedUsers.${vk.targetUid}`] = Date.now() + 60000; // 1 Dakika Ban
+        }
+    }
+    db.collection("rooms").doc(currentRoomId).update(updates);
+}
+    
 function updateReadyStatusUI() {
     let allReady = true; 
     gamePlayers.forEach(p => { 
@@ -4289,7 +4585,7 @@ function updateReadyStatusUI() {
     
     if (isHost) document.getElementById('host-start-btn').style.display = allReady ? 'block' : 'none';
 }
-
+document.addEventListener('click', () => document.querySelectorAll('.kick-btn-popup').forEach(btn => btn.classList.remove('show')));
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 </script>
 </body>
