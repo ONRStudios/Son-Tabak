@@ -3202,18 +3202,30 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
         } 
     }
     
-    playerUpdates = playerUpdates.map((p, i) => ({...p, hand: newHands[i].map(serializeCard)})); 
+playerUpdates = playerUpdates.map((p, i) => ({...p, hand: newHands[i].map(serializeCard)})); 
     let isSafe = gamePlayers[pIdx].saidSonTabak || declaredSonTabak; 
-    if (newHands[pIdx].length === 1 && isSafe) {
-        playerUpdates[pIdx].saidSonTabak = true; 
-    } else {
-        playerUpdates[pIdx].saidSonTabak = false;
-    }
     
-    if (card.val === 'Wild Mixer' || card.val === 'Wild Table') { 
-        for (let i = 0; i < maxP; i++) { 
-            if (newHands[i].length === 1) playerUpdates[i].saidSonTabak = true; 
-        } 
+    // Herkesin "Son Tabak" durumunu yeni el boyutlarına göre düzeltelim:
+    for (let i = 0; i < maxP; i++) {
+        if (i === pIdx) {
+            // Hamleyi yapan bizzat kendimiz isek:
+            if (newHands[i].length === 1 && isSafe) {
+                playerUpdates[i].saidSonTabak = true;
+            } else {
+                playerUpdates[i].saidSonTabak = false;
+            }
+        } else {
+            // Masadaki DİĞER oyuncular için:
+            if (card.val === 'Wild Mixer' || card.val === 'Wild Table') {
+                // Karıştırma kartlarında kura şansı kime gülüp 1 karta düştüyse otomatik korumaya alınır, diğerleri sıfırlanır
+                playerUpdates[i].saidSonTabak = (newHands[i].length === 1);
+            } else {
+                // Düdüklü Tencere veya Meze yüzünden kart sayısı 1'in üstüne çıktıysa, butonlarının tekrar açılabilmesi için değerleri sıfırla!
+                if (newHands[i].length > 1) {
+                    playerUpdates[i].saidSonTabak = false;
+                }
+            }
+        }
     }
     
     let updates = { 
