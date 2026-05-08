@@ -12,7 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <style>
-        /* --- TEMEL CSS --- */
+/* --- TEMEL CSS --- */
         :root {
             --card-pattern: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
             --bg-color: #2c3e50;
@@ -304,14 +304,14 @@
             user-select: none; 
         }
 
-.create-form { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 10px; 
-    flex: 1; /* Sütundaki kalan tüm boşluğu doldurmasını sağlar */
-    overflow-y: auto; /* İçerik sığmazsa dikey kaydırma çubuğu çıkarır */
-    padding-bottom: 5px; /* Kaydırırken en altta biraz nefes payı bırakır */
-}
+        .create-form { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            flex: 1; 
+            overflow-y: auto; 
+            padding-bottom: 5px; 
+        }
 
         .mode-check { 
             display: flex; 
@@ -475,17 +475,6 @@
 
         .right-panel { grid-area: panel; display: flex; flex-direction: column; gap: 10px; height: 100%; overflow: hidden; }
         
-        .info-container { 
-            background: #fff; 
-            width: 100%; 
-            border-radius: 15px; 
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2); 
-            overflow: hidden; 
-            display: flex; 
-            flex-direction: column; 
-            height: 200px; 
-        }
-
         .panel-header { 
             font-weight: bold; 
             color: #fff; 
@@ -573,9 +562,9 @@
         
         #top-area { 
             display: flex; 
-            justify-content: center; /* space-evenly yerine center kullanıyoruz */
+            justify-content: center; 
             align-items: center;
-            gap: 15px; /* Oyuncular arası sabit simetrik boşluk */
+            gap: 15px; 
             width: 100%; 
             padding-top: 10px; 
             min-height: 140px; 
@@ -658,26 +647,16 @@
             justify-content: center; 
         }
         
-        /* YAN SLOTLAR - YENİ TASARIM (FLEX DEĞİL, SABİT KUTU) */
         .side-bot { display: none; position: absolute; top: 50%; transform: translateY(-50%); z-index: 10; width: 90px; height: 120px; min-width: 90px !important; max-width: 90px !important; }
         #slot-left { left: 40px; } 
         #slot-right { right: 40px; }
         
-        /* İsim kutuları tam kartların üstünde dursun */
         #slot-left .bot-name { position: absolute; left: -10px; top: 50%; transform: translateY(-50%) rotate(-90deg); margin: 0; white-space: nowrap; z-index: 15; }
         #slot-right .bot-name { position: absolute; right: -10px; top: 50%; transform: translateY(-50%) rotate(90deg); margin: 0; white-space: nowrap; z-index: 15; }
         
         .side-bot .bot-stack-visual { position: absolute; left: 0; top: 50%; transform: translateY(-50%); margin: 0 !important; }
-        #slot-left .chat-bubble { 
-            left: 50%; 
-            top: 130%; /* İsim kutusunun hemen altına indirir */
-            transform: translateX(-50%); 
-        }
-        #slot-right .chat-bubble { 
-            left: 50%; 
-            top: 130%; /* İsim kutusunun hemen altına indirir */
-            transform: translateX(-50%); 
-        }
+        #slot-left .chat-bubble { left: 50%; top: 130%; transform: translateX(-50%); }
+        #slot-right .chat-bubble { left: 50%; top: 130%; transform: translateX(-50%); }
 
         .mini-card-back { 
             width: 60px; 
@@ -697,7 +676,6 @@
             background: var(--card-pattern) !important; 
         }
         
-        /* Yan Kartlar İçin Özel Sınıf (90 Derece Yatık Boyutlar) */
         .mini-card-back.rotated-card { width: 90px; height: 60px; }
         .card-back-style { background: var(--card-pattern) !important; background-size: cover; border: 3px solid #fff !important; }
         
@@ -720,7 +698,6 @@
 
         .mini-card-back::after { font-size: 0.75em; transform: translate(-50%, -50%) rotate(-15deg) scale(0.8); }
         
-        /* --- YENİ DİNAMİK OK SİSTEMİ CSS --- */
         .arrow-icon { 
             position: absolute; 
             z-index: 10; 
@@ -748,7 +725,6 @@
             align-self: center; 
         }
         
-        /* Container Mode Bağlı Ok Konumları */
         .mode-4p #arrow-side-left { display: flex; left: 20px; top: 50%; transform: translateY(-50%); }
         .mode-4p #arrow-side-right { display: flex; right: 20px; top: 50%; transform: translateY(-50%); }
         
@@ -769,7 +745,6 @@
             100% { transform: rotate(var(--rot, 0deg)) scale(1.0); } 
         }
         
-        /* Geri Dönüşüm Rotasyon Düzeltmesi (Sadece döner ve büyür, renk değiştirmez) */
         .arrow-spin { animation: spinArrow 0.8s ease-in-out forwards !important; }
         
         @keyframes spinArrow { 
@@ -784,7 +759,6 @@
         .glow-purple { color: #9b59b6 !important; } 
         .glow-neutral { color: #3498db !important; }
         
-        /* Oyun Alanı ve Ortadaki Desteler */
         #play-area { 
             display: flex; 
             align-items: center; 
@@ -948,28 +922,6 @@
         .hand-packed .card-emoji { font-size: 2.5em; }
         .hand-super-packed .card { width: 60px; height: 90px; font-size: 0.6em; border-width: 2px; } 
         .hand-super-packed .card-emoji { font-size: 1.8em; }
-        
-        .buttons-container { grid-area: game buttons; display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding: 5px; }
-        
-        .game-btn { 
-            padding: 12px 20px; 
-            border: none; 
-            border-radius: 10px; 
-            font-size: 1em; 
-            font-weight: bold; 
-            cursor: pointer; 
-            color: white; 
-            width: 100%; 
-            margin-bottom: 0; 
-            transition: 0.2s; 
-            font-family: var(--main-font); 
-        }
-
-        .game-btn:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
-        .btn-red { background-color: #c0392b; } 
-        .btn-blue { background-color: #3498db; } 
-        .btn-dark { background-color: #34495e; } 
-        .btn-green { background-color: #27ae60; }
         
         .flying-card { position: fixed; z-index: 3000; pointer-events: none; transition: all 1.0s ease-in-out; }
         
@@ -1202,46 +1154,27 @@
             .login-input-group { width: 90% !important; padding: 25px; }
             .game-title-login { font-size: 2.2em; }
             .plate-anim { font-size: 4em; }
-            /* Kartların üst üste binmesini engellemek için genişliği geri verdik */
             .bot-wrapper.top-bot {
                 min-width: 95px !important; 
                 max-width: 95px !important;
                 width: 95px !important;
             }
-
-            /* Ok boşlukları dengelendi */
-            .arrow-top-static {
-                margin: 0 5px !important;
-                width: 20px !important;
-            }
+            .arrow-top-static { margin: 0 5px !important; width: 20px !important; }
             
             #lobby-overlay { overflow-y: auto; padding: 50px 10px 10px 10px; display: none; }
             .lobby-grid { display: flex; flex-direction: row; flex-wrap: wrap; height: auto; gap: 10px; padding-bottom: 20px; align-items: flex-start; }
             
             #col-create, #col-rooms { 
-                width: 100%; 
-                box-sizing: border-box; 
-                min-height: auto; 
-                max-height: 50px; 
-                flex: none; 
-                padding: 10px 15px; 
-                overflow: hidden; 
-                cursor: pointer; 
+                width: 100%; box-sizing: border-box; min-height: auto; max-height: 50px; 
+                flex: none; padding: 10px 15px; overflow: hidden; cursor: pointer; 
             }
 
             #col-create.open-tab, #col-rooms.open-tab { max-height: 500px; cursor: default; padding: 15px; }
             
             .lobby-col.players-col { 
-                width: calc(50% - 6px); 
-                flex: none; 
-                height: 250px; 
-                max-height: 250px !important; 
-                padding: 5px !important; 
-                margin: 0; 
-                display: flex; 
-                flex-direction: column; 
-                cursor: default !important; 
-                box-sizing: border-box; 
+                width: calc(50% - 6px); flex: none; height: 250px; max-height: 250px !important; 
+                padding: 5px !important; margin: 0; display: flex; flex-direction: column; 
+                cursor: default !important; box-sizing: border-box; 
             }
 
             .lobby-chat-wrapper { width: calc(50% - 6px); box-sizing: border-box; height: 250px; flex: none; margin: 0; font-size: 0.8em; }
@@ -1254,28 +1187,14 @@
             #col-create.open-tab .col-content, #col-rooms.open-tab .col-content { opacity: 1; pointer-events: auto; }
             
             .main-wrapper { 
-                display: grid; 
-                grid-template-columns: 100%; 
-                grid-template-rows: 40px 1fr 120px 40px; 
-                grid-template-areas: "logo" "game" "panel" "buttons"; 
-                width: 100%; 
-                min-height: 100vh; 
-                height: auto; 
-                padding: 5px; 
-                gap: 5px; 
-                box-sizing: border-box; 
+                display: grid; grid-template-columns: 100%; grid-template-rows: 40px 1fr 120px 40px; 
+                grid-template-areas: "logo" "game" "panel" "buttons"; width: 100%; min-height: 100vh; 
+                height: auto; padding: 5px; gap: 5px; box-sizing: border-box; 
             }
 
             #brand-area { 
-                grid-area: logo; 
-                padding: 4px 8px; 
-                flex-direction: row; 
-                align-items: center; 
-                gap: 5px; 
-                border-radius: 10px; 
-                margin: 0; 
-                height: 100%; 
-                box-sizing: border-box; 
+                grid-area: logo; padding: 4px 8px; flex-direction: row; align-items: center; 
+                gap: 5px; border-radius: 10px; margin: 0; height: 100%; box-sizing: border-box; 
             }
 
             .brand-title { font-size: 1.1em; display: flex; gap: 5px; } 
@@ -1283,73 +1202,33 @@
             .brand-sub { font-size: 0.7em; margin: 0; margin-left: auto; }
             
             .game-container { 
-                grid-area: game; 
-                width: 100%; 
-                height: 100%; 
-                min-height: 0; 
-                display: flex; 
-                flex-direction: column; 
-                justify-content: space-between; 
-                align-items: center; 
-                margin: 0; 
-                padding: 5px 0; 
-                overflow: hidden; 
-                box-sizing: border-box; 
+                grid-area: game; width: 100%; height: 100%; min-height: 0; display: flex; 
+                flex-direction: column; justify-content: space-between; align-items: center; 
+                margin: 0; padding: 5px 0; overflow: hidden; box-sizing: border-box; 
             }
 
-           #top-area { 
-                height: auto; 
-                min-height: 80px; 
-                width: 100%; 
-                transform: scale(0.76); /* 0.72 ile 0.80 arası altın oran */
-                transform-origin: center top; 
-                margin: 0 auto; 
-                justify-content: center; 
-                gap: 5px; 
+            #top-area { 
+                height: auto; min-height: 80px; width: 100%; transform: scale(0.76); 
+                transform-origin: center top; margin: 0 auto; justify-content: center; gap: 5px; 
             }
             #play-area { height: auto; width: 100%; transform: scale(0.80); margin: 0; flex-grow: 1; gap: 15px; } 
             #bottom-area { padding-bottom: 2px; transform: scale(0.85); transform-origin: center bottom; margin: 0; }
             .bot-wrapper { transform: scale(0.85); margin: 0; } 
             
-            /* Mobil Ok ve Yan Slot Düzenlemeleri (YUKARI ÇEKİLDİ VE KARTIN ÜSTÜNE HİZALANDI) */
             .arrow-icon, .arrow-top-static { font-size: 1.5em; }
             .mode-5p #arrow-side-left, .mode-6p #arrow-side-left { left: 5px; bottom: 20%; } 
             .mode-5p #arrow-side-right, .mode-6p #arrow-side-right { right: 5px; bottom: 20%; }
             .mode-5p #arrow-corner-tl, .mode-6p #arrow-corner-tl { left: 5%; top: 22%; }
             .mode-5p #arrow-corner-tr, .mode-6p #arrow-corner-tr { right: 5%; top: 22%; }
             
-            #slot-left { left: -15px; top: 40%; } /* Sola yapışma hizası düzeltildi */
-            #slot-right { right: -15px; top: 40%; } /* Sağdaki kartlar dışa itildi, simetri sağlandı */
+            #slot-left { left: -15px; top: 40%; } 
+            #slot-right { right: -15px; top: 40%; } 
             
-            /* İsimleri yan kutunun kendi kart bölgesinin ortasına denk getiriyoruz */
-          #slot-left .bot-name { 
-                left: 50%; 
-                top: 50%;
-                transform: translate(-50%, -50%) rotate(-90deg); 
-                font-size: 0.7em; 
-                z-index: 15;
-            }
-            #slot-right .bot-name { 
-                left: 50%; 
-                right: auto; /* Masaüstünden gelen right kuralını eziyoruz */
-                top: 50%;
-                transform: translate(-50%, -50%) rotate(90deg); 
-                font-size: 0.7em; 
-                z-index: 15;
-            }
+            #slot-left .bot-name { left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-90deg); font-size: 0.7em; z-index: 15; }
+            #slot-right .bot-name { left: 50%; right: auto; top: 50%; transform: translate(-50%, -50%) rotate(90deg); font-size: 0.7em; z-index: 15; }
 
-            /* Mobil Chat Balonları (İsimlerin altında, dışarı taşmayacak şekilde) */
-            #slot-left .chat-bubble { 
-                left: 65px; 
-                top: 120px; 
-                transform: translateX(-50%); 
-            }
-            #slot-right .chat-bubble { 
-                left: auto;
-                right: 65px; 
-                top: 120px; 
-                transform: translateX(50%); 
-            }
+            #slot-left .chat-bubble { left: 65px; top: 120px; transform: translateX(-50%); }
+            #slot-right .chat-bubble { left: auto; right: 65px; top: 120px; transform: translateX(50%); }
 
             .flying-card { transform: scale(0.8); transform-origin: top left; }
             .card[data-val="+2"] .card-emoji { font-size: 2.0em !important; gap: 1px !important; }
@@ -1367,82 +1246,81 @@
             .chat-line { line-height: 1.1 !important; margin-bottom: 2px !important; }
             .panel-header { font-size: 0.75em; padding: 3px; }
             
-            /* Mobil Lobi Chat Düzenlemesi */
             .chat-input-area { padding: 2px; width: 100%; box-sizing: border-box; }
             #player-input { font-size: 0.7em; padding: 2px 5px; height: 25px; flex: 1; min-width: 0; }
             #send-btn { width: 25px; height: 25px; font-size: 1em; }
             
             .l-chat-input-area { width: 100%; box-sizing: border-box; padding-right: 5px; }
             #l-chat-input { width: auto; flex: 1; min-width: 0; }
-
-.buttons-container { grid-area: buttons; flex-direction: row; gap: 5px; padding: 0; box-sizing: border-box; height: 100%; margin: 0; min-height: 40px; z-index: 100; }
+            
+            .buttons-container { grid-area: buttons; flex-direction: row; gap: 5px; padding: 0; box-sizing: border-box; height: 100%; margin: 0; min-height: 40px; z-index: 100; }
             .game-btn { font-size: 0.8em; padding: 0; display: flex; align-items: center; justify-content: center; height: 100%; flex: 1; margin: 0; }
-        } /* 🚨 İŞTE BU PARANTEZ EKSİKTİ! BÜTÜN SORUN BUYDU 🚨 */
+        } /* BU PARANTEZ ÇOK ÖNEMLİ */
 
-/* --- LOBİ BİLDİRİM POPUP --- */
-#lobby-notification {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: white; border: 4px solid #c0392b; border-radius: 15px; padding: 30px;
-    z-index: 10000; text-align: center; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    min-width: 250px; font-family: var(--main-font); animation: popIn 0.3s ease-out;
-}
-.close-notif {
-    position: absolute; top: 5px; right: 10px; cursor: pointer; color: #777; font-size: 1.2em; border:none; background:none; font-weight:bold;
-}
+        /* --- LOBİ BİLDİRİM POPUP --- */
+        #lobby-notification {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; border: 4px solid #c0392b; border-radius: 15px; padding: 30px;
+            z-index: 10000; text-align: center; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            min-width: 250px; font-family: var(--main-font); animation: popIn 0.3s ease-out;
+        }
+        .close-notif {
+            position: absolute; top: 5px; right: 10px; cursor: pointer; color: #777; font-size: 1.2em; border:none; background:none; font-weight:bold;
+        }
 
-/* --- VOTE KICK KUTUSU & FLIP EFEKTİ --- */
-.info-container {
-    perspective: 1000px;
-    position: relative;
-    background: transparent !important; box-shadow: none !important;
-    overflow: visible !important; /* Taklanın görünmesi için şart */
-}
-.info-flipper {
-    width: 100%; height: 100%;
-    transition: transform 0.6s;
-    transform-style: preserve-3d;
-    position: relative;
-}
-.info-container.flipped .info-flipper {
-    transform: rotateY(180deg);
-}
-.info-front, .info-back {
-    width: 100%; height: 100%;
-    position: absolute; top:0; left:0;
-    backface-visibility: hidden;
-    display: flex; flex-direction: column;
-    border-radius: 15px;
-    background: #fff;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-    overflow: hidden;
-}
-.info-back {
-    transform: rotateY(180deg);
-    justify-content: center; align-items: center; text-align: center;
-    padding: 10px; box-sizing: border-box; background: #fdfdfd;
-}
+        /* --- VOTE KICK KUTUSU & FLIP EFEKTİ --- */
+        .info-container {
+            perspective: 1000px;
+            position: relative;
+            background: transparent !important; box-shadow: none !important;
+            overflow: visible !important; /* Taklanın görünmesi için şart */
+        }
+        .info-flipper {
+            width: 100%; height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            position: relative;
+        }
+        .info-container.flipped .info-flipper {
+            transform: rotateY(180deg);
+        }
+        .info-front, .info-back {
+            width: 100%; height: 100%;
+            position: absolute; top:0; left:0;
+            backface-visibility: hidden;
+            display: flex; flex-direction: column;
+            border-radius: 15px;
+            background: #fff;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .info-back {
+            transform: rotateY(180deg);
+            justify-content: center; align-items: center; text-align: center;
+            padding: 10px; box-sizing: border-box; background: #fdfdfd;
+        }
 
-/* --- VOTE PROGRESS VE BUTONLAR --- */
-.vote-progress {
-    position: absolute; left: 0; width: 100%; height: 6px;
-    background: #2ecc71; 
-}
-.vote-progress.top { top: 0; }
-.vote-progress.bottom { bottom: 0; }
-.vote-btns { display: flex; gap: 15px; margin-top: 10px; }
-.vote-btn { font-size: 1.5em; width: 45px; height: 45px; border-radius: 50%; border: none; cursor: pointer; display: flex; justify-content:center; align-items:center; transition: 0.2s; box-shadow: 0 3px 5px rgba(0,0,0,0.3);}
-.vote-btn:hover { transform: scale(1.1); }
-.vote-yes { background: #2ecc71; color: white; }
-.vote-no { background: #e74c3c; color: white; }
+        /* --- VOTE PROGRESS VE BUTONLAR --- */
+        .vote-progress {
+            position: absolute; left: 0; width: 100%; height: 6px;
+            background: #2ecc71; 
+        }
+        .vote-progress.top { top: 0; }
+        .vote-progress.bottom { bottom: 0; }
+        .vote-btns { display: flex; gap: 15px; margin-top: 10px; justify-content: center; }
+        .vote-btn { font-size: 1.5em; width: 45px; height: 45px; border-radius: 50%; border: none; cursor: pointer; display: flex; justify-content:center; align-items:center; transition: 0.2s; box-shadow: 0 3px 5px rgba(0,0,0,0.3);}
+        .vote-btn:hover { transform: scale(1.1); }
+        .vote-yes { background: #2ecc71; color: white; }
+        .vote-no { background: #e74c3c; color: white; }
 
-/* --- İSME TIKLAYINCA ÇIKAN KOV BUTONU --- */
-.kick-btn-popup {
-    position: absolute; top: 120%; left: 50%; transform: translateX(-50%);
-    background: #c0392b; color: white; border: none; padding: 6px 12px; border-radius: 8px;
-    font-size: 0.75em; font-weight: bold; cursor: pointer; display: none; z-index: 200;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3); white-space: nowrap; font-family: var(--main-font);
-}
-.kick-btn-popup.show { display: block; animation: popIn 0.2s; }
+        /* --- İSME TIKLAYINCA ÇIKAN KOV BUTONU --- */
+        .kick-btn-popup {
+            position: absolute; top: 120%; left: 50%; transform: translateX(-50%);
+            background: #c0392b; color: white; border: none; padding: 6px 12px; border-radius: 8px;
+            font-size: 0.75em; font-weight: bold; cursor: pointer; display: none; z-index: 200;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); white-space: nowrap; font-family: var(--main-font);
+        }
+        .kick-btn-popup.show { display: block; animation: popIn 0.2s; }
     </style>
 </head>
 <body>
