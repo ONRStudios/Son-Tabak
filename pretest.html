@@ -1965,7 +1965,8 @@ const ANIM_CONFIG = {
     POPUP: 3000, 
     BOT_THINK: 300, 
     HEARTBEAT_MS: 30000, 
-    BOT_WATCHDOG: 3000 
+    BOT_WATCHDOG: 3000
+    AFK_TIMEOUT: 60000
 };
 
 const CARD_PATTERNS = [
@@ -2622,17 +2623,18 @@ let lastBotActionTime = 0;
 function syncGameLoop(roomData) { 
     const gs = roomData.gameState; 
     
-    if (isHost && roomData.lastActive && (Date.now() - roomData.lastActive > 60000)) { 
-        confirmLeaveGame(); 
-        return; 
-    } 
-    
     if (!gs) return; 
     
     gameDeck = (gs.deck || []).map(deserializeCard); 
     gameDiscard = (gs.discardPile || []).map(deserializeCard); 
     gamePlayers = roomData.players; 
-    gameHands = gamePlayers.map(p => (p.hand || []).map(deserializeCard)); 
+    gameHands = gamePlayers.map(p => (p.hand || []).map(deserializeCard));
+    myPlayerIdx = gamePlayers.findIndex(p => p.uid === myUid);
+    if (myPlayerIdx === -1) {
+        showToast("AFK kaldığın için mutfaktan atıldın! 🧹");
+        confirmLeaveGame();
+        return;
+    }
     currentPlayer = gs.currentPlayer; 
     direction = gs.direction; 
     drawStack = gs.drawStack; 
@@ -2698,13 +2700,47 @@ function runBotWatchdog() {
     
     const currentPObj = gamePlayers[currentPlayer]; 
     if (currentPObj && currentPObj.isBot) { 
+        // BOT İSE NORMAL BOT MANTIĞI ÇALIŞSIN
         if (isBotThinking && (Date.now() - lastBotActionTime > ANIM_CONFIG.BOT_WATCHDOG)) { 
             isBotThinking = false; 
             attemptBotMove(); 
         } else if (!isBotThinking && !isProcessingQueue) { 
             attemptBotMove(); 
         } 
-    } 
+    } else if (currentPObj && !currentPObj.isBot) {
+        // YENİ: İNSAN İSE AFK SÜRESİNİ KONTROL ET
+        let lastActionTime = lastGameState ? lastGameState.lastAction.timestamp : 0;
+        if (lastActionTime > 0 && (Date.now() - lastActionTime > ANIM_CONFIG.AFK_TIMEOUT)) {
+             console.log(`${currentPObj.name} AFK kaldı, bota çevriliyor...`);
+             kickAfkPlayer(currentPlayer);
+        }
+    }
+}
+
+// YENİ FONKSİYON: AFK Oyuncuyu Bota Çevir
+async function kickAfkPlayer(pIdx) {
+    if (!isHost) return;
+    
+    let ps = [...gamePlayers];
+    let afkPlayer = ps[pIdx];
+    
+    // İsmindeki olası bot emojilerini temizleyip yeniden ekleyelim ki çift emoji olmasın
+    let cleanName = afkPlayer.name.replace('🤖', '').trim();
+    
+    ps[pIdx] = {
+        ...afkPlayer,
+        uid: 'replaced_bot_' + Date.now(),
+        name: '🤖 ' + cleanName,
+        isBot: true,
+        isReady: true,
+        lastSeen: Date.now()
+    };
+    
+    // Firebase'i güncelle (Sadece statüsü bot oldu, eli ve sırası aynı kaldı)
+    await db.collection("rooms").doc(currentRoomId).update({
+        players: ps,
+        "lastActive": Date.now()
+    });
 }
 
 async function processActionQueue() { 
