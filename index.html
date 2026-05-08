@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Son Tabak Online - v0.94 (Open Beta)</title>
+    <title>Son Tabak Online - v0.95 (Open Google Beta)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
     
@@ -304,11 +304,14 @@
             user-select: none; 
         }
 
-        .create-form { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-        }
+.create-form { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    flex: 1; /* Sütundaki kalan tüm boşluğu doldurmasını sağlar */
+    overflow-y: auto; /* İçerik sığmazsa dikey kaydırma çubuğu çıkarır */
+    padding-bottom: 5px; /* Kaydırırken en altta biraz nefes payı bırakır */
+}
 
         .mode-check { 
             display: flex; 
@@ -1382,7 +1385,10 @@
 
 <div id="login-overlay">
     <div class="brand-corner">🔥 Kalority</div>
-    <div class="rules-corner"><button class="icon-btn" onclick="openRules()">📖</button></div>
+    <div class="rules-corner">
+        <button class="icon-btn" onclick="openRules()" title="Kurallar">📖</button>
+    </div>
+    <div class="production-corner">ONR Studios Production</div>
     <div class="production-corner">ONR Studios Production</div>
 
     <div class="floating-bg" style="left:10%; animation-duration:12s; animation-delay: -5s;">🍅</div>
@@ -1397,15 +1403,19 @@
             <div class="online-stamp">ONLINE</div>
         </div>
         <div class="login-input-group">
-            <input type="text" id="username-in" class="styled-input" placeholder="Adını Yaz" maxlength="12">
-            <button class="login-btn-main" id="login-btn">Mutfağa Gir</button>
-        </div>
+    <button class="login-btn-main" id="login-btn" style="background-color: #4285F4;">Google ile Mutfağa Gir</button>
+     </div>
     </div>
 </div>
 
 <div id="lobby-overlay">
     <div class="brand-corner" style="position:fixed; top:15px; left:20px;">🔥 Kalority</div>
-    <div class="rules-corner" style="position:fixed; top:15px; right:20px;"><button class="icon-btn" style="background:#333;" onclick="openRules()">📖</button></div>
+    
+    <div class="rules-corner" style="position:fixed; top:15px; right:20px; display:flex; gap:10px;">
+        <button class="icon-btn" style="background:#333;" onclick="openSettings()" title="Ayarlar">⚙️</button>
+        <button class="icon-btn" style="background:#333;" onclick="openRules()" title="Kurallar">📖</button>
+    </div>
+    
     <div class="production-corner" style="position:fixed; bottom:10px; left:20px; color:#555;">ONR Studios Production</div>
 
     <div class="lobby-grid">
@@ -1455,7 +1465,36 @@
         </div>
     </div>
 </div>
+<div id="settings-modal" class="modal">
+    <div class="modal-box">
+        <h3>⚙️ Mutfak Ayarları</h3>
+        
+        <div style="width: 100%; text-align: left; margin-bottom: 15px; background: #f9f9f9; padding: 10px; border-radius: 8px; box-sizing: border-box;">
+            <label style="font-size:0.9em; font-weight:bold; color:#555;">Şefin Adı:</label>
+            <input type="text" id="settings-username-in" class="styled-input" maxlength="12" style="background:#fff; border:1px solid #ccc; color:#333; margin-top:5px; width:100%; box-sizing:border-box;">
+            
+            <div style="font-size:0.75em; color:#e67e22; margin-top:8px; line-height:1.3; font-family: sans-serif;">
+                ⚠️ <b>DİKKAT:</b> Kimlik değişimi sonrası <b>20 gün boyunca</b> tekrar değiştiremezsin. Lütfen iyi düşün!
+            </div>
 
+            <div id="settings-info" style="font-size:0.8em; margin-top:8px; font-weight:bold;"></div>
+            <div id="settings-error" style="font-size:0.8em; margin-top:5px; font-weight:bold; color:#c0392b; display:none;"></div>
+        </div>
+
+        <div style="display:flex; gap:10px; width:100%;">
+            <button class="game-btn btn-green" id="change-name-btn" onclick="saveNewUsername()">Kaydet</button>
+            <button class="game-btn btn-red" onclick="document.getElementById('settings-modal').style.display='none'">Kapat</button>
+        </div>
+    </div>
+</div>
+<div id="new-user-modal" class="modal">
+    <div class="modal-box">
+        <h3>👨‍🍳 Şefin Adını Belirle</h3>
+        <p style="font-size:0.8em; color:#555;">En az 3 harf olmalı.</p>
+        <input type="text" id="new-username-in" class="styled-input" placeholder="Şefin Adı" maxlength="12" style="background:#eee; color:#333; margin-bottom:10px;">
+        <button class="login-btn-main" id="save-username-btn">Kaydet ve Mutfağa Gir</button>
+    </div>
+</div>
 <div id="waiting-room-overlay" class="modal">
     <div class="modal-box" style="max-width: 500px; width: 90%; background: #fff;">
         <div class="wr-container">
@@ -1493,7 +1532,7 @@
 
 <div class="main-wrapper" id="main-game-wrapper" style="display:none;">
     <div id="brand-area">
-        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.94 (Open Beta)</span></div>
+        <div class="brand-title">🍽️ Son Tabak <span class="version">v0.95 (Open Google Beta)</span></div>
         <div class="brand-sub">🔥Kalority</div>
     </div>
     
@@ -1732,6 +1771,102 @@ const deserializeCard = (s) => {
     return card;
 };
 
+function openSettings() {
+    const modal = document.getElementById('settings-modal');
+    const input = document.getElementById('settings-username-in');
+    const infoText = document.getElementById('settings-info');
+    const errorText = document.getElementById('settings-error');
+    const saveBtn = document.getElementById('change-name-btn');
+
+    input.value = myName; // Mevcut ismi yazdır
+    errorText.style.display = 'none'; // Menü açıldığında eski hataları gizle
+
+    // Veritabanından son değiştirme tarihini çek
+    db.collection("users").doc(myUid).get().then(doc => {
+        if (doc.exists) {
+            let data = doc.data();
+            let lastChange = data.lastUsernameChange || 0;
+            let now = Date.now();
+            let twentyDays = 20 * 24 * 60 * 60 * 1000;
+
+            if (now - lastChange >= twentyDays || lastChange === 0) {
+                infoText.innerText = "✅ Kimlik değişimi içn uygunsun.";
+                infoText.style.color = "#27ae60"; // Yeşil
+                saveBtn.disabled = false;
+                saveBtn.style.opacity = "1";
+            } else {
+                let remainingMillis = twentyDays - (now - lastChange);
+                let remainingDays = Math.ceil(remainingMillis / (1000 * 60 * 60 * 24));
+                infoText.innerText = `⏳ Kimlik değişimi için ${remainingDays} gün beklemelisin.`;
+                infoText.style.color = "#c0392b"; // Kırmızı
+                saveBtn.disabled = true;
+                saveBtn.style.opacity = "0.5";
+            }
+        }
+        modal.style.display = 'flex';
+    });
+}
+
+async function saveNewUsername() {
+    const rawName = document.getElementById('settings-username-in').value.trim();
+    const errorText = document.getElementById('settings-error');
+    const btn = document.getElementById('change-name-btn');
+
+    errorText.style.display = 'none'; // Her tıklamada hata alanını sıfırla
+
+    if (rawName === myName) {
+        document.getElementById('settings-modal').style.display = 'none';
+        return; // İsim aynıysa hiçbir şey yapma
+    }
+
+    if (rawName.length < 3) {
+        errorText.innerText = "❌ İsmin en az 3 karakter olmalı Şef!";
+        errorText.style.display = 'block';
+        return;
+    }
+
+    const lowerName = rawName.toLowerCase();
+    btn.innerText = "Kimlik kontrolü...";
+    btn.disabled = true; // Spam tıklamayı önlemek için butonu kilitliyoruz
+
+    try {
+        // İsim benzersiz mi kontrolü
+        const snapshot = await db.collection("users").where("usernameLower", "==", lowerName).get();
+        
+        if (!snapshot.empty) {
+            btn.innerText = "Kaydet";
+            btn.disabled = false;
+            // Ekrana hatayı şık bir şekilde basıyoruz
+            errorText.innerText = "❌ Bu isim mutfakta zaten kullanılıyor! Başka bir isim dene.";
+            errorText.style.display = 'block';
+            return;
+        }
+
+        // Müsaitse güncelle ve zamanlayıcıyı sıfırla
+        await db.collection("users").doc(myUid).update({
+            username: rawName,
+            usernameLower: lowerName,
+            lastUsernameChange: Date.now()
+        });
+
+        myName = rawName;
+        updateGlobalStatus('lobby'); // Lobideki ismin güncellenmesi için
+        
+        // İşlem bittikten sonra kapat ve haber ver
+        document.getElementById('settings-modal').style.display = 'none';
+        btn.innerText = "Kaydet";
+        btn.disabled = false;
+        showToast("Kimlik değiştirildi!"); // Alert yerine oyunun kendi toast bildirimini kullanıyoruz
+
+    } catch (error) {
+        console.error("Kimlik değişim hatası:", error);
+        errorText.innerText = "❌ Bağlantı hatası oluştu.";
+        errorText.style.display = 'block';
+        btn.innerText = "Kaydet";
+        btn.disabled = false;
+    }
+}
+    
 function getLightColor(hex) {
     const lightMap = {
         '#c0392b': '#ff9999', // Kırmızı
@@ -1757,7 +1892,45 @@ function getPlayerDOMId(pIdx) {
     
     return `slot-${layout[relIdx]}`;
 }
+document.getElementById('save-username-btn').addEventListener('click', async () => {
+    const rawName = document.getElementById('new-username-in').value.trim();
+    
+    if (rawName.length < 3) {
+        return alert("İsmin en az 3 karakter olmalı Şef!");
+    }
 
+    const lowerName = rawName.toLowerCase();
+    const btn = document.getElementById('save-username-btn');
+    btn.innerText = "Kimlik kontrolü...";
+
+    try {
+        // Bu isimde (küçük harf haliyle) biri var mı kontrol et
+        const snapshot = await db.collection("users").where("usernameLower", "==", lowerName).get();
+        
+        if (!snapshot.empty) {
+            btn.innerText = "Kaydet ve Gir";
+            return alert("Bu isim mutfakta zaten kullanılıyor! Başka bir isim dene.");
+        }
+
+        // İsim müsaitse veritabanına kaydet
+        await db.collection("users").doc(myUid).set({
+            uid: myUid,
+            username: rawName,
+            usernameLower: lowerName,
+            lastUsernameChange: 0, // İlk kayıt olduğu için 0
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Kayıt başarılı, lobiye geç
+        myName = rawName;
+        enterLobby();
+
+    } catch (error) {
+        console.error("Kayıt hatası:", error);
+        alert("Kimlik kontrolünde sıkıntı çıktı.");
+        btn.innerText = "Kaydet ve Başla";
+    }
+});
 function getPlayerPrefix(pIdx) {
     if (pIdx === myPlayerIdx) return 'player';
     let maxP = gamePlayers.length;
@@ -1795,7 +1968,8 @@ const ANIM_CONFIG = {
     POPUP: 3000, 
     BOT_THINK: 300, 
     HEARTBEAT_MS: 30000, 
-    BOT_WATCHDOG: 3000 
+    BOT_WATCHDOG: 3000,
+    AFK_TIMEOUT: 60000
 };
 
 const CARD_PATTERNS = [
@@ -1946,36 +2120,50 @@ async function performJanitorCleanup() {
     } 
 }
 
+const provider = new firebase.auth.GoogleAuthProvider();
+
 document.getElementById('login-btn').addEventListener('click', () => {
-    const name = document.getElementById('username-in').value.trim(); 
-    if (!name) return alert("Lütfen bir isim gir!");
+    document.getElementById('login-btn').innerText = "Kapı Açılıyor...";
     
-    document.getElementById('login-btn').innerText = "Giriş Yapılıyor...";
-    
-    auth.signInAnonymously().then(() => { 
-        myName = name; 
-        myLobbyColor = getRandomColor(); 
-        if (audioCtx.state === 'suspended') audioCtx.resume(); 
+    auth.signInWithPopup(provider).then((result) => {
+        myUid = result.user.uid;
         
-        document.getElementById('login-overlay').style.display = 'none'; 
-        document.getElementById('lobby-overlay').style.display = 'flex'; 
-        
-        // POPUP'I BURADA AÇIYORUZ
-        document.getElementById('warning-modal').style.display = 'flex';
-        
-        initLobbyFeatures(); 
-        updateGlobalStatus('lobby'); 
-        listenRooms(); 
-        performJanitorCleanup(); 
-    }).catch((e) => { 
-        alert("Giriş Hatası: " + e.message); 
-        document.getElementById('login-btn').innerText = "Mutfağa Gir"; 
+        // Kullanıcı veritabanımızda var mı kontrol et
+        db.collection("users").doc(myUid).get().then((doc) => {
+            if (doc.exists) {
+                // Eski oyuncu, ismi veritabanından al ve lobiye geç
+                myName = doc.data().username;
+                enterLobby(); 
+            } else {
+                // Yeni oyuncu, isim seçme ekranını (modalı) aç
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('new-user-modal').style.display = 'flex';
+            }
+        });
+    }).catch((e) => {
+        alert("Kapı Açılmadı: " + e.message);
+        document.getElementById('login-btn').innerText = "Google ile Mutfağa Gir";
     });
 });
 
 let lobbyChatUnsub = null; 
 let globalPlayersUnsub = null;
 
+function enterLobby() {
+    myLobbyColor = getRandomColor();
+    if (audioCtx.state === 'suspended') audioCtx.resume(); 
+    
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('new-user-modal').style.display = 'none';
+    document.getElementById('lobby-overlay').style.display = 'flex'; 
+    document.getElementById('warning-modal').style.display = 'flex';
+    
+    initLobbyFeatures(); 
+    updateGlobalStatus('lobby'); 
+    listenRooms(); 
+    performJanitorCleanup();
+}
+  
 function initLobbyFeatures() {
     setInterval(() => { 
         if (myUid) { 
@@ -2438,17 +2626,18 @@ let lastBotActionTime = 0;
 function syncGameLoop(roomData) { 
     const gs = roomData.gameState; 
     
-    if (isHost && roomData.lastActive && (Date.now() - roomData.lastActive > 60000)) { 
-        confirmLeaveGame(); 
-        return; 
-    } 
-    
     if (!gs) return; 
     
     gameDeck = (gs.deck || []).map(deserializeCard); 
     gameDiscard = (gs.discardPile || []).map(deserializeCard); 
     gamePlayers = roomData.players; 
-    gameHands = gamePlayers.map(p => (p.hand || []).map(deserializeCard)); 
+    gameHands = gamePlayers.map(p => (p.hand || []).map(deserializeCard));
+    myPlayerIdx = gamePlayers.findIndex(p => p.uid === myUid);
+    if (myPlayerIdx === -1) {
+        showToast("AFK kaldığın için mutfaktan atıldın! 🧹");
+        confirmLeaveGame();
+        return;
+    }
     currentPlayer = gs.currentPlayer; 
     direction = gs.direction; 
     drawStack = gs.drawStack; 
@@ -2514,13 +2703,47 @@ function runBotWatchdog() {
     
     const currentPObj = gamePlayers[currentPlayer]; 
     if (currentPObj && currentPObj.isBot) { 
+        // BOT İSE NORMAL BOT MANTIĞI ÇALIŞSIN
         if (isBotThinking && (Date.now() - lastBotActionTime > ANIM_CONFIG.BOT_WATCHDOG)) { 
             isBotThinking = false; 
             attemptBotMove(); 
         } else if (!isBotThinking && !isProcessingQueue) { 
             attemptBotMove(); 
         } 
-    } 
+    } else if (currentPObj && !currentPObj.isBot) {
+        // YENİ: İNSAN İSE AFK SÜRESİNİ KONTROL ET
+        let lastActionTime = lastGameState ? lastGameState.lastAction.timestamp : 0;
+        if (lastActionTime > 0 && (Date.now() - lastActionTime > ANIM_CONFIG.AFK_TIMEOUT)) {
+             console.log(`${currentPObj.name} AFK kaldı, bota çevriliyor...`);
+             kickAfkPlayer(currentPlayer);
+        }
+    }
+}
+
+// YENİ FONKSİYON: AFK Oyuncuyu Bota Çevir
+async function kickAfkPlayer(pIdx) {
+    if (!isHost) return;
+    
+    let ps = [...gamePlayers];
+    let afkPlayer = ps[pIdx];
+    
+    // İsmindeki olası bot emojilerini temizleyip yeniden ekleyelim ki çift emoji olmasın
+    let cleanName = afkPlayer.name.replace('🤖', '').trim();
+    
+    ps[pIdx] = {
+        ...afkPlayer,
+        uid: 'replaced_bot_' + Date.now(),
+        name: '🤖 ' + cleanName,
+        isBot: true,
+        isReady: true,
+        lastSeen: Date.now()
+    };
+    
+    // Firebase'i güncelle (Sadece statüsü bot oldu, eli ve sırası aynı kaldı)
+    await db.collection("rooms").doc(currentRoomId).update({
+        players: ps,
+        "lastActive": Date.now()
+    });
 }
 
 async function processActionQueue() { 
@@ -2573,11 +2796,6 @@ async function handleRemoteAction(action) {
         document.getElementById('end-continue-btn').className = "game-btn btn-blue"; 
         await animateInitialDeal(); 
     } else if (action.type === 'play') {
-        if (action.saidSonTabak) {
-            const pName = gamePlayers[action.pIdx].name;
-            showSonTabakPopup(pName);
-            SoundFX.playUno();
-        }
         let pIdx = action.pIdx; 
         let sourceId = pIdx === myPlayerIdx ? 'player-hand' : getPlayerDOMId(pIdx); 
         let source = document.getElementById(sourceId); 
@@ -2771,9 +2989,7 @@ function resolveDirection(d) {
 function playerSaySonTabak() { 
     if (currentPlayer !== myPlayerIdx || gameHands[myPlayerIdx].length > 2) return; 
     localSaidSonTabak = true; 
-    document.getElementById('son-tabak-btn').disabled = true; // Butonu anında pasif yapalım
-
-    let ps = gamePlayers.map(p => ({...p})); // Deep copy düzeltmesi
+    let ps = [...gamePlayers]; 
     ps[myPlayerIdx].saidSonTabak = true; 
     db.collection("rooms").doc(currentRoomId).update({ 
         players: ps, 
@@ -2843,12 +3059,12 @@ async function serverDrawCard(pIdx, count, isPenalty = false) {
         newDeck = rebuildDeckFromState(newHands, topCard); 
         if (newDeck.length === 0) newDeck = createFullDeck(); 
     } 
-for (let i = 0; i < count; i++) {
+    for (let i = 0; i < count; i++) {
         if (newDeck.length > 0) newHands[pIdx].push(newDeck.pop()); 
     }
     
-    let pUpdates = gamePlayers.map(p => ({...p})); // YENİ KOD
-    pUpdates[pIdx].hand = newHands[pIdx].map(serializeCard);
+    let pUpdates = [...gamePlayers]; 
+    pUpdates[pIdx].hand = newHands[pIdx].map(serializeCard); 
     pUpdates[pIdx].saidSonTabak = false; 
     let updates = { 
         "players": pUpdates, 
@@ -2875,22 +3091,22 @@ async function serverPassTurn(pIdx) {
 }
 
 async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredSonTabak = false) {
-    let newHands = gameHands.map(h => [...h]);
-    let newDiscard = [...gameDiscard];
-    if (!newHands[pIdx] || !newHands[pIdx][cIdx]) return;
+    let newHands = gameHands.map(h => [...h]); 
+    let newDiscard = [...gameDiscard]; 
+    if (!newHands[pIdx] || !newHands[pIdx][cIdx]) return; 
     
-    let card = newHands[pIdx][cIdx];
+    let card = newHands[pIdx][cIdx]; 
     if (cardWithColor) card = cardWithColor;
-    newHands[pIdx].splice(cIdx, 1);
-    newDiscard.push(card);
+    newHands[pIdx].splice(cIdx, 1); 
+    newDiscard.push(card); 
     if (newDiscard.length > 2) newDiscard = newDiscard.slice(-2);
     
-    let maxP = gamePlayers.length;
-    let newDir = direction, newDrawStack = drawStack, nextP = currentPlayer, newWinner = -1;
+    let maxP = gamePlayers.length; 
+    let newDir = direction, newDrawStack = drawStack, nextP = currentPlayer, newWinner = -1; 
+    let playerUpdates = [...gamePlayers]; 
+    playerUpdates[pIdx].saidSonTabak = false;
     
-    // ÇÖZÜM 1: Shallow copy yerine Deep copy yapıyoruz ki lokal UI state'imiz bozulmasın
-    let playerUpdates = gamePlayers.map(p => ({...p}));
-    
+    // GÜVENLİ KART ÇEKME YARDIMCISI EKLENDİ
     const safeDraw = () => {
         if (gameDeck.length === 0) {
             let topCard = newDiscard.length > 0 ? newDiscard[newDiscard.length - 1] : null;
@@ -2914,15 +3130,16 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
     if (card.val === 'Wild Pot') { 
         for (let k = 0; k < maxP; k++) { 
             let targetP = (pIdx + (k * newDir) + maxP) % maxP; 
-            let drawn = safeDraw(); 
+            let drawn = safeDraw(); // YENİ MANTIK
             if (drawn) newHands[targetP].push(drawn); 
         } 
         if (newHands[pIdx].length === 0) { 
-            let drawn = safeDraw(); 
+            let drawn = safeDraw(); // YENİ MANTIK
             if (drawn) newHands[pIdx].push(drawn); 
             newWinner = -1; 
         } 
     } else if (card.val === 'Wild Table') { 
+        // ... (Buradaki orjinal Wild Table mantığını aynen bırak)
         let isWinning = (newHands[pIdx].length === 0); 
         let playersToShuffle = []; 
         for (let i = 0; i < maxP; i++) playersToShuffle.push(i); 
@@ -2943,6 +3160,7 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
             } 
         }); 
     } else if (card.val === 'Wild Mixer') { 
+        // ... (Buradaki orjinal Wild Mixer mantığını aynen bırak)
         let isWinning = (newHands[pIdx].length === 0); 
         if (isWinning) { 
             let losers = []; 
@@ -2964,7 +3182,7 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
         } 
     } else if (card.val === 'Wild Meze') { 
         let prevP = (pIdx - newDir + maxP) % maxP; 
-        let drawn = safeDraw(); 
+        let drawn = safeDraw(); // YENİ MANTIK
         if (drawn) newHands[prevP].push(drawn); 
     }
     
@@ -2984,16 +3202,8 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
         } 
     }
     
-    // ÇÖZÜM 1 DEVAMI: Kart sayısını kontrol edip saidSonTabak durumunu sıfırla (Action kart yiyenleri kurtarır)
-    for (let i = 0; i < maxP; i++) {
-        if (newHands[i].length > 1) {
-            playerUpdates[i].saidSonTabak = false;
-        }
-    }
-
     playerUpdates = playerUpdates.map((p, i) => ({...p, hand: newHands[i].map(serializeCard)})); 
-    
-    let isSafe = playerUpdates[pIdx].saidSonTabak || declaredSonTabak; 
+    let isSafe = gamePlayers[pIdx].saidSonTabak || declaredSonTabak; 
     if (newHands[pIdx].length === 1 && isSafe) {
         playerUpdates[pIdx].saidSonTabak = true; 
     } else {
@@ -3003,7 +3213,6 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
     if (card.val === 'Wild Mixer' || card.val === 'Wild Table') { 
         for (let i = 0; i < maxP; i++) { 
             if (newHands[i].length === 1) playerUpdates[i].saidSonTabak = true; 
-            else playerUpdates[i].saidSonTabak = false;
         } 
     }
     
@@ -3015,8 +3224,7 @@ async function serverPlayCard(pIdx, cIdx, cardWithColor, mixerDir = 1, declaredS
         "gameState.drawStack": newDrawStack, 
         "gameState.vulnerablePlayerIdx": -1, 
         "gameState.hasDrawn": false, 
-        // ÇÖZÜM 2: declaredSonTabak bilgisini play eyleminin içine ekliyoruz
-        "gameState.lastAction": { type: 'play', pIdx, card: serializeCard(card), timestamp: Date.now(), penaltyCount: finalPenaltyCount, saidSonTabak: declaredSonTabak }, 
+        "gameState.lastAction": { type: 'play', pIdx, card: serializeCard(card), timestamp: Date.now(), penaltyCount: finalPenaltyCount }, 
         "lastActive": Date.now() 
     };
     
@@ -3042,8 +3250,8 @@ async function serverPunishVulnerable(victimIdx) {
     let newDeck = [...gameDeck], newHands = gameHands.map(h => [...h]), c = newDeck.pop(); 
     if (c) newHands[victimIdx].push(c); 
     
-    let pUpdates = gamePlayers.map(p => ({...p})); // YENİ KOD
-    pUpdates[victimIdx].hand = newHands[victimIdx].map(serializeCard);
+    let pUpdates = [...gamePlayers]; 
+    pUpdates[victimIdx].hand = newHands[victimIdx].map(serializeCard); 
     
     await db.collection("rooms").doc(currentRoomId).update({ 
         "players": pUpdates, 
@@ -3058,8 +3266,8 @@ async function serverPunishChallenger(challengerIdx) {
     let newDeck = [...gameDeck], newHands = gameHands.map(h => [...h]), c = newDeck.pop(); 
     if (c) newHands[challengerIdx].push(c); 
     
-    let pUpdates = gamePlayers.map(p => ({...p})); // YENİ KOD
-    pUpdates[challengerIdx].hand = newHands[challengerIdx].map(serializeCard);
+    let pUpdates = [...gamePlayers]; 
+    pUpdates[challengerIdx].hand = newHands[challengerIdx].map(serializeCard); 
     pUpdates[challengerIdx].challengeUsed = true; 
     let nextP = (currentPlayer + direction + maxP) % maxP; 
     
@@ -3073,7 +3281,7 @@ async function serverPunishChallenger(challengerIdx) {
 }
 
 async function serverBotSaySonTabak(botIdx) {
-    let ps = gamePlayers.map(p => ({...p})); // YENİ KOD
+    let ps = [...gamePlayers];
     ps[botIdx].saidSonTabak = true;
     
     await db.collection("rooms").doc(currentRoomId).update({
