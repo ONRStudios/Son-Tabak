@@ -3560,6 +3560,7 @@ function updateUI() {
 
             // YENİ: İnsansa tıklama olayını ve butonu bağla
             if (!p.isBot) {
+if (!p.isBot) {
                 let nameEl = document.getElementById(`${nameTag}-name`);
                 nameEl.style.cursor = 'pointer';
                 nameEl.onclick = (e) => {
@@ -3570,8 +3571,7 @@ function updateUI() {
                 };
 
                 let kickBtnId = `kick-btn-${i}`;
-                let domContainer = document.getElementById(domId);
-               if (!document.getElementById(kickBtnId)) {
+                if (!document.getElementById(kickBtnId)) {
                     let btn = document.createElement('button');
                     btn.id = kickBtnId;
                     btn.className = 'kick-btn-popup';
@@ -3584,9 +3584,8 @@ function updateUI() {
                     nameEl.style.position = 'relative'; // Popup isme göre hizalansın
                     nameEl.appendChild(btn); // domContainer yerine direkt İsmin içine gömüyoruz
                 }
-                    domContainer.appendChild(btn);
-                }
             }
+        
         }
     }
 
